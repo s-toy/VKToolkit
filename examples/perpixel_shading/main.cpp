@@ -6,8 +6,9 @@ using namespace VulkanApp;
 int main()
 {
 	CPerpixelShadingApp App;
-	App.setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	App.setWindowSize(1600, 900);
 	App.setWindowPos(100, 100);
+	App.setWindowTitle("perpixel shading demo");
 
 	try
 	{

@@ -11,8 +11,6 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkGraphicsPipelineCreator.hpp"
 #include "VkShaderModuleCreator.hpp"
-#include "VkInstanceCreator.hpp"
-#include "VkDeviceCreator.hpp"
 
 using namespace hiveVKT;
 
@@ -22,17 +20,8 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 {
 	if (!CVkApplicationBase::_initV()) return false;
 
-	m_pGLFWWindow = this->_getGLFWwindow();
-	_ASSERTE(m_pGLFWWindow);
-
 	__prepareLayersAndExtensions();
 
-	hiveVKT::CVkInstanceCreator InstanceCreator;
-	m_Instance = InstanceCreator.create();
-
-	m_DebugMessenger.setupDebugMessenger(m_Instance);
-
-	__createSurface();
 	__pickPhysicalDevice();
 	__createDevice();
 	__retrieveDeviceQueue();
@@ -116,8 +105,6 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 //Function:
 void VulkanApp::CPerpixelShadingApp::_destroyV()
 {
-	CVkApplicationBase::_destroyV();
-
 	m_Device.waitIdle();
 
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -168,14 +155,8 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 	vkDestroySwapchainKHR(m_Device, m_pSwapChain, nullptr);
 
 	vkDestroyDevice(m_Device, nullptr);
-	vkDestroySurfaceKHR(m_Instance, m_pSurface, nullptr);
 
-	m_DebugMessenger.destroyDebugMessenger(m_Instance);
-
-	vkDestroyInstance(m_Instance, nullptr);
-
-	glfwDestroyWindow(m_pGLFWWindow);
-	glfwTerminate();
+	CVkApplicationBase::_destroyV();
 }
 
 //************************************************************************************
@@ -192,20 +173,12 @@ void VulkanApp::CPerpixelShadingApp::__prepareLayersAndExtensions()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__createSurface()
-{
-	if (glfwCreateWindowSurface(m_Instance, m_pGLFWWindow, nullptr, &m_pSurface) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create window surface!");
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__pickPhysicalDevice()
 {
 	uint32_t PhysicalDeviceCount = 0;
-	vkEnumeratePhysicalDevices(m_Instance, &PhysicalDeviceCount, nullptr);
+	vkEnumeratePhysicalDevices(_instance(), &PhysicalDeviceCount, nullptr);
 	std::vector<VkPhysicalDevice> PhysicalDeviceSet(PhysicalDeviceCount);
-	vkEnumeratePhysicalDevices(m_Instance, &PhysicalDeviceCount, PhysicalDeviceSet.data());
+	vkEnumeratePhysicalDevices(_instance(), &PhysicalDeviceCount, PhysicalDeviceSet.data());
 
 	for (auto PhysicalDevice : PhysicalDeviceSet)
 	{
@@ -261,7 +234,7 @@ void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 
 	VkSwapchainCreateInfoKHR SwapchainCreateInfo = {};
 	SwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	SwapchainCreateInfo.surface = m_pSurface;
+	SwapchainCreateInfo.surface = _surface();
 	SwapchainCreateInfo.imageFormat = SurfaceFormat.format;
 	SwapchainCreateInfo.imageColorSpace = SurfaceFormat.colorSpace;
 	SwapchainCreateInfo.imageExtent = Extent;
@@ -1141,7 +1114,7 @@ VulkanApp::SQueueFamilyIndices VulkanApp::CPerpixelShadingApp::__findRequiredQue
 		VkBool32 GraphicsSupport = VK_FALSE, PresentSupport = VK_FALSE, TransferSupport = VK_FALSE;
 
 		GraphicsSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & VK_QUEUE_GRAPHICS_BIT);
-		vkGetPhysicalDeviceSurfaceSupportKHR(vPhysicalDevice, i, m_pSurface, &PresentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(vPhysicalDevice, i, _surface(), &PresentSupport);
 		TransferSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & VK_QUEUE_TRANSFER_BIT);
 
 		if (GraphicsSupport && PresentSupport && TransferSupport)
@@ -1160,17 +1133,17 @@ VulkanApp::SSwapChainSupportDetails VulkanApp::CPerpixelShadingApp::__queryPhysi
 {
 	SSwapChainSupportDetails SwapChainSuportDetails;
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vPhysicalDevice, m_pSurface, &SwapChainSuportDetails.SurfaceCapabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vPhysicalDevice, _surface(), &SwapChainSuportDetails.SurfaceCapabilities);
 
 	uint32_t FormatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, m_pSurface, &FormatCount, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, _surface(), &FormatCount, nullptr);
 	SwapChainSuportDetails.SurfaceFormatSet.resize(FormatCount);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, m_pSurface, &FormatCount, SwapChainSuportDetails.SurfaceFormatSet.data());
+	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, _surface(), &FormatCount, SwapChainSuportDetails.SurfaceFormatSet.data());
 
 	uint32_t PresentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, m_pSurface, &PresentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, _surface(), &PresentModeCount, nullptr);
 	SwapChainSuportDetails.PresentModeSet.resize(PresentModeCount);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, m_pSurface, &PresentModeCount, SwapChainSuportDetails.PresentModeSet.data());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, _surface(), &PresentModeCount, SwapChainSuportDetails.PresentModeSet.data());
 
 	return SwapChainSuportDetails;
 }

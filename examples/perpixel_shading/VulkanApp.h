@@ -1,7 +1,6 @@
 #pragma once
 #include "Common.h"
 #include <GLFW/glfw3.h>
-#include "VkDebugMessenger.hpp"
 #include "VkApplicationBase.hpp"
 
 namespace VulkanApp
@@ -14,7 +13,6 @@ namespace VulkanApp
 		virtual void _destroyV() override;
 
 		void __prepareLayersAndExtensions();
-		void __createSurface();
 		void __pickPhysicalDevice();
 		void __createDevice();
 		void __retrieveDeviceQueue();
@@ -65,10 +63,6 @@ namespace VulkanApp
 
 		GLFWwindow* m_pGLFWWindow = nullptr;
 
-		hiveVKT::CVkDebugMessenger m_DebugMessenger;
-
-		vk::Instance m_Instance;
-		VkSurfaceKHR m_pSurface = VK_NULL_HANDLE;
 		VkPhysicalDevice m_pPhysicalDevice = VK_NULL_HANDLE;
 		vk::Device m_Device;
 		VkQueue m_pQueue = VK_NULL_HANDLE;
