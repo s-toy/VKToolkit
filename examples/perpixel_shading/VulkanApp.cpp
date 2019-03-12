@@ -14,33 +14,17 @@
 #include "VkInstanceCreator.hpp"
 #include "VkDeviceCreator.hpp"
 
-//************************************************************************************
-//Function:
-void VulkanApp::CVulkanApp::run()
-{
-	__initWindow();
-	__initVulkan();
-	__mainLoop();
-	__cleanup();
-}
+using namespace hiveVKT;
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__initWindow()
+bool VulkanApp::CPerpixelShadingApp::_initV()
 {
-	glfwInit();
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	if (!CVkApplicationBase::_initV()) return false;
 
-	m_pGLFWWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VulkanApp", nullptr, nullptr);
+	m_pGLFWWindow = this->_getGLFWwindow();
+	_ASSERTE(m_pGLFWWindow);
 
-	_ASSERT(m_pGLFWWindow);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CVulkanApp::__initVulkan()
-{
 	__prepareLayersAndExtensions();
 
 	hiveVKT::CVkInstanceCreator InstanceCreator;
@@ -71,26 +55,71 @@ void VulkanApp::CVulkanApp::__initVulkan()
 	__createDescriptorSet();
 	__createCommandBuffers();
 	__createSyncObjects();
+
+	return true;
 }
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__mainLoop()
+bool VulkanApp::CPerpixelShadingApp::_renderV()
 {
-	while (!glfwWindowShouldClose(m_pGLFWWindow))
-	{
-		glfwPollEvents();
+	if (!CVkApplicationBase::_renderV()) return false;
 
-		__drawFrame();
-	}
+	vkWaitForFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
-	vkDeviceWaitIdle(m_Device);
+	uint32_t ImageIndex = 0;
+	VkResult Result = vkAcquireNextImageKHR(m_Device, m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
+	if (Result == VK_ERROR_OUT_OF_DATE_KHR)
+		throw std::runtime_error("Failed to acquire swap chain image!");
+	else if (Result != VK_SUCCESS && Result != VK_SUBOPTIMAL_KHR)
+		throw std::runtime_error("Failed to acquire swap chain image!");
+
+	__updateUniformBuffer(ImageIndex);
+
+	VkSubmitInfo SubmitInfo = {};
+	SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	VkSemaphore WaitSemaphores[] = { m_ImageAvailableSemaphoreSet[m_CurrentFrame] };
+	VkPipelineStageFlags WaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	SubmitInfo.waitSemaphoreCount = 1;
+	SubmitInfo.pWaitSemaphores = WaitSemaphores;
+	SubmitInfo.pWaitDstStageMask = WaitStages;
+	SubmitInfo.commandBufferCount = 1;
+	SubmitInfo.pCommandBuffers = &m_CommandBufferSet[ImageIndex];
+	VkSemaphore SignalSemaphores[] = { m_RenderFinishedSemaphoreSet[m_CurrentFrame] };
+	SubmitInfo.signalSemaphoreCount = 1;
+	SubmitInfo.pSignalSemaphores = SignalSemaphores;
+	vkResetFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame]);
+	if (vkQueueSubmit(m_pQueue, 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
+		throw std::runtime_error("Failed to submit draw command buffer!");
+
+	VkPresentInfoKHR PresentInfo = {};
+	PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	PresentInfo.waitSemaphoreCount = 1;
+	PresentInfo.pWaitSemaphores = SignalSemaphores;
+	VkSwapchainKHR SwapChains[] = { m_pSwapChain };
+	PresentInfo.swapchainCount = 1;
+	PresentInfo.pSwapchains = SwapChains;
+	PresentInfo.pImageIndices = &ImageIndex;
+	PresentInfo.pResults = nullptr;
+	Result = vkQueuePresentKHR(m_pQueue, &PresentInfo);
+	if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
+		throw std::runtime_error("Failed to present swap chain image!");
+	else if (Result != VK_SUCCESS)
+		throw std::runtime_error("Failed to present swap chain image!");
+
+	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+	return true;
 }
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__cleanup()
+void VulkanApp::CPerpixelShadingApp::_destroyV()
 {
+	CVkApplicationBase::_destroyV();
+
+	m_Device.waitIdle();
+
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
 		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphoreSet[i], nullptr);
@@ -151,7 +180,7 @@ void VulkanApp::CVulkanApp::__cleanup()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__prepareLayersAndExtensions()
+void VulkanApp::CPerpixelShadingApp::__prepareLayersAndExtensions()
 {
 	if (g_enableValidationLayers)
 	{
@@ -163,7 +192,7 @@ void VulkanApp::CVulkanApp::__prepareLayersAndExtensions()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createSurface()
+void VulkanApp::CPerpixelShadingApp::__createSurface()
 {
 	if (glfwCreateWindowSurface(m_Instance, m_pGLFWWindow, nullptr, &m_pSurface) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create window surface!");
@@ -171,7 +200,7 @@ void VulkanApp::CVulkanApp::__createSurface()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__pickPhysicalDevice()
+void VulkanApp::CPerpixelShadingApp::__pickPhysicalDevice()
 {
 	uint32_t PhysicalDeviceCount = 0;
 	vkEnumeratePhysicalDevices(m_Instance, &PhysicalDeviceCount, nullptr);
@@ -194,7 +223,7 @@ void VulkanApp::CVulkanApp::__pickPhysicalDevice()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createDevice()
+void VulkanApp::CPerpixelShadingApp::__createDevice()
 {
 	hiveVKT::CVkDeviceCreator DeviceCreator;
 
@@ -211,7 +240,7 @@ void VulkanApp::CVulkanApp::__createDevice()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__retrieveDeviceQueue()
+void VulkanApp::CPerpixelShadingApp::__retrieveDeviceQueue()
 {
 	SQueueFamilyIndices QueueFamilyIndices = __findRequiredQueueFamilies(m_pPhysicalDevice);
 
@@ -220,7 +249,7 @@ void VulkanApp::CVulkanApp::__retrieveDeviceQueue()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createSwapChain()
+void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 {
 	SSwapChainSupportDetails SwapChainSupportDetails = __queryPhysicalDeviceSwapChainSupport(m_pPhysicalDevice);
 	VkSurfaceFormatKHR SurfaceFormat = __determineSurfaceFormat(SwapChainSupportDetails.SurfaceFormatSet);
@@ -257,7 +286,7 @@ void VulkanApp::CVulkanApp::__createSwapChain()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__retrieveSwapChainImagesAndCreateImageViews()
+void VulkanApp::CPerpixelShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
 {
 	uint32_t SwapChainImageCount = 0;
 	vkGetSwapchainImagesKHR(m_Device, m_pSwapChain, &SwapChainImageCount, nullptr);
@@ -274,7 +303,7 @@ void VulkanApp::CVulkanApp::__retrieveSwapChainImagesAndCreateImageViews()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createRenderPass()
+void VulkanApp::CPerpixelShadingApp::__createRenderPass()
 {
 	VkAttachmentDescription ColorAttachment = {};
 	ColorAttachment.format = m_SwapChainImageFormat;
@@ -354,7 +383,7 @@ void VulkanApp::CVulkanApp::__createRenderPass()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createDescriptorSetLayout()
+void VulkanApp::CPerpixelShadingApp::__createDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding UniformBufferBinding = {};
 	UniformBufferBinding.binding = 0;
@@ -383,7 +412,7 @@ void VulkanApp::CVulkanApp::__createDescriptorSetLayout()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createPipelineLayout()
+void VulkanApp::CPerpixelShadingApp::__createPipelineLayout()
 {
 	VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo = {};
 	PipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -398,7 +427,7 @@ void VulkanApp::CVulkanApp::__createPipelineLayout()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createGraphicsPipeline()
+void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 {
 	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
 	auto VertexShaderModule = ShaderModuleCreator.createUnique(m_Device, "vert.spv");
@@ -426,7 +455,7 @@ void VulkanApp::CVulkanApp::__createGraphicsPipeline()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createCommandPool()
+void VulkanApp::CPerpixelShadingApp::__createCommandPool()
 {
 	SQueueFamilyIndices QueueFamilyIndices = __findRequiredQueueFamilies(m_pPhysicalDevice);
 
@@ -440,7 +469,7 @@ void VulkanApp::CVulkanApp::__createCommandPool()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createMsaaResource()
+void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 {
 	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_SampleCount, m_SwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pMsaaImage, m_pMsaaImageDeviceMemory);
 
@@ -451,7 +480,7 @@ void VulkanApp::CVulkanApp::__createMsaaResource()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createDepthResources()
+void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 {
 	VkFormat DepthImageFormat = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_SampleCount, DepthImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pDepthImage, m_pDepthImageDeviceMemory);
@@ -461,7 +490,7 @@ void VulkanApp::CVulkanApp::__createDepthResources()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory)
+void VulkanApp::CPerpixelShadingApp::__createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory)
 {
 	VkImageCreateInfo ImageCreateInfo = {};
 	ImageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -497,7 +526,7 @@ void VulkanApp::CVulkanApp::__createImage(uint32_t vImageWidth, uint32_t vImageH
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel)
+void VulkanApp::CPerpixelShadingApp::__transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel)
 {
 	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
 
@@ -568,7 +597,7 @@ void VulkanApp::CVulkanApp::__transitionImageLayout(VkImage vImage, VkFormat vIm
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createFramebuffers()
+void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 {
 	m_FramebufferSet.resize(m_SwapChainImageSet.size());
 
@@ -592,7 +621,7 @@ void VulkanApp::CVulkanApp::__createFramebuffers()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createTextureSamplerResources()
+void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 {
 	int TextureWidth = 0, TextureHeight = 0, TextureChannels = 0;
 	unsigned char* Pixels = stbi_load("../../resource/models/chalet/Chalet.jpg", &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
@@ -648,7 +677,7 @@ void VulkanApp::CVulkanApp::__createTextureSamplerResources()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel)
+void VulkanApp::CPerpixelShadingApp::__generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel)
 {
 	VkFormatProperties FormatProperties;
 	vkGetPhysicalDeviceFormatProperties(m_pPhysicalDevice, vImageFormat, &FormatProperties);
@@ -720,7 +749,7 @@ void VulkanApp::CVulkanApp::__generateMipmaps(VkImage vImage, VkFormat vImageFor
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory)
+void VulkanApp::CPerpixelShadingApp::__createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory)
 {
 	VkBufferCreateInfo BufferCreateInfo = {};
 	BufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -747,7 +776,7 @@ void VulkanApp::CVulkanApp::__createBuffer(VkDeviceSize vBufferSize, VkBufferUsa
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__copyBuffer2Image(VkBuffer vBuffer, VkImage vImage, uint32_t vImageWidth, uint32_t vImageHeight)
+void VulkanApp::CPerpixelShadingApp::__copyBuffer2Image(VkBuffer vBuffer, VkImage vImage, uint32_t vImageWidth, uint32_t vImageHeight)
 {
 	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
 
@@ -769,7 +798,7 @@ void VulkanApp::CVulkanApp::__copyBuffer2Image(VkBuffer vBuffer, VkImage vImage,
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createVertexBuffer()
+void VulkanApp::CPerpixelShadingApp::__createVertexBuffer()
 {
 	VkDeviceSize BufferSize = sizeof(m_VertexData[0]) * m_VertexData.size();
 
@@ -793,7 +822,7 @@ void VulkanApp::CVulkanApp::__createVertexBuffer()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createIndexBuffer()
+void VulkanApp::CPerpixelShadingApp::__createIndexBuffer()
 {
 	VkDeviceSize BufferSize = sizeof(m_IndexData[0]) * m_IndexData.size();
 
@@ -817,7 +846,7 @@ void VulkanApp::CVulkanApp::__createIndexBuffer()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createUniformBuffers()
+void VulkanApp::CPerpixelShadingApp::__createUniformBuffers()
 {
 	VkDeviceSize BufferSize = sizeof(SUniformBufferObject);
 
@@ -832,7 +861,7 @@ void VulkanApp::CVulkanApp::__createUniformBuffers()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createDescriptorPool()
+void VulkanApp::CPerpixelShadingApp::__createDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 2> DescriptorPoolSizeSet = {};
 	DescriptorPoolSizeSet[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -852,7 +881,7 @@ void VulkanApp::CVulkanApp::__createDescriptorPool()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createDescriptorSet()
+void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 {
 	std::vector<VkDescriptorSetLayout> DescriptorSetLayoutSet(m_SwapChainImageSet.size(), m_pDescriptorSetLayout);
 
@@ -905,7 +934,7 @@ void VulkanApp::CVulkanApp::__createDescriptorSet()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createCommandBuffers()
+void VulkanApp::CPerpixelShadingApp::__createCommandBuffers()
 {
 	m_CommandBufferSet.resize(m_FramebufferSet.size());
 
@@ -958,7 +987,7 @@ void VulkanApp::CVulkanApp::__createCommandBuffers()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__createSyncObjects()
+void VulkanApp::CPerpixelShadingApp::__createSyncObjects()
 {
 	m_ImageAvailableSemaphoreSet.resize(MAX_FRAMES_IN_FLIGHT);
 	m_RenderFinishedSemaphoreSet.resize(MAX_FRAMES_IN_FLIGHT);
@@ -983,7 +1012,7 @@ void VulkanApp::CVulkanApp::__createSyncObjects()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__copyBuffer(VkBuffer vSrcBuffer, VkBuffer vDstBuffer, VkDeviceSize vBufferSize)
+void VulkanApp::CPerpixelShadingApp::__copyBuffer(VkBuffer vSrcBuffer, VkBuffer vDstBuffer, VkDeviceSize vBufferSize)
 {
 	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
 
@@ -998,7 +1027,7 @@ void VulkanApp::CVulkanApp::__copyBuffer(VkBuffer vSrcBuffer, VkBuffer vDstBuffe
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__updateUniformBuffer(uint32_t vImageIndex)
+void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 {
 	static auto StartTime = std::chrono::high_resolution_clock::now();
 
@@ -1020,7 +1049,7 @@ void VulkanApp::CVulkanApp::__updateUniformBuffer(uint32_t vImageIndex)
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__loadModel()
+void VulkanApp::CPerpixelShadingApp::__loadModel()
 {
 	tinyobj::attrib_t Attribute;
 	std::vector<tinyobj::shape_t> ShapeSet;
@@ -1064,7 +1093,7 @@ void VulkanApp::CVulkanApp::__loadModel()
 
 //************************************************************************************
 //Function:
-bool VulkanApp::CVulkanApp::__checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& vPhysicalDevice)const
+bool VulkanApp::CPerpixelShadingApp::__checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& vPhysicalDevice)const
 {
 	uint32_t PhysicalDeviceExtensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(vPhysicalDevice, nullptr, &PhysicalDeviceExtensionCount, nullptr);
@@ -1081,7 +1110,7 @@ bool VulkanApp::CVulkanApp::__checkPhysicalDeviceExtensionSupport(const VkPhysic
 
 //************************************************************************************
 //Function:
-bool VulkanApp::CVulkanApp::__isPhysicalDeviceSuitable(const VkPhysicalDevice& vPhysicalDevice)const
+bool VulkanApp::CPerpixelShadingApp::__isPhysicalDeviceSuitable(const VkPhysicalDevice& vPhysicalDevice)const
 {
 	SQueueFamilyIndices QueueFamily = __findRequiredQueueFamilies(vPhysicalDevice);
 	bool IsExtensionSupport = __checkPhysicalDeviceExtensionSupport(vPhysicalDevice);
@@ -1097,7 +1126,7 @@ bool VulkanApp::CVulkanApp::__isPhysicalDeviceSuitable(const VkPhysicalDevice& v
 
 //************************************************************************************
 //Function:
-VulkanApp::SQueueFamilyIndices VulkanApp::CVulkanApp::__findRequiredQueueFamilies(const VkPhysicalDevice& vPhysicalDevice)const
+VulkanApp::SQueueFamilyIndices VulkanApp::CPerpixelShadingApp::__findRequiredQueueFamilies(const VkPhysicalDevice& vPhysicalDevice)const
 {
 	SQueueFamilyIndices RequiredQueueFamilyIndices;
 
@@ -1127,7 +1156,7 @@ VulkanApp::SQueueFamilyIndices VulkanApp::CVulkanApp::__findRequiredQueueFamilie
 
 //************************************************************************************
 //Function:
-VulkanApp::SSwapChainSupportDetails VulkanApp::CVulkanApp::__queryPhysicalDeviceSwapChainSupport(const VkPhysicalDevice& vPhysicalDevice)const
+VulkanApp::SSwapChainSupportDetails VulkanApp::CPerpixelShadingApp::__queryPhysicalDeviceSwapChainSupport(const VkPhysicalDevice& vPhysicalDevice)const
 {
 	SSwapChainSupportDetails SwapChainSuportDetails;
 
@@ -1148,7 +1177,7 @@ VulkanApp::SSwapChainSupportDetails VulkanApp::CVulkanApp::__queryPhysicalDevice
 
 //************************************************************************************
 //Function:
-VkSurfaceFormatKHR VulkanApp::CVulkanApp::__determineSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
+VkSurfaceFormatKHR VulkanApp::CPerpixelShadingApp::__determineSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
 {
 	if (vCandidateSurfaceFormatSet.size() == 1 && vCandidateSurfaceFormatSet[0].format == VK_FORMAT_UNDEFINED)
 		return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
@@ -1164,7 +1193,7 @@ VkSurfaceFormatKHR VulkanApp::CVulkanApp::__determineSurfaceFormat(const std::ve
 
 //************************************************************************************
 //Function:
-VkPresentModeKHR VulkanApp::CVulkanApp::__determinePresentMode(const std::vector<VkPresentModeKHR>& vCandidatePresentModeSet)const
+VkPresentModeKHR VulkanApp::CPerpixelShadingApp::__determinePresentMode(const std::vector<VkPresentModeKHR>& vCandidatePresentModeSet)const
 {
 	VkPresentModeKHR BestPresentMode = VK_PRESENT_MODE_FIFO_KHR;
 
@@ -1181,7 +1210,7 @@ VkPresentModeKHR VulkanApp::CVulkanApp::__determinePresentMode(const std::vector
 
 //************************************************************************************
 //Function:
-VkExtent2D VulkanApp::CVulkanApp::__determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const
+VkExtent2D VulkanApp::CPerpixelShadingApp::__determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const
 {
 	if (vSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
@@ -1203,7 +1232,7 @@ VkExtent2D VulkanApp::CVulkanApp::__determineSwapChainExtent(const VkSurfaceCapa
 
 //************************************************************************************
 //Function:
-VkImageView VulkanApp::CVulkanApp::__createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel)
+VkImageView VulkanApp::CPerpixelShadingApp::__createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel)
 {
 	VkImageViewCreateInfo ImageViewCreateInfo = {};
 	ImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1229,7 +1258,7 @@ VkImageView VulkanApp::CVulkanApp::__createImageView(const VkImage& vImage, VkFo
 
 //************************************************************************************
 //Function:
-VkFormat VulkanApp::CVulkanApp::__findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures)
+VkFormat VulkanApp::CPerpixelShadingApp::__findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures)
 {
 	for (auto Format : vCandidateFormatSet)
 	{
@@ -1248,7 +1277,7 @@ VkFormat VulkanApp::CVulkanApp::__findSupportedFormat(const std::vector<VkFormat
 
 //************************************************************************************
 //Function:
-uint32_t VulkanApp::CVulkanApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
+uint32_t VulkanApp::CPerpixelShadingApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
 {
 	VkPhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = {};
 	vkGetPhysicalDeviceMemoryProperties(m_pPhysicalDevice, &PhysicalDeviceMemoryProperties);
@@ -1264,7 +1293,7 @@ uint32_t VulkanApp::CVulkanApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkM
 
 //************************************************************************************
 //Function:
-VkSampleCountFlagBits VulkanApp::CVulkanApp::__getMaxSampleCount()
+VkSampleCountFlagBits VulkanApp::CPerpixelShadingApp::__getMaxSampleCount()
 {
 	VkPhysicalDeviceProperties PhysicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(m_pPhysicalDevice, &PhysicalDeviceProperties);
@@ -1282,7 +1311,7 @@ VkSampleCountFlagBits VulkanApp::CVulkanApp::__getMaxSampleCount()
 
 //************************************************************************************
 //Function:
-VkCommandBuffer VulkanApp::CVulkanApp::__beginSingleTimeCommands()
+VkCommandBuffer VulkanApp::CPerpixelShadingApp::__beginSingleTimeCommands()
 {
 	VkCommandBufferAllocateInfo CommandBufferAllocateInfo = {};
 	CommandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1304,7 +1333,7 @@ VkCommandBuffer VulkanApp::CVulkanApp::__beginSingleTimeCommands()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__endSingleTimeCommands(VkCommandBuffer vCommandBuffer)
+void VulkanApp::CPerpixelShadingApp::__endSingleTimeCommands(VkCommandBuffer vCommandBuffer)
 {
 	vkEndCommandBuffer(vCommandBuffer);
 
@@ -1326,56 +1355,7 @@ void VulkanApp::CVulkanApp::__endSingleTimeCommands(VkCommandBuffer vCommandBuff
 
 //************************************************************************************
 //Function:
-void VulkanApp::CVulkanApp::__drawFrame()
-{
-	vkWaitForFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-
-	uint32_t ImageIndex = 0;
-	VkResult Result = vkAcquireNextImageKHR(m_Device, m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
-	if (Result == VK_ERROR_OUT_OF_DATE_KHR)
-		throw std::runtime_error("Failed to acquire swap chain image!");
-	else if (Result != VK_SUCCESS && Result != VK_SUBOPTIMAL_KHR)
-		throw std::runtime_error("Failed to acquire swap chain image!");
-
-	__updateUniformBuffer(ImageIndex);
-
-	VkSubmitInfo SubmitInfo = {};
-	SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	VkSemaphore WaitSemaphores[] = { m_ImageAvailableSemaphoreSet[m_CurrentFrame] };
-	VkPipelineStageFlags WaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	SubmitInfo.waitSemaphoreCount = 1;
-	SubmitInfo.pWaitSemaphores = WaitSemaphores;
-	SubmitInfo.pWaitDstStageMask = WaitStages;
-	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &m_CommandBufferSet[ImageIndex];
-	VkSemaphore SignalSemaphores[] = { m_RenderFinishedSemaphoreSet[m_CurrentFrame] };
-	SubmitInfo.signalSemaphoreCount = 1;
-	SubmitInfo.pSignalSemaphores = SignalSemaphores;
-	vkResetFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame]);
-	if (vkQueueSubmit(m_pQueue, 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
-		throw std::runtime_error("Failed to submit draw command buffer!");
-
-	VkPresentInfoKHR PresentInfo = {};
-	PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	PresentInfo.waitSemaphoreCount = 1;
-	PresentInfo.pWaitSemaphores = SignalSemaphores;
-	VkSwapchainKHR SwapChains[] = { m_pSwapChain };
-	PresentInfo.swapchainCount = 1;
-	PresentInfo.pSwapchains = SwapChains;
-	PresentInfo.pImageIndices = &ImageIndex;
-	PresentInfo.pResults = nullptr;
-	Result = vkQueuePresentKHR(m_pQueue, &PresentInfo);
-	if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
-		throw std::runtime_error("Failed to present swap chain image!");
-	else if (Result != VK_SUCCESS)
-		throw std::runtime_error("Failed to present swap chain image!");
-
-	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-}
-
-//************************************************************************************
-//Function:
-VKAPI_ATTR VkBool32 VKAPI_CALL VulkanApp::CVulkanApp::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL VulkanApp::CPerpixelShadingApp::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	if (vMessageSeverityFlags >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 		std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;

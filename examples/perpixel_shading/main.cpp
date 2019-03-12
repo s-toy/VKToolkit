@@ -5,11 +5,13 @@ using namespace VulkanApp;
 
 int main()
 {
-	CVulkanApp app;
+	CPerpixelShadingApp App;
+	App.setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	App.setWindowPos(100, 100);
 
 	try
 	{
-		app.run();
+		App.run();
 	}
 	catch (std::runtime_error e)
 	{

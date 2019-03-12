@@ -9,8 +9,8 @@
 
 namespace VulkanApp
 {
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH  1600
+#define WINDOW_HEIGHT 900
 
 #define MAX_FRAMES_IN_FLIGHT 2
 

@@ -2,19 +2,16 @@
 #include "Common.h"
 #include <GLFW/glfw3.h>
 #include "VkDebugMessenger.hpp"
+#include "VkApplicationBase.hpp"
 
 namespace VulkanApp
 {
-	class CVulkanApp
+	class CPerpixelShadingApp : public hiveVKT::CVkApplicationBase
 	{
-	public:
-		void run();
-
 	private:
-		void __initWindow();
-		void __initVulkan();
-		void __mainLoop();
-		void __cleanup();
+		virtual bool _initV() override;
+		virtual bool _renderV() override;
+		virtual void _destroyV() override;
 
 		void __prepareLayersAndExtensions();
 		void __createSurface();
@@ -63,8 +60,6 @@ namespace VulkanApp
 
 		VkCommandBuffer __beginSingleTimeCommands();
 		void __endSingleTimeCommands(VkCommandBuffer vCommandBuffer);
-
-		void __drawFrame();
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
