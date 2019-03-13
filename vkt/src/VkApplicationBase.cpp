@@ -2,7 +2,7 @@
 #include "VkInstanceCreator.hpp"
 #include "VkDeviceCreator.hpp"
 #include "VkDebugMessenger.hpp"
-#include "Window.hpp"
+#include "WindowCreator.hpp"
 #include "Utility.hpp"
 
 using namespace hiveVKT;
@@ -61,10 +61,10 @@ bool hiveVKT::CVkApplicationBase::_renderV()
 //Function:
 bool hiveVKT::CVkApplicationBase::_isRenderLoopDoneV()
 {
-	_ASSERTE(m_pWindow && m_pWindow->getGLFWwindow());
+	_ASSERTE(m_pWindow);
 
-	bool IsRenderLoopDone = glfwWindowShouldClose(m_pWindow->getGLFWwindow());
-	if (IsRenderLoopDone) { _SAFE_DELETE(m_pWindow); glfwTerminate(); }
+	bool IsRenderLoopDone = glfwWindowShouldClose(m_pWindow);
+	if (IsRenderLoopDone) { glfwDestroyWindow(m_pWindow); glfwTerminate(); }
 
 	return IsRenderLoopDone;
 }
@@ -79,15 +79,7 @@ void hiveVKT::CVkApplicationBase::_destroyV()
 	m_VkInstance.destroySurfaceKHR(m_VkSurface);
 	m_VkInstance.destroy();
 
-	_SAFE_DELETE(m_pWindow);
 	glfwTerminate();
-}
-
-//************************************************************************************
-//Function:
-GLFWwindow* hiveVKT::CVkApplicationBase::_window() const
-{
-	return m_pWindow->getGLFWwindow();
 }
 
 //************************************************************************************
@@ -95,8 +87,13 @@ GLFWwindow* hiveVKT::CVkApplicationBase::_window() const
 bool hiveVKT::CVkApplicationBase::__initWindow()
 {
 	_ASSERTE(!m_pWindow);
-	m_pWindow = new CWindow;
-	return m_pWindow->init(m_DisplayInfo);
+
+	CWindowCreator WindowCreator;
+	m_pWindow = WindowCreator.create(m_DisplayInfo);
+
+	if (!m_pWindow) return false;
+
+	return true;
 }
 
 //************************************************************************************
@@ -109,13 +106,15 @@ bool hiveVKT::CVkApplicationBase::__initVulkan()
 	__createSurface();
 	__pickPhysicalDevice();
 	__createDevice();
+
+	return true;
 }
 
 //************************************************************************************
 //Function:
 void hiveVKT::CVkApplicationBase::__prepareLayersAndExtensions()
 {
-#ifdef _ENABLE_VK_DEBUG_UTILS
+#ifdef _ENABLE_DEBUG_UTILS
 	m_EnabledLayersAtDeviceLevel.emplace_back("VK_LAYER_LUNARG_standard_validation");
 #endif
 

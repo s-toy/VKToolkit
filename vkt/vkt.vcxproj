@@ -29,7 +29,7 @@
     <ClInclude Include="src\VkInstanceCreator.hpp" />
     <ClInclude Include="src\VkShaderModuleCreator.hpp" />
     <ClInclude Include="src\VKTExport.hpp" />
-    <ClInclude Include="src\Window.hpp" />
+    <ClInclude Include="src\WindowCreator.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp" />

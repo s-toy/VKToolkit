@@ -55,7 +55,7 @@ namespace hiveVKT
 		{
 			if (!m_EnableDefaultLayersAndExtensions) return;
 
-		#ifdef _ENABLE_VK_DEBUG_UTILS
+		#ifdef _ENABLE_DEBUG_UTILS
 			m_DeviceLayerSet.emplace_back("VK_LAYER_LUNARG_standard_validation");
 		#endif
 

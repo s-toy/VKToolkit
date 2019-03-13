@@ -8,7 +8,6 @@
 
 namespace hiveVKT
 {
-	class CWindow;
 	class CVkDebugMessenger;
 
 	struct SQueueFamilyIndices
@@ -47,7 +46,7 @@ namespace hiveVKT
 		virtual void _handleEventV() {}
 		virtual void _destroyV();
 
-		GLFWwindow* _window() const;
+		GLFWwindow* _window() const { return m_pWindow; }
 
 		vk::Instance _instance()				const { return m_VkInstance; }
 		vk::SurfaceKHR _surface()				const { return m_VkSurface; }
@@ -59,16 +58,16 @@ namespace hiveVKT
 
 	private:
 		CVkDebugMessenger* m_pDebugMessenger = nullptr;
-		CWindow* m_pWindow = nullptr;
+		GLFWwindow* m_pWindow = nullptr;
 
 		SDisplayInfo m_DisplayInfo = {};
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
 		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 
-		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
-
 		std::vector<const char*> m_EnabledExtensionsAtDeviceLevel;
 		std::vector<const char*> m_EnabledLayersAtDeviceLevel;
+
+		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
 
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;

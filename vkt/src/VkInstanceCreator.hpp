@@ -76,7 +76,7 @@ namespace hiveVKT
 			m_InstanceExtensionSet.insert(m_InstanceExtensionSet.end(), Extensions.begin(), Extensions.end());
 			_ASSERT(!m_InstanceExtensionSet.empty());
 
-		#ifdef _ENABLE_VK_DEBUG_UTILS
+		#ifdef _ENABLE_DEBUG_UTILS
 			m_InstanceLayerSet.emplace_back("VK_LAYER_LUNARG_standard_validation");
 			m_InstanceExtensionSet.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
@@ -85,7 +85,7 @@ namespace hiveVKT
 		#endif
 		}
 
-#ifdef _ENABLE_VK_DEBUG_UTILS
+#ifdef _ENABLE_DEBUG_UTILS
 		bool __checkInstanceLayersSupport()
 		{
 			auto InstanceLayerPropertiesSet = vk::enumerateInstanceLayerProperties();

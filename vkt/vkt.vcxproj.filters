@@ -21,9 +21,6 @@
     <ClInclude Include="src\Utility.hpp">
       <Filter>general</Filter>
     </ClInclude>
-    <ClInclude Include="src\Window.hpp">
-      <Filter>general</Filter>
-    </ClInclude>
     <ClInclude Include="src\VkApplicationBase.hpp">
       <Filter>vulkan\framework</Filter>
     </ClInclude>
@@ -47,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="src\VKTExport.hpp">
       <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowCreator.hpp">
+      <Filter>vulkan\toolkit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

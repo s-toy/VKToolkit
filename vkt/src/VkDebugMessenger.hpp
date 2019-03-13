@@ -11,8 +11,8 @@ namespace hiveVKT
 	public:
 		bool setupDebugMessenger(const vk::Instance& vInstance)
 		{
-		#ifdef _ENABLE_VK_DEBUG_UTILS
-			if (m_pDebugUtilsMessenger) return;
+		#ifdef _ENABLE_DEBUG_UTILS
+			if (m_pDebugUtilsMessenger) return true;
 
 			VkDebugUtilsMessengerCreateInfoEXT DebugUtilsMessengerCreateInfo = {};
 			DebugUtilsMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -35,7 +35,7 @@ namespace hiveVKT
 
 		void destroyDebugMessenger(const vk::Instance& vInstance)
 		{
-		#ifdef _ENABLE_VK_DEBUG_UTILS
+		#ifdef _ENABLE_DEBUG_UTILS
 			if (!m_pDebugUtilsMessenger) return;
 			__destroyDebugUtilsMessengerEXT(vInstance, m_pDebugUtilsMessenger, nullptr);
 		#endif
@@ -44,7 +44,7 @@ namespace hiveVKT
 	private:
 		VkDebugUtilsMessengerEXT m_pDebugUtilsMessenger = VK_NULL_HANDLE;
 
-#ifdef _ENABLE_VK_DEBUG_UTILS
+#ifdef _ENABLE_DEBUG_UTILS
 		static VKAPI_ATTR VkBool32 VKAPI_CALL __debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* vCallbackData, void* vUserData)
 		{
 			std::string Prefix;
