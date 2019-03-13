@@ -9,7 +9,7 @@ namespace hiveVKT
 	class CVkDebugMessenger
 	{
 	public:
-		void setupDebugMessenger(const vk::Instance& vInstance)
+		bool setupDebugMessenger(const vk::Instance& vInstance)
 		{
 		#ifdef _ENABLE_VK_DEBUG_UTILS
 			if (m_pDebugUtilsMessenger) return;
@@ -22,7 +22,14 @@ namespace hiveVKT
 			DebugUtilsMessengerCreateInfo.pUserData = nullptr;
 
 			if (__createDebugUtilsMessengerEXT(vInstance, &DebugUtilsMessengerCreateInfo, nullptr, &m_pDebugUtilsMessenger) != VK_SUCCESS)
-				throw std::runtime_error("Failed to set up debug utils messenger!");
+			{
+				_OUTPUT_WARNING("Failed to set up debug utils messenger!");
+				return false;
+			}
+
+			return true;
+		#else
+			return false;
 		#endif
 		}
 
@@ -49,7 +56,7 @@ namespace hiveVKT
 			else if (vMessageSeverityFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) { Prefix = "DEBUG"; }
 
 			if (vMessageSeverityFlags >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-				std::cerr << format("[%s] Validation layer: %s", Prefix.c_str(), vCallbackData->pMessage) << std::endl;
+				_OUTPUT_WARNING(format("[%s] Validation layer: %s", Prefix.c_str(), vCallbackData->pMessage));
 
 			return VK_FALSE;
 		}

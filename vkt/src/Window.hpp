@@ -1,5 +1,6 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include "Common.hpp"
 
 namespace hiveVKT
 {
@@ -22,7 +23,7 @@ namespace hiveVKT
 
 		bool init(const SDisplayInfo& vDisplayInfo)
 		{
-			if (!glfwInit()) { std::cerr << "Fail to initialize window due to failure of glfwInit()!"; return false; }
+			if (!glfwInit()) { _OUTPUT_WARNING("Fail to initialize window due to failure of glfwInit()!"); return false; }
 
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE, vDisplayInfo.IsWindowResizable);

@@ -80,10 +80,7 @@ namespace hiveVKT
 			m_InstanceLayerSet.emplace_back("VK_LAYER_LUNARG_standard_validation");
 			m_InstanceExtensionSet.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-			if (!__checkInstanceLayersSupport())
-			{
-				throw std::runtime_error("Not all requested instance layers are available.");
-			}
+			if (!__checkInstanceLayersSupport()) _THROW_RUNTINE_ERROR("Not all requested instance layers are available.");
 			//TODO:是否需要检查Extentions是否可用
 		#endif
 		}

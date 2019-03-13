@@ -5,19 +5,13 @@ using namespace VulkanApp;
 
 int main()
 {
-	CPerpixelShadingApp App;
-	App.setWindowSize(1600, 900);
-	App.setWindowPos(100, 100);
-	App.setWindowTitle("perpixel shading demo");
+	CPerpixelShadingApp Application;
 
-	try
-	{
-		App.run();
-	}
-	catch (std::runtime_error e)
-	{
-		std::cout << e.what() << std::endl;
-	}
+	Application.setWindowSize(1600, 900);
+	Application.setWindowPos(100, 100);
+	Application.setWindowTitle("perpixel shading demo");
 
-	return 0;
+	Application.run();
+
+	return EXIT_SUCCESS;
 }

@@ -23,41 +23,39 @@ namespace hiveVKT
 		void setWindowResizable(bool vResizable) { m_DisplayInfo.IsWindowResizable = vResizable; }
 		void setWindowTitle(const std::string& vTitle) { m_DisplayInfo.WindowTitle = vTitle; }
 
-		bool run()
+		void run()
 		{
-			if (!_initV())
-			{
-				std::cerr << "Failed to run renderer due to failure of initialization!" << std::endl;
-				return false;
-			}
-
-			bool IsNormalExit = true;
 			try
 			{
+				if (!_initV()) { _THROW_RUNTINE_ERROR("Failed to run application due to failure of initialization!"); }
+
+				_OUTPUT_EVENT("Succeed to init application.");
+
 				while (!m_IsRenderLoopDone)
 				{
-					if (!_renderV())
-					{
-						std::cerr << "Render loop interrupted due to render failure!" << std::endl;
-						IsNormalExit = false;
-						break;
-					}
+					if (!_renderV()) { _THROW_RUNTINE_ERROR("Render loop interrupted due to render failure!"); }
 					m_IsRenderLoopDone = _isRenderLoopDoneV();
 				}
+
+				_destroyV();
+
+				_OUTPUT_EVENT("Succeed to end application.");
+			}
+			catch (const std::runtime_error& e)
+			{
+				_OUTPUT_WARNING(e.what()); exit(EXIT_FAILURE);			//TODO: how to handle exceptions
 			}
 			catch (...)
 			{
-				IsNormalExit = false;
+				_OUTPUT_WARNING("The program is terminated due to unexpected error!"); exit(EXIT_FAILURE);
 			}
-
-			return IsNormalExit;
 		}
 
 	protected:
 		virtual bool _initV()
 		{
-			if (!__initWindow()) { std::cerr << "Fail to initialize renderer due to failure of initializing window!" << std::endl; return false; }
-			if (!__initVulkan()) { std::cerr << "Fail to initialize renderer due to failure of initializing vulkan!" << std::endl; return false; }
+			if (!__initWindow()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing window!"); return false; }
+			if (!__initVulkan()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing vulkan!"); return false; }
 
 			return true;
 		}
@@ -75,7 +73,7 @@ namespace hiveVKT
 			_ASSERTE(m_pWindow && m_pWindow->getGLFWwindow());
 
 			bool IsRenderLoopDone = glfwWindowShouldClose(m_pWindow->getGLFWwindow());
-			if (IsRenderLoopDone) { delete m_pWindow; glfwTerminate(); }
+			if (IsRenderLoopDone) { _SAFE_DELETE(m_pWindow); glfwTerminate(); }
 
 			return IsRenderLoopDone;
 		}
@@ -131,7 +129,7 @@ namespace hiveVKT
 
 		void __createSurface()
 		{
-			if (glfwCreateWindowSurface(m_VkInstance, _window(), nullptr, &m_VkSurface) != VK_SUCCESS) throw std::runtime_error("Failed to create window surface!");
+			if (glfwCreateWindowSurface(m_VkInstance, _window(), nullptr, &m_VkSurface) != VK_SUCCESS) _THROW_RUNTINE_ERROR("Failed to create window surface!");
 		}
 
 		void __pickPhysicalDevice() {}

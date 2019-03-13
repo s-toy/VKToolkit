@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include "Common.hpp"
 
 namespace hiveVKT
 {
@@ -18,7 +19,7 @@ namespace hiveVKT
 	{
 		std::ifstream Fin(vFilename, std::ios::ate | std::ios::binary);
 
-		if (!Fin.is_open()) throw std::runtime_error("Failed to open file!");
+		if (!Fin.is_open()) _THROW_RUNTINE_ERROR("Failed to open file!");
 
 		size_t FileSize = (size_t)Fin.tellg();
 		std::vector<char> Buffer(FileSize);
