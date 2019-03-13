@@ -17,20 +17,6 @@ namespace VulkanApp
 	const bool g_enableValidationLayers = false;
 #endif
 
-	struct SQueueFamilyIndices
-	{
-		std::optional<uint32_t> QueueFamily;
-
-		bool IsComplete() { return QueueFamily.has_value(); }
-	};
-
-	struct SSwapChainSupportDetails
-	{
-		VkSurfaceCapabilitiesKHR SurfaceCapabilities;
-		std::vector<VkSurfaceFormatKHR> SurfaceFormatSet;
-		std::vector<VkPresentModeKHR> PresentModeSet;
-	};
-
 	struct SVertex
 	{
 		glm::vec3 Position;

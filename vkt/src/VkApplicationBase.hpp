@@ -1,21 +1,36 @@
 #pragma once
+#include <optional>
+#define GLFW_INCLUDE_VULKAN
 #include <vulkan/vulkan.hpp>
-#include "Window.hpp"
-#include "Utility.hpp"
+#include <GLFW/glfw3.h>
 #include "Common.hpp"
-#include "VkInstanceCreator.hpp"
-#include "VkDeviceCreator.hpp"
-#include "VkDebugMessenger.hpp"
+#include "VKTExport.hpp"
 
 namespace hiveVKT
 {
 	class CWindow;
+	class CVkDebugMessenger;
 
-	class CVkApplicationBase
+	struct SQueueFamilyIndices
+	{
+		std::optional<uint32_t> QueueFamily;
+		bool IsComplete() { return QueueFamily.has_value(); }
+	};
+
+	struct SSwapChainSupportDetails
+	{
+		vk::SurfaceCapabilitiesKHR SurfaceCapabilities;
+		std::vector<vk::SurfaceFormatKHR> SurfaceFormatSet;
+		std::vector<vk::PresentModeKHR> PresentModeSet;
+	};
+
+	class VKT_DECLSPEC CVkApplicationBase
 	{
 	public:
 		CVkApplicationBase() = default;
 		virtual ~CVkApplicationBase() = default;
+
+		void run();
 
 		void setWindowSize(int vWidth, int vHeight) { m_DisplayInfo.WindowWidth = vWidth; m_DisplayInfo.WindowHeight = vHeight; }
 		void setWindowPos(int vPosX, int vPosY) { m_DisplayInfo.WindowPosX = vPosX; m_DisplayInfo.WindowPosY = vPosY; }
@@ -23,115 +38,59 @@ namespace hiveVKT
 		void setWindowResizable(bool vResizable) { m_DisplayInfo.IsWindowResizable = vResizable; }
 		void setWindowTitle(const std::string& vTitle) { m_DisplayInfo.WindowTitle = vTitle; }
 
-		void run()
-		{
-			try
-			{
-				if (!_initV()) { _THROW_RUNTINE_ERROR("Failed to run application due to failure of initialization!"); }
-
-				_OUTPUT_EVENT("Succeed to init application.");
-
-				while (!m_IsRenderLoopDone)
-				{
-					if (!_renderV()) { _THROW_RUNTINE_ERROR("Render loop interrupted due to render failure!"); }
-					m_IsRenderLoopDone = _isRenderLoopDoneV();
-				}
-
-				_destroyV();
-
-				_OUTPUT_EVENT("Succeed to end application.");
-			}
-			catch (const std::runtime_error& e)
-			{
-				_OUTPUT_WARNING(e.what()); exit(EXIT_FAILURE);			//TODO: how to handle exceptions
-			}
-			catch (...)
-			{
-				_OUTPUT_WARNING("The program is terminated due to unexpected error!"); exit(EXIT_FAILURE);
-			}
-		}
-
 	protected:
-		virtual bool _initV()
-		{
-			if (!__initWindow()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing window!"); return false; }
-			if (!__initVulkan()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing vulkan!"); return false; }
+		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
 
-			return true;
-		}
-
-		virtual bool _renderV()
-		{
-			_handleEventV();
-			glfwPollEvents();
-
-			return true;
-		}
-
-		virtual bool _isRenderLoopDoneV()
-		{
-			_ASSERTE(m_pWindow && m_pWindow->getGLFWwindow());
-
-			bool IsRenderLoopDone = glfwWindowShouldClose(m_pWindow->getGLFWwindow());
-			if (IsRenderLoopDone) { _SAFE_DELETE(m_pWindow); glfwTerminate(); }
-
-			return IsRenderLoopDone;
-		}
-
+		virtual bool _initV();
+		virtual bool _renderV();
+		virtual bool _isRenderLoopDoneV();
 		virtual void _handleEventV() {}
+		virtual void _destroyV();
 
-		virtual void _destroyV()
-		{
-			m_DebugMessenger.destroyDebugMessenger(m_VkInstance);
-			m_VkInstance.destroySurfaceKHR(m_VkSurface);
-			m_VkInstance.destroy();
+		GLFWwindow* _window() const;
 
-			_SAFE_DELETE(m_pWindow);
-			glfwTerminate();
-		}
+		vk::Instance _instance()				const { return m_VkInstance; }
+		vk::SurfaceKHR _surface()				const { return m_VkSurface; }
+		vk::PhysicalDevice _physicalDevice()	const { return m_VkPhysicalDevice; }
+		vk::Device _device()					const { return m_VkDevice; }
 
-		GLFWwindow* _window() const { return m_pWindow->getGLFWwindow(); }
-
-		vk::Instance _instance() const { return m_VkInstance; }
-		vk::SurfaceKHR _surface() const { return m_VkSurface; }
+		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
+		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_SwapChainSupportDetails; }
 
 	private:
+		CVkDebugMessenger* m_pDebugMessenger = nullptr;
 		CWindow* m_pWindow = nullptr;
-		SDisplayInfo m_DisplayInfo = {};
 
-		CVkDebugMessenger m_DebugMessenger;
+		SDisplayInfo m_DisplayInfo = {};
+		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
+		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 
 		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
 
+		std::vector<const char*> m_EnabledExtensionsAtDeviceLevel;
+		std::vector<const char*> m_EnabledLayersAtDeviceLevel;
+
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;
+		vk::Device m_VkDevice;
 
 		bool m_IsInitialized = false;
 		bool m_IsRenderLoopDone = false;
 
-		bool __initWindow()
-		{
-			_ASSERTE(!m_pWindow);
-			m_pWindow = new CWindow;
-			return m_pWindow->init(m_DisplayInfo);
-		}
+		bool __initWindow();
+		bool __initVulkan();
 
-		bool __initVulkan()
-		{
-			__createInstance();
-			__createSurface();
-			__pickPhysicalDevice();
+		void __prepareLayersAndExtensions();
+		void __createInstance();
+		void __createDebugMessenger();
+		void __createSurface();
+		void __pickPhysicalDevice();
+		void __createDevice();
 
-			m_DebugMessenger.setupDebugMessenger(m_VkInstance);
-		}
+		bool __isPhysicalDeviceSuitable(const vk::PhysicalDevice& vPhysicalDevice);
+		bool __checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& vPhysicalDevice)const;
 
-		void __createInstance() { hiveVKT::CVkInstanceCreator InstanceCreator; m_VkInstance = InstanceCreator.create(); }
-
-		void __createSurface()
-		{
-			if (glfwCreateWindowSurface(m_VkInstance, _window(), nullptr, &m_VkSurface) != VK_SUCCESS) _THROW_RUNTINE_ERROR("Failed to create window surface!");
-		}
-
-		void __pickPhysicalDevice() {}
+		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
+		SSwapChainSupportDetails __queryPhysicalDeviceSwapChainSupport(const vk::PhysicalDevice& vPhysicalDevice);
 	};
 }

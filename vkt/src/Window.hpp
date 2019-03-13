@@ -4,17 +4,6 @@
 
 namespace hiveVKT
 {
-	struct SDisplayInfo
-	{
-		int WindowWidth = 0;
-		int WindowHeight = 0;
-		int WindowPosX = 0;
-		int WindowPosY = 0;
-		std::string WindowTitle = "";
-		bool IsWindowFullScreen = false;
-		bool IsWindowResizable = false;
-	};
-
 	class CWindow
 	{
 	public:

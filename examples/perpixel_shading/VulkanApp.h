@@ -12,9 +12,6 @@ namespace VulkanApp
 		virtual bool _renderV() override;
 		virtual void _destroyV() override;
 
-		void __prepareLayersAndExtensions();
-		void __pickPhysicalDevice();
-		void __createDevice();
 		void __retrieveDeviceQueue();
 		void __createSwapChain();
 		void __retrieveSwapChainImagesAndCreateImageViews();
@@ -43,14 +40,9 @@ namespace VulkanApp
 		void __updateUniformBuffer(uint32_t vImageIndex);
 		void __loadModel();
 
-		bool __checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& vPhysicalDevice)const;
-		bool __isPhysicalDeviceSuitable(const VkPhysicalDevice& vPhysicalDevice)const;
-
-		SQueueFamilyIndices __findRequiredQueueFamilies(const VkPhysicalDevice& vPhysicalDevice)const;
-		SSwapChainSupportDetails __queryPhysicalDeviceSwapChainSupport(const VkPhysicalDevice& vPhysicalDevice)const;
-		VkSurfaceFormatKHR __determineSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
-		VkPresentModeKHR __determinePresentMode(const std::vector<VkPresentModeKHR>& vCandidatePresentModeSet)const;
-		VkExtent2D __determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
+		vk::SurfaceFormatKHR __determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
+		vk::PresentModeKHR __determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const;
+		VkExtent2D __determineSwapChainExtent(const vk::SurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
 		uint32_t __findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty);
@@ -63,8 +55,6 @@ namespace VulkanApp
 
 		GLFWwindow* m_pGLFWWindow = nullptr;
 
-		VkPhysicalDevice m_pPhysicalDevice = VK_NULL_HANDLE;
-		vk::Device m_Device;
 		VkQueue m_pQueue = VK_NULL_HANDLE;
 		VkSwapchainKHR m_pSwapChain = VK_NULL_HANDLE;
 		VkRenderPass m_pRenderPass = VK_NULL_HANDLE;
@@ -100,9 +90,6 @@ namespace VulkanApp
 		std::vector<VkSemaphore> m_ImageAvailableSemaphoreSet;
 		std::vector<VkSemaphore> m_RenderFinishedSemaphoreSet;
 		std::vector<VkFence> m_InFlightFenceSet;
-
-		std::vector<const char*> m_enabledLayersAtDeviceLevel;
-		std::vector<const char*> m_enabledExtensionsAtDeviceLevel;
 
 		std::vector<SVertex> m_VertexData;
 		std::vector<uint32_t> m_IndexData;

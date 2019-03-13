@@ -11,6 +11,7 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkGraphicsPipelineCreator.hpp"
 #include "VkShaderModuleCreator.hpp"
+#include "VkDeviceCreator.hpp"
 
 using namespace hiveVKT;
 
@@ -20,10 +21,8 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 {
 	if (!CVkApplicationBase::_initV()) return false;
 
-	__prepareLayersAndExtensions();
+	m_SampleCount = __getMaxSampleCount();
 
-	__pickPhysicalDevice();
-	__createDevice();
 	__retrieveDeviceQueue();
 	__createSwapChain();
 	__retrieveSwapChainImagesAndCreateImageViews();
@@ -54,10 +53,10 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 {
 	if (!CVkApplicationBase::_renderV()) return false;
 
-	vkWaitForFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkWaitForFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t ImageIndex = 0;
-	VkResult Result = vkAcquireNextImageKHR(m_Device, m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
+	VkResult Result = vkAcquireNextImageKHR(_device(), m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 	if (Result == VK_ERROR_OUT_OF_DATE_KHR)
 		throw std::runtime_error("Failed to acquire swap chain image!");
 	else if (Result != VK_SUCCESS && Result != VK_SUBOPTIMAL_KHR)
@@ -77,7 +76,7 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 	VkSemaphore SignalSemaphores[] = { m_RenderFinishedSemaphoreSet[m_CurrentFrame] };
 	SubmitInfo.signalSemaphoreCount = 1;
 	SubmitInfo.pSignalSemaphores = SignalSemaphores;
-	vkResetFences(m_Device, 1, &m_InFlightFenceSet[m_CurrentFrame]);
+	vkResetFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame]);
 	if (vkQueueSubmit(m_pQueue, 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("Failed to submit draw command buffer!");
 
@@ -105,128 +104,76 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 //Function:
 void VulkanApp::CPerpixelShadingApp::_destroyV()
 {
-	m_Device.waitIdle();
+	_device().waitIdle();
 
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
-		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphoreSet[i], nullptr);
-		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphoreSet[i], nullptr);
-		vkDestroyFence(m_Device, m_InFlightFenceSet[i], nullptr);
+		vkDestroySemaphore(_device(), m_ImageAvailableSemaphoreSet[i], nullptr);
+		vkDestroySemaphore(_device(), m_RenderFinishedSemaphoreSet[i], nullptr);
+		vkDestroyFence(_device(), m_InFlightFenceSet[i], nullptr);
 	}
 
-	vkDestroyDescriptorPool(m_Device, m_pDescriptorPool, nullptr);
+	vkDestroyDescriptorPool(_device(), m_pDescriptorPool, nullptr);
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		vkDestroyBuffer(m_Device, m_UniformBufferSet[i], nullptr);
-		vkFreeMemory(m_Device, m_UniformBufferDeviceMemorySet[i], nullptr);
+		vkDestroyBuffer(_device(), m_UniformBufferSet[i], nullptr);
+		vkFreeMemory(_device(), m_UniformBufferDeviceMemorySet[i], nullptr);
 	}
 
-	vkDestroyBuffer(m_Device, m_pIndexBuffer, nullptr);
-	vkFreeMemory(m_Device, m_pIndexBufferMemory, nullptr);
-	vkDestroyBuffer(m_Device, m_pVertexBuffer, nullptr);
-	vkFreeMemory(m_Device, m_pVertexBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(_device(), m_pIndexBuffer, nullptr);
+	vkFreeMemory(_device(), m_pIndexBufferMemory, nullptr);
+	vkDestroyBuffer(_device(), m_pVertexBuffer, nullptr);
+	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory, nullptr);
 
-	vkDestroySampler(m_Device, m_pTextureSampler, nullptr);
-	vkDestroyImageView(m_Device, m_pTextureImageView, nullptr);
-	vkDestroyImage(m_Device, m_pTextureImage, nullptr);
-	vkFreeMemory(m_Device, m_pTextureImageDeviceMemory, nullptr);
+	vkDestroySampler(_device(), m_pTextureSampler, nullptr);
+	vkDestroyImageView(_device(), m_pTextureImageView, nullptr);
+	vkDestroyImage(_device(), m_pTextureImage, nullptr);
+	vkFreeMemory(_device(), m_pTextureImageDeviceMemory, nullptr);
 
 	for (auto i = 0; i < m_FramebufferSet.size(); ++i)
-		vkDestroyFramebuffer(m_Device, m_FramebufferSet[i], nullptr);
+		vkDestroyFramebuffer(_device(), m_FramebufferSet[i], nullptr);
 
-	vkDestroyImageView(m_Device, m_pDepthImageView, nullptr);
-	vkDestroyImage(m_Device, m_pDepthImage, nullptr);
-	vkFreeMemory(m_Device, m_pDepthImageDeviceMemory, nullptr);
+	vkDestroyImageView(_device(), m_pDepthImageView, nullptr);
+	vkDestroyImage(_device(), m_pDepthImage, nullptr);
+	vkFreeMemory(_device(), m_pDepthImageDeviceMemory, nullptr);
 
-	vkDestroyImageView(m_Device, m_pMsaaImageView, nullptr);
-	vkDestroyImage(m_Device, m_pMsaaImage, nullptr);
-	vkFreeMemory(m_Device, m_pMsaaImageDeviceMemory, nullptr);
+	vkDestroyImageView(_device(), m_pMsaaImageView, nullptr);
+	vkDestroyImage(_device(), m_pMsaaImage, nullptr);
+	vkFreeMemory(_device(), m_pMsaaImageDeviceMemory, nullptr);
 
-	vkDestroyCommandPool(m_Device, m_pCommandPool, nullptr);
+	vkDestroyCommandPool(_device(), m_pCommandPool, nullptr);
 
-	vkDestroyPipeline(m_Device, m_pGraphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(m_Device, m_pPipelineLayout, nullptr);
-	vkDestroyDescriptorSetLayout(m_Device, m_pDescriptorSetLayout, nullptr);
-	vkDestroyRenderPass(m_Device, m_pRenderPass, nullptr);
+	vkDestroyPipeline(_device(), m_pGraphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(_device(), m_pPipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(_device(), m_pDescriptorSetLayout, nullptr);
+	vkDestroyRenderPass(_device(), m_pRenderPass, nullptr);
 
 	for (auto i = 0; i < m_SwapChainImageViewSet.size(); ++i)
-		vkDestroyImageView(m_Device, m_SwapChainImageViewSet[i], nullptr);
-	vkDestroySwapchainKHR(m_Device, m_pSwapChain, nullptr);
+		vkDestroyImageView(_device(), m_SwapChainImageViewSet[i], nullptr);
+	vkDestroySwapchainKHR(_device(), m_pSwapChain, nullptr);
 
-	vkDestroyDevice(m_Device, nullptr);
+	vkDestroyDevice(_device(), nullptr);
 
 	CVkApplicationBase::_destroyV();
 }
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__prepareLayersAndExtensions()
-{
-	if (g_enableValidationLayers)
-	{
-		m_enabledLayersAtDeviceLevel.emplace_back("VK_LAYER_LUNARG_standard_validation");
-	}
-
-	m_enabledExtensionsAtDeviceLevel.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__pickPhysicalDevice()
-{
-	uint32_t PhysicalDeviceCount = 0;
-	vkEnumeratePhysicalDevices(_instance(), &PhysicalDeviceCount, nullptr);
-	std::vector<VkPhysicalDevice> PhysicalDeviceSet(PhysicalDeviceCount);
-	vkEnumeratePhysicalDevices(_instance(), &PhysicalDeviceCount, PhysicalDeviceSet.data());
-
-	for (auto PhysicalDevice : PhysicalDeviceSet)
-	{
-		if (__isPhysicalDeviceSuitable(PhysicalDevice))
-		{
-			m_pPhysicalDevice = PhysicalDevice;
-			m_SampleCount = __getMaxSampleCount();
-			break;
-		}
-	}
-
-	if (m_pPhysicalDevice == VK_NULL_HANDLE)
-		throw std::runtime_error("Failed to find a suitable GPU!");
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__createDevice()
-{
-	hiveVKT::CVkDeviceCreator DeviceCreator;
-
-	SQueueFamilyIndices QueueFamilyIndices = __findRequiredQueueFamilies(m_pPhysicalDevice);
-	DeviceCreator.addQueue(QueueFamilyIndices.QueueFamily.value(), 1, 1.0f);
-
-	vk::PhysicalDeviceFeatures PhysicalDeviceFeatures;
-	PhysicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
-	PhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
-	DeviceCreator.setPhysicalDeviceFeatures(&PhysicalDeviceFeatures);
-
-	m_Device = DeviceCreator.create(m_pPhysicalDevice);
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__retrieveDeviceQueue()
 {
-	SQueueFamilyIndices QueueFamilyIndices = __findRequiredQueueFamilies(m_pPhysicalDevice);
+	SQueueFamilyIndices QueueFamilyIndices = _requiredQueueFamilyIndices();
 
-	vkGetDeviceQueue(m_Device, QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
+	vkGetDeviceQueue(_device(), QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
 }
 
 //************************************************************************************
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 {
-	SSwapChainSupportDetails SwapChainSupportDetails = __queryPhysicalDeviceSwapChainSupport(m_pPhysicalDevice);
-	VkSurfaceFormatKHR SurfaceFormat = __determineSurfaceFormat(SwapChainSupportDetails.SurfaceFormatSet);
-	VkPresentModeKHR PresentMode = __determinePresentMode(SwapChainSupportDetails.PresentModeSet);
+	SSwapChainSupportDetails SwapChainSupportDetails = _swapChainSupportDetails();
+	vk::SurfaceFormatKHR SurfaceFormat = __determineSurfaceFormat(SwapChainSupportDetails.SurfaceFormatSet);
+	vk::PresentModeKHR PresentMode = __determinePresentMode(SwapChainSupportDetails.PresentModeSet);
 	VkExtent2D Extent = __determineSwapChainExtent(SwapChainSupportDetails.SurfaceCapabilities);
 	uint32_t ImageCount = SwapChainSupportDetails.SurfaceCapabilities.minImageCount + 1;
 	if (SwapChainSupportDetails.SurfaceCapabilities.maxImageCount > 0 && ImageCount > SwapChainSupportDetails.SurfaceCapabilities.maxImageCount)
@@ -235,8 +182,8 @@ void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 	VkSwapchainCreateInfoKHR SwapchainCreateInfo = {};
 	SwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	SwapchainCreateInfo.surface = _surface();
-	SwapchainCreateInfo.imageFormat = SurfaceFormat.format;
-	SwapchainCreateInfo.imageColorSpace = SurfaceFormat.colorSpace;
+	SwapchainCreateInfo.imageFormat = (VkFormat)SurfaceFormat.format;
+	SwapchainCreateInfo.imageColorSpace = (VkColorSpaceKHR)SurfaceFormat.colorSpace;
 	SwapchainCreateInfo.imageExtent = Extent;
 	SwapchainCreateInfo.imageArrayLayers = 1;
 	SwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -244,16 +191,16 @@ void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 	SwapchainCreateInfo.queueFamilyIndexCount = 0;
 	SwapchainCreateInfo.pQueueFamilyIndices = nullptr;
 	SwapchainCreateInfo.minImageCount = ImageCount;
-	SwapchainCreateInfo.presentMode = PresentMode;
-	SwapchainCreateInfo.preTransform = SwapChainSupportDetails.SurfaceCapabilities.currentTransform;
+	SwapchainCreateInfo.presentMode = (VkPresentModeKHR)PresentMode;
+	SwapchainCreateInfo.preTransform = (VkSurfaceTransformFlagBitsKHR)SwapChainSupportDetails.SurfaceCapabilities.currentTransform;
 	SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	SwapchainCreateInfo.clipped = VK_TRUE;
 	SwapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	if (vkCreateSwapchainKHR(m_Device, &SwapchainCreateInfo, nullptr, &m_pSwapChain) != VK_SUCCESS)
+	if (vkCreateSwapchainKHR(_device(), &SwapchainCreateInfo, nullptr, &m_pSwapChain) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create swap chain!");
 
-	m_SwapChainImageFormat = SurfaceFormat.format;
+	m_SwapChainImageFormat = (VkFormat)SurfaceFormat.format;
 	m_SwapChainExtent = Extent;
 }
 
@@ -262,9 +209,9 @@ void VulkanApp::CPerpixelShadingApp::__createSwapChain()
 void VulkanApp::CPerpixelShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
 {
 	uint32_t SwapChainImageCount = 0;
-	vkGetSwapchainImagesKHR(m_Device, m_pSwapChain, &SwapChainImageCount, nullptr);
+	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, nullptr);
 	m_SwapChainImageSet.resize(SwapChainImageCount);
-	vkGetSwapchainImagesKHR(m_Device, m_pSwapChain, &SwapChainImageCount, m_SwapChainImageSet.data());
+	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, m_SwapChainImageSet.data());
 
 	m_SwapChainImageViewSet.resize(SwapChainImageCount);
 
@@ -350,7 +297,7 @@ void VulkanApp::CPerpixelShadingApp::__createRenderPass()
 	RenderPassCreateInfo.subpassCount = 1;
 	RenderPassCreateInfo.pSubpasses = &SubpassDescription;
 
-	if (vkCreateRenderPass(m_Device, &RenderPassCreateInfo, nullptr, &m_pRenderPass) != VK_SUCCESS)
+	if (vkCreateRenderPass(_device(), &RenderPassCreateInfo, nullptr, &m_pRenderPass) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create render pass!");
 }
 
@@ -379,7 +326,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSetLayout()
 	DescriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(Bindings.size());
 	DescriptorSetLayoutCreateInfo.pBindings = Bindings.data();
 
-	if (vkCreateDescriptorSetLayout(m_Device, &DescriptorSetLayoutCreateInfo, nullptr, &m_pDescriptorSetLayout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(_device(), &DescriptorSetLayoutCreateInfo, nullptr, &m_pDescriptorSetLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor set layout!");
 }
 
@@ -394,7 +341,7 @@ void VulkanApp::CPerpixelShadingApp::__createPipelineLayout()
 	PipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 	PipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-	if (vkCreatePipelineLayout(m_Device, &PipelineLayoutCreateInfo, nullptr, &m_pPipelineLayout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(_device(), &PipelineLayoutCreateInfo, nullptr, &m_pPipelineLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create pipeline layout!");
 }
 
@@ -403,8 +350,8 @@ void VulkanApp::CPerpixelShadingApp::__createPipelineLayout()
 void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 {
 	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
-	auto VertexShaderModule = ShaderModuleCreator.createUnique(m_Device, "vert.spv");
-	auto FragmentShaderModule = ShaderModuleCreator.createUnique(m_Device, "frag.spv");
+	auto VertexShaderModule = ShaderModuleCreator.createUnique(_device(), "vert.spv");
+	auto FragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "frag.spv");
 
 	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
 
@@ -423,20 +370,20 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	PipelineCreator.setDepthTestEnable(VK_TRUE);
 	PipelineCreator.setDepthCompareOp(vk::CompareOp::eLess);
 
-	m_pGraphicsPipeline = PipelineCreator.create(m_Device, m_pPipelineLayout, nullptr, m_pRenderPass);
+	m_pGraphicsPipeline = PipelineCreator.create(_device(), m_pPipelineLayout, nullptr, m_pRenderPass);
 }
 
 //************************************************************************************
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createCommandPool()
 {
-	SQueueFamilyIndices QueueFamilyIndices = __findRequiredQueueFamilies(m_pPhysicalDevice);
+	SQueueFamilyIndices QueueFamilyIndices = _requiredQueueFamilyIndices();
 
 	VkCommandPoolCreateInfo CommandPoolCreateInfo = {};
 	CommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	CommandPoolCreateInfo.queueFamilyIndex = QueueFamilyIndices.QueueFamily.value();
 
-	if (vkCreateCommandPool(m_Device, &CommandPoolCreateInfo, nullptr, &m_pCommandPool) != VK_SUCCESS)
+	if (vkCreateCommandPool(_device(), &CommandPoolCreateInfo, nullptr, &m_pCommandPool) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create command pool!");
 }
 
@@ -480,21 +427,21 @@ void VulkanApp::CPerpixelShadingApp::__createImage(uint32_t vImageWidth, uint32_
 	ImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	ImageCreateInfo.samples = vSampleCount;
 
-	if (vkCreateImage(m_Device, &ImageCreateInfo, nullptr, &vImage) != VK_SUCCESS)
+	if (vkCreateImage(_device(), &ImageCreateInfo, nullptr, &vImage) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create image!");
 
 	VkMemoryRequirements MemoryRequirements = {};
-	vkGetImageMemoryRequirements(m_Device, vImage, &MemoryRequirements);
+	vkGetImageMemoryRequirements(_device(), vImage, &MemoryRequirements);
 
 	VkMemoryAllocateInfo MemoryAllocateInfo = {};
 	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperties);
 
-	if (vkAllocateMemory(m_Device, &MemoryAllocateInfo, nullptr, &vImageDeviceMemory) != VK_SUCCESS)
+	if (vkAllocateMemory(_device(), &MemoryAllocateInfo, nullptr, &vImageDeviceMemory) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate memory for image!");
 
-	vkBindImageMemory(m_Device, vImage, vImageDeviceMemory, 0);
+	vkBindImageMemory(_device(), vImage, vImageDeviceMemory, 0);
 }
 
 //************************************************************************************
@@ -587,7 +534,7 @@ void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 		FramebufferCreateInfo.width = m_SwapChainExtent.width;
 		FramebufferCreateInfo.height = m_SwapChainExtent.height;
 
-		if (vkCreateFramebuffer(m_Device, &FramebufferCreateInfo, nullptr, &m_FramebufferSet[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_FramebufferSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create frame buffer!");
 	}
 }
@@ -610,9 +557,9 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 
 	__createBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 	void* Data = nullptr;
-	vkMapMemory(m_Device, pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
+	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
 	memcpy(Data, Pixels, static_cast<size_t>(ImageSize));
-	vkUnmapMemory(m_Device, pStagingBufferDeviceMemory);
+	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
 
 	stbi_image_free(Pixels);
 
@@ -621,8 +568,8 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 	__copyBuffer2Image(pStagingBuffer, m_pTextureImage, static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight));
 	__generateMipmaps(m_pTextureImage, VK_FORMAT_R8G8B8A8_UNORM, TextureWidth, TextureHeight, m_MipmapLevel);
 
-	vkDestroyBuffer(m_Device, pStagingBuffer, nullptr);
-	vkFreeMemory(m_Device, pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
+	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
 
 	m_pTextureImageView = __createImageView(m_pTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_MipmapLevel);
 
@@ -644,7 +591,7 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 	SamplerCreateInfo.maxLod = static_cast<float>(m_MipmapLevel);
 	SamplerCreateInfo.minLod = 0.0f;
 
-	if (vkCreateSampler(m_Device, &SamplerCreateInfo, nullptr, &m_pTextureSampler) != VK_SUCCESS)
+	if (vkCreateSampler(_device(), &SamplerCreateInfo, nullptr, &m_pTextureSampler) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create texture sampler!");
 }
 
@@ -653,7 +600,7 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 void VulkanApp::CPerpixelShadingApp::__generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel)
 {
 	VkFormatProperties FormatProperties;
-	vkGetPhysicalDeviceFormatProperties(m_pPhysicalDevice, vImageFormat, &FormatProperties);
+	vkGetPhysicalDeviceFormatProperties(_physicalDevice(), vImageFormat, &FormatProperties);
 	if (!(FormatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		throw std::runtime_error("Texture image format does not support linear blitting!");
 
@@ -730,21 +677,21 @@ void VulkanApp::CPerpixelShadingApp::__createBuffer(VkDeviceSize vBufferSize, Vk
 	BufferCreateInfo.usage = vBufferUsage;
 	BufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(m_Device, &BufferCreateInfo, nullptr, &voBuffer) != VK_SUCCESS)
+	if (vkCreateBuffer(_device(), &BufferCreateInfo, nullptr, &voBuffer) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create vertex buffer!");
 
 	VkMemoryRequirements MemoryRequirements = {};
-	vkGetBufferMemoryRequirements(m_Device, voBuffer, &MemoryRequirements);
+	vkGetBufferMemoryRequirements(_device(), voBuffer, &MemoryRequirements);
 
 	VkMemoryAllocateInfo MemoryAllocateInfo = {};
 	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperty);
 
-	if (vkAllocateMemory(m_Device, &MemoryAllocateInfo, nullptr, &voBufferDeviceMemory) != VK_SUCCESS)
+	if (vkAllocateMemory(_device(), &MemoryAllocateInfo, nullptr, &voBufferDeviceMemory) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate memory for vertex buffer!");
 
-	vkBindBufferMemory(m_Device, voBuffer, voBufferDeviceMemory, 0);
+	vkBindBufferMemory(_device(), voBuffer, voBufferDeviceMemory, 0);
 }
 
 //************************************************************************************
@@ -781,16 +728,16 @@ void VulkanApp::CPerpixelShadingApp::__createVertexBuffer()
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
 	void* Data = nullptr;
-	vkMapMemory(m_Device, pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, m_VertexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(m_Device, pStagingBufferDeviceMemory);
+	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pVertexBuffer, m_pVertexBufferDeviceMemory);
 
 	__copyBuffer(pStagingBuffer, m_pVertexBuffer, BufferSize);
 
-	vkDestroyBuffer(m_Device, pStagingBuffer, nullptr);
-	vkFreeMemory(m_Device, pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
+	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
 }
 
 //************************************************************************************
@@ -805,16 +752,16 @@ void VulkanApp::CPerpixelShadingApp::__createIndexBuffer()
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
 	void* Data = nullptr;
-	vkMapMemory(m_Device, pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, m_IndexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(m_Device, pStagingBufferDeviceMemory);
+	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pIndexBuffer, m_pIndexBufferMemory);
 
 	__copyBuffer(pStagingBuffer, m_pIndexBuffer, BufferSize);
 
-	vkDestroyBuffer(m_Device, pStagingBuffer, nullptr);
-	vkFreeMemory(m_Device, pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
+	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
 }
 
 //************************************************************************************
@@ -848,7 +795,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorPool()
 	DescriptorPoolCreateInfo.pPoolSizes = DescriptorPoolSizeSet.data();
 	DescriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(m_SwapChainImageSet.size());
 
-	if (vkCreateDescriptorPool(m_Device, &DescriptorPoolCreateInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(_device(), &DescriptorPoolCreateInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor pool!");
 }
 
@@ -865,7 +812,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 	DescriptorSetAllocateInfo.pSetLayouts = DescriptorSetLayoutSet.data();
 
 	m_DescriptorSet.resize(m_SwapChainImageSet.size());
-	if (vkAllocateDescriptorSets(m_Device, &DescriptorSetAllocateInfo, m_DescriptorSet.data()) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(_device(), &DescriptorSetAllocateInfo, m_DescriptorSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate descriptor set!");
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
@@ -901,7 +848,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 		WriteDescriptors[1].pTexelBufferView = nullptr;
 		WriteDescriptors[1].pBufferInfo = nullptr;
 
-		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
+		vkUpdateDescriptorSets(_device(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
 	}
 }
 
@@ -917,7 +864,7 @@ void VulkanApp::CPerpixelShadingApp::__createCommandBuffers()
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBufferSet.size());
 
-	if (vkAllocateCommandBuffers(m_Device, &CommandBufferAllocateInfo, m_CommandBufferSet.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(_device(), &CommandBufferAllocateInfo, m_CommandBufferSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate command buffers!");
 
 	for (auto i = 0; i < m_CommandBufferSet.size(); ++i)
@@ -975,10 +922,10 @@ void VulkanApp::CPerpixelShadingApp::__createSyncObjects()
 
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (vkCreateSemaphore(m_Device, &SemaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphoreSet[i]) != VK_SUCCESS || vkCreateSemaphore(m_Device, &SemaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphoreSet[i]) != VK_SUCCESS)
+		if (vkCreateSemaphore(_device(), &SemaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphoreSet[i]) != VK_SUCCESS || vkCreateSemaphore(_device(), &SemaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphoreSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create semaphores!");
 
-		if (vkCreateFence(m_Device, &FenceCreateInfo, nullptr, &m_InFlightFenceSet[i]) != VK_SUCCESS)
+		if (vkCreateFence(_device(), &FenceCreateInfo, nullptr, &m_InFlightFenceSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create fences!");
 	}
 }
@@ -1015,9 +962,9 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 	UBO.Projection[1][1] *= -1;
 
 	void* Data = nullptr;
-	vkMapMemory(m_Device, m_UniformBufferDeviceMemorySet[vImageIndex], 0, sizeof(UBO), 0, &Data);
+	vkMapMemory(_device(), m_UniformBufferDeviceMemorySet[vImageIndex], 0, sizeof(UBO), 0, &Data);
 	memcpy(Data, &UBO, sizeof(UBO));
-	vkUnmapMemory(m_Device, m_UniformBufferDeviceMemorySet[vImageIndex]);
+	vkUnmapMemory(_device(), m_UniformBufferDeviceMemorySet[vImageIndex]);
 }
 
 //************************************************************************************
@@ -1066,98 +1013,14 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 
 //************************************************************************************
 //Function:
-bool VulkanApp::CPerpixelShadingApp::__checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& vPhysicalDevice)const
+vk::SurfaceFormatKHR VulkanApp::CPerpixelShadingApp::__determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
 {
-	uint32_t PhysicalDeviceExtensionCount = 0;
-	vkEnumerateDeviceExtensionProperties(vPhysicalDevice, nullptr, &PhysicalDeviceExtensionCount, nullptr);
-	std::vector<VkExtensionProperties> PhysicalDeviceExtensionPropertySet(PhysicalDeviceExtensionCount);
-	vkEnumerateDeviceExtensionProperties(vPhysicalDevice, nullptr, &PhysicalDeviceExtensionCount, PhysicalDeviceExtensionPropertySet.data());
-
-	std::set<std::string> RequiredPhysicalDeviceExtensionSet(m_enabledExtensionsAtDeviceLevel.begin(), m_enabledExtensionsAtDeviceLevel.end());
-
-	for (const auto& ExtensionProperty : PhysicalDeviceExtensionPropertySet)
-		RequiredPhysicalDeviceExtensionSet.erase(ExtensionProperty.extensionName);
-
-	return RequiredPhysicalDeviceExtensionSet.empty();
-}
-
-//************************************************************************************
-//Function:
-bool VulkanApp::CPerpixelShadingApp::__isPhysicalDeviceSuitable(const VkPhysicalDevice& vPhysicalDevice)const
-{
-	SQueueFamilyIndices QueueFamily = __findRequiredQueueFamilies(vPhysicalDevice);
-	bool IsExtensionSupport = __checkPhysicalDeviceExtensionSupport(vPhysicalDevice);
-	bool IsSwapChainAdequate = false;
-	if (IsExtensionSupport)
-	{
-		SSwapChainSupportDetails SwapChainSupportDetails = __queryPhysicalDeviceSwapChainSupport(vPhysicalDevice);
-		IsSwapChainAdequate = !SwapChainSupportDetails.SurfaceFormatSet.empty() && !SwapChainSupportDetails.PresentModeSet.empty();
-	}
-
-	return QueueFamily.IsComplete() && IsExtensionSupport && IsSwapChainAdequate;
-}
-
-//************************************************************************************
-//Function:
-VulkanApp::SQueueFamilyIndices VulkanApp::CPerpixelShadingApp::__findRequiredQueueFamilies(const VkPhysicalDevice& vPhysicalDevice)const
-{
-	SQueueFamilyIndices RequiredQueueFamilyIndices;
-
-	uint32_t QueueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(vPhysicalDevice, &QueueFamilyCount, nullptr);
-	std::vector<VkQueueFamilyProperties> QueueFamilyPropertySet(QueueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(vPhysicalDevice, &QueueFamilyCount, QueueFamilyPropertySet.data());
-
-	int i = 0;
-	for (const auto& QueueFamilyProperty : QueueFamilyPropertySet)
-	{
-		VkBool32 GraphicsSupport = VK_FALSE, PresentSupport = VK_FALSE, TransferSupport = VK_FALSE;
-
-		GraphicsSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & VK_QUEUE_GRAPHICS_BIT);
-		vkGetPhysicalDeviceSurfaceSupportKHR(vPhysicalDevice, i, _surface(), &PresentSupport);
-		TransferSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & VK_QUEUE_TRANSFER_BIT);
-
-		if (GraphicsSupport && PresentSupport && TransferSupport)
-		{
-			RequiredQueueFamilyIndices.QueueFamily = i;
-			return RequiredQueueFamilyIndices;
-		}
-	}
-
-	return RequiredQueueFamilyIndices;
-}
-
-//************************************************************************************
-//Function:
-VulkanApp::SSwapChainSupportDetails VulkanApp::CPerpixelShadingApp::__queryPhysicalDeviceSwapChainSupport(const VkPhysicalDevice& vPhysicalDevice)const
-{
-	SSwapChainSupportDetails SwapChainSuportDetails;
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vPhysicalDevice, _surface(), &SwapChainSuportDetails.SurfaceCapabilities);
-
-	uint32_t FormatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, _surface(), &FormatCount, nullptr);
-	SwapChainSuportDetails.SurfaceFormatSet.resize(FormatCount);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(vPhysicalDevice, _surface(), &FormatCount, SwapChainSuportDetails.SurfaceFormatSet.data());
-
-	uint32_t PresentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, _surface(), &PresentModeCount, nullptr);
-	SwapChainSuportDetails.PresentModeSet.resize(PresentModeCount);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(vPhysicalDevice, _surface(), &PresentModeCount, SwapChainSuportDetails.PresentModeSet.data());
-
-	return SwapChainSuportDetails;
-}
-
-//************************************************************************************
-//Function:
-VkSurfaceFormatKHR VulkanApp::CPerpixelShadingApp::__determineSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
-{
-	if (vCandidateSurfaceFormatSet.size() == 1 && vCandidateSurfaceFormatSet[0].format == VK_FORMAT_UNDEFINED)
-		return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+	if (vCandidateSurfaceFormatSet.size() == 1 && vCandidateSurfaceFormatSet[0].format == vk::Format::eUndefined)
+		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
 
 	for (const auto& Format : vCandidateSurfaceFormatSet)
 	{
-		if (Format.format == VK_FORMAT_B8G8R8A8_UNORM && Format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		if (Format.format == vk::Format::eB8G8R8A8Unorm && Format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
 			return Format;
 	}
 
@@ -1166,15 +1029,15 @@ VkSurfaceFormatKHR VulkanApp::CPerpixelShadingApp::__determineSurfaceFormat(cons
 
 //************************************************************************************
 //Function:
-VkPresentModeKHR VulkanApp::CPerpixelShadingApp::__determinePresentMode(const std::vector<VkPresentModeKHR>& vCandidatePresentModeSet)const
+vk::PresentModeKHR VulkanApp::CPerpixelShadingApp::__determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const
 {
-	VkPresentModeKHR BestPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+	vk::PresentModeKHR BestPresentMode = vk::PresentModeKHR::eFifo;
 
 	for (const auto& PresentMode : vCandidatePresentModeSet)
 	{
-		if (PresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+		if (PresentMode == vk::PresentModeKHR::eMailbox)
 			return PresentMode;
-		else if (PresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+		else if (PresentMode == vk::PresentModeKHR::eImmediate)
 			BestPresentMode = PresentMode;
 	}
 
@@ -1183,7 +1046,7 @@ VkPresentModeKHR VulkanApp::CPerpixelShadingApp::__determinePresentMode(const st
 
 //************************************************************************************
 //Function:
-VkExtent2D VulkanApp::CPerpixelShadingApp::__determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const
+VkExtent2D VulkanApp::CPerpixelShadingApp::__determineSwapChainExtent(const vk::SurfaceCapabilitiesKHR& vSurfaceCapabilities)const
 {
 	if (vSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
@@ -1223,7 +1086,7 @@ VkImageView VulkanApp::CPerpixelShadingApp::__createImageView(const VkImage& vIm
 	ImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 
 	VkImageView ImageView;
-	if (vkCreateImageView(m_Device, &ImageViewCreateInfo, nullptr, &ImageView) != VK_SUCCESS)
+	if (vkCreateImageView(_device(), &ImageViewCreateInfo, nullptr, &ImageView) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create image view!");
 
 	return ImageView;
@@ -1236,7 +1099,7 @@ VkFormat VulkanApp::CPerpixelShadingApp::__findSupportedFormat(const std::vector
 	for (auto Format : vCandidateFormatSet)
 	{
 		VkFormatProperties FormatProperties;
-		vkGetPhysicalDeviceFormatProperties(m_pPhysicalDevice, Format, &FormatProperties);
+		vkGetPhysicalDeviceFormatProperties(_physicalDevice(), Format, &FormatProperties);
 
 		if (vImageTiling == VK_IMAGE_TILING_LINEAR && ((FormatProperties.linearTilingFeatures&vFormatFeatures) == vFormatFeatures))
 			return Format;
@@ -1253,7 +1116,7 @@ VkFormat VulkanApp::CPerpixelShadingApp::__findSupportedFormat(const std::vector
 uint32_t VulkanApp::CPerpixelShadingApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
 {
 	VkPhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = {};
-	vkGetPhysicalDeviceMemoryProperties(m_pPhysicalDevice, &PhysicalDeviceMemoryProperties);
+	vkGetPhysicalDeviceMemoryProperties(_physicalDevice(), &PhysicalDeviceMemoryProperties);
 
 	for (uint32_t i = 0; i < PhysicalDeviceMemoryProperties.memoryTypeCount; ++i)
 	{
@@ -1269,7 +1132,7 @@ uint32_t VulkanApp::CPerpixelShadingApp::__findMemoryType(uint32_t vMemoryTypeFi
 VkSampleCountFlagBits VulkanApp::CPerpixelShadingApp::__getMaxSampleCount()
 {
 	VkPhysicalDeviceProperties PhysicalDeviceProperties;
-	vkGetPhysicalDeviceProperties(m_pPhysicalDevice, &PhysicalDeviceProperties);
+	vkGetPhysicalDeviceProperties(_physicalDevice(), &PhysicalDeviceProperties);
 
 	VkSampleCountFlags Counts = std::min(PhysicalDeviceProperties.limits.framebufferColorSampleCounts, PhysicalDeviceProperties.limits.framebufferDepthSampleCounts);
 	if (Counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
@@ -1293,7 +1156,7 @@ VkCommandBuffer VulkanApp::CPerpixelShadingApp::__beginSingleTimeCommands()
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
 	VkCommandBuffer CommandBuffer = VK_NULL_HANDLE;
-	vkAllocateCommandBuffers(m_Device, &CommandBufferAllocateInfo, &CommandBuffer);
+	vkAllocateCommandBuffers(_device(), &CommandBufferAllocateInfo, &CommandBuffer);
 
 	VkCommandBufferBeginInfo CommandBufferBeginInfo = {};
 	CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1323,7 +1186,7 @@ void VulkanApp::CPerpixelShadingApp::__endSingleTimeCommands(VkCommandBuffer vCo
 	vkQueueSubmit(m_pQueue, 1, &SubmitInfo, nullptr);
 	vkQueueWaitIdle(m_pQueue);
 
-	vkFreeCommandBuffers(m_Device, m_pCommandPool, 1, &vCommandBuffer);
+	vkFreeCommandBuffers(_device(), m_pCommandPool, 1, &vCommandBuffer);
 }
 
 //************************************************************************************

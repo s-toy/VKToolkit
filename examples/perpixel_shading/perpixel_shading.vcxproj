@@ -141,6 +141,11 @@
     <None Include="FragmentShader.frag" />
     <None Include="VertexShader.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\vkt\vkt.vcxproj">
+      <Project>{b9ae0893-58b4-409d-bcfb-e97748bafa16}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
