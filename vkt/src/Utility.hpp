@@ -10,8 +10,11 @@ namespace hiveVKT
 	std::string format(const char *vFormat, Args... args)
 	{
 		int n = snprintf(nullptr, 0, vFormat, args...);
+		if (0 == n) return "";
+
 		std::string Ret(n, '\0');
 		snprintf(&*Ret.begin(), n + 1, vFormat, args...);
+
 		return Ret;
 	}
 

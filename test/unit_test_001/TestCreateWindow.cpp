@@ -1,7 +1,6 @@
 #include "pch.h"
 #include <windows.h>
 #include "WindowCreator.hpp"
-#include "TestCommon.h"
 
 using namespace hiveVKT;
 

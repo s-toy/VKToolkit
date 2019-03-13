@@ -2,7 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="TestCreateWindow.cpp">
+    <ClCompile Include="TestUtility.cpp">
+      <Filter>test cases</Filter>
+    </ClCompile>
+    <ClCompile Include="TestCreateVkDevice.cpp">
       <Filter>test cases</Filter>
     </ClCompile>
     <ClCompile Include="TestCreateVkInstance.cpp">
@@ -11,7 +14,7 @@
     <ClCompile Include="TestCreateVkShaderModule.cpp">
       <Filter>test cases</Filter>
     </ClCompile>
-    <ClCompile Include="TestCreateVkDevice.cpp">
+    <ClCompile Include="TestCreateWindow.cpp">
       <Filter>test cases</Filter>
     </ClCompile>
   </ItemGroup>
@@ -19,16 +22,16 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="test cases">
-      <UniqueIdentifier>{e7cc3a99-2c32-44bd-aeac-e28f2c94e231}</UniqueIdentifier>
-    </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{36d3dd61-adda-4f3b-b4b5-b71061716e52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test cases">
+      <UniqueIdentifier>{9d6db2e0-892f-4b27-9fdf-2a4d49fd051f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="TestCommon.h">
+    <ClInclude Include="UnitTestCommon.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
