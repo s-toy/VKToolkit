@@ -29,7 +29,8 @@ void hiveVKT::CVkApplicationBase::run()
 	}
 	catch (const std::runtime_error& e)
 	{
-		_OUTPUT_WARNING(e.what()); exit(EXIT_FAILURE);			//TODO: how to handle exceptions
+		_OUTPUT_WARNING(e.what()); 
+		exit(EXIT_FAILURE);			//TODO: how to handle exceptions
 	}
 	catch (...)
 	{

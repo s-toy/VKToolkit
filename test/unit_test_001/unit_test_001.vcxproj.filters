@@ -19,9 +19,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="common">
       <UniqueIdentifier>{36d3dd61-adda-4f3b-b4b5-b71061716e52}</UniqueIdentifier>
     </Filter>
@@ -34,5 +31,8 @@
     <ClInclude Include="UnitTestCommon.h">
       <Filter>common</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

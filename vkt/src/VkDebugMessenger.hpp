@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <vulkan/vulkan.hpp>
 #include "Utility.hpp"
 #include "Common.hpp"

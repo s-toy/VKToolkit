@@ -1,9 +1,8 @@
 #pragma once
 #include <string>
 #include <fstream>
-#include <vector>
-#include "Common.hpp"
 
+//TODO: the functions of this file should be moved to hiveCommon
 namespace hiveVKT
 {
 	template <class ... Args>

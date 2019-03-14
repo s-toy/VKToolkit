@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <GLFW/glfw3.h>
 #include "Common.hpp"
 
@@ -14,9 +13,9 @@ namespace hiveVKT
 	public:
 		GLFWwindow* create(const SDisplayInfo& vDisplayInfo)
 		{
-			if (!vDisplayInfo.isValid()) { _OUTPUT_WARNING("Input parameters for creating window must be valid!"); return nullptr; }
+			_HIVE_EARLY_RETURN(!vDisplayInfo.isValid(), "Input parameters for creating window must be valid!", nullptr);
 
-			if (!glfwInit()) { _OUTPUT_WARNING("Failed to create window due to failure of glfwInit()!"); return nullptr; }
+			_HIVE_EARLY_RETURN(!glfwInit(), "Failed to create window due to failure of glfwInit()!", nullptr);
 
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE, vDisplayInfo.IsWindowResizable);
@@ -28,11 +27,7 @@ namespace hiveVKT
 			auto pWindow = vDisplayInfo.IsWindowFullScreen ? __createFullScreenWindow(vDisplayInfo) : 
 				glfwCreateWindow(vDisplayInfo.WindowWidth, vDisplayInfo.WindowHeight, vDisplayInfo.WindowTitle.c_str(), nullptr, nullptr);
 
-			if (!pWindow)
-			{
-				_OUTPUT_WARNING("Failed to create window due to failure of glfwCreateWindow()!");
-				return nullptr;
-			}
+			_HIVE_EARLY_RETURN(!pWindow, "Failed to create window due to failure of glfwCreateWindow()!", nullptr);
 
 			glfwSetWindowPos(pWindow, vDisplayInfo.WindowPosX, vDisplayInfo.WindowPosY);
 

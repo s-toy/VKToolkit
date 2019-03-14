@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "Utility.hpp"
+#include "Common.hpp"
 
 namespace hiveVKT
 {
