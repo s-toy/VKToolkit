@@ -5,7 +5,7 @@ using namespace hiveVKT;
 
 //*******************************************************************************
 //TEST POINT: To verify that the hiveVKT::format function can return an expected string.
-TEST(Test_StringFormatting, Format)
+TEST(Test_Utility, StringFormatting)
 {
 	EXPECT_EQ(format(nullptr), std::string{});
 	EXPECT_EQ(format(""), "");

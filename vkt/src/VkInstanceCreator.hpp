@@ -70,7 +70,10 @@ namespace hiveVKT
 			if (!m_EnableDefaultLayersAndExtensions) return;
 
 			uint32_t GLFWExtensionCount = 0;
+
+			//HACK: glfw functions should not be called inside this class.
 			const char** pGLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
+			_ASSERT_EXPR(pGLFWExtensions, "glfwGetRequiredInstanceExtensions() failed, make sure that glfwInit() has been called before!");
 
 			auto Extensions = std::vector<const char*>(pGLFWExtensions, pGLFWExtensions + GLFWExtensionCount);
 			m_InstanceExtensionSet.insert(m_InstanceExtensionSet.end(), Extensions.begin(), Extensions.end());
@@ -81,7 +84,7 @@ namespace hiveVKT
 			m_InstanceExtensionSet.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
 			if (!__checkInstanceLayersSupport()) _THROW_RUNTINE_ERROR("Not all requested instance layers are available.");
-			//TODO:是否需要检查Extentions是否可用
+			//TODO: Is it necessary to check if the required instance extensions are available?
 		#endif
 		}
 
