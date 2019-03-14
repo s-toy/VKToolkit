@@ -16,6 +16,7 @@ protected:
 	{
 		ASSERT_NO_THROW(m_DebugMessenger.destroyDebugMessenger(m_VkInstance));
 		ASSERT_NO_THROW(m_VkInstance.destroy());
+		glfwTerminate();
 	}
 
 	vk::Instance m_VkInstance;

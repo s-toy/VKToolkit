@@ -7,7 +7,7 @@
 namespace hiveVKT
 {
 	template <class ... Args>
-	std::string format(const char *vFormat, Args... args)
+	static std::string format(const char *vFormat, Args... args)
 	{
 		if (nullptr == vFormat) return std::string{};
 
@@ -20,19 +20,23 @@ namespace hiveVKT
 		return Ret;
 	}
 
-	static std::vector<char> readFile(const std::string& vFilename)
+	template<typename T>
+	static bool readFile(const std::string& vFilename, T& voBuffer)
 	{
 		std::ifstream Fin(vFilename, std::ios::ate | std::ios::binary);
-
-		if (!Fin.is_open()) _THROW_RUNTINE_ERROR("Failed to open file!");
+		if (!Fin.is_open()) return false;
 
 		size_t FileSize = (size_t)Fin.tellg();
-		std::vector<char> Buffer(FileSize);
+
+		using value_type = typename T::value_type;
+		size_t ValueSize = sizeof(value_type);
+		size_t BufferSize = (FileSize + ValueSize - 1) / ValueSize;
+		voBuffer.resize(BufferSize);
 
 		Fin.seekg(0);
-		Fin.read(Buffer.data(), FileSize);
+		Fin.read(reinterpret_cast<char*>(voBuffer.data()), FileSize);
 		Fin.close();
 
-		return Buffer;
+		return true;
 	}
 }

@@ -15,3 +15,10 @@ TEST(Test_Utility, StringFormatting)
 	EXPECT_EQ(format("%s %i!", "hello", 9102), "hello 9102!");
 	EXPECT_EQ(format("%.2f", 3.1415926), "3.14");
 }
+
+//*******************************************************************************
+//TEST POINT:
+TEST(Test_Utility, ReadFile)
+{
+	//TODO: 
+}

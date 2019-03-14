@@ -6,31 +6,40 @@ namespace hiveVKT
 {
 	class CVkShaderModuleCreator
 	{
+		using SprivCodeType = std::vector<uint32_t>;
+
 	public:
-		vk::ShaderModule create(const vk::Device& vDevice, const std::vector<char>& vSpvCode)
+		vk::ShaderModule create(const vk::Device& vDevice, const SprivCodeType& vSpvCode)
 		{
 			__prepareShaderModuleCreateInfo(vSpvCode);
 			return vDevice.createShaderModule(m_ShaderModuleCreateInfo, nullptr);
 		}
 
-		vk::ShaderModule create(const vk::Device& vDevice, const std::string& vSpvFileName) { return create(vDevice, readFile(vSpvFileName)); }
+		vk::ShaderModule create(const vk::Device& vDevice, const std::string& vSpvFileName) { return create(vDevice, __readSpvFile(vSpvFileName)); }
 
-		vk::UniqueShaderModule createUnique(const vk::Device& vDevice, const std::vector<char>& vSpvCode)
+		vk::UniqueShaderModule createUnique(const vk::Device& vDevice, const SprivCodeType& vSpvCode)
 		{
 			__prepareShaderModuleCreateInfo(vSpvCode);
 			return vDevice.createShaderModuleUnique(m_ShaderModuleCreateInfo, nullptr);
 		}
 
-		vk::UniqueShaderModule createUnique(const vk::Device& vDevice, const std::string& vSpvFileName) { return createUnique(vDevice, readFile(vSpvFileName)); }
+		vk::UniqueShaderModule createUnique(const vk::Device& vDevice, const std::string& vSpvFileName) { return createUnique(vDevice, __readSpvFile(vSpvFileName)); }
 
 	private:
 		vk::ShaderModuleCreateInfo m_ShaderModuleCreateInfo;
 
-		void __prepareShaderModuleCreateInfo(const std::vector<char>& vSpvCode)
+		void __prepareShaderModuleCreateInfo(const SprivCodeType& vSpvCode)
 		{
 			_ASSERTE(!vSpvCode.empty());
-			m_ShaderModuleCreateInfo.codeSize = vSpvCode.size();
-			m_ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vSpvCode.data());
+			m_ShaderModuleCreateInfo.codeSize = vSpvCode.size() * sizeof(SprivCodeType::value_type);
+			m_ShaderModuleCreateInfo.pCode = vSpvCode.data();
+		}
+
+		SprivCodeType __readSpvFile(const std::string& vSpvFileName)
+		{
+			SprivCodeType Buffer;
+			if (!readFile(vSpvFileName, Buffer)) _THROW_RUNTINE_ERROR(format("Failed to read file: %s", vSpvFileName.c_str()));
+			return Buffer;
 		}
 	};
 }
