@@ -12,6 +12,7 @@
 #include "VkGraphicsPipelineCreator.hpp"
 #include "VkShaderModuleCreator.hpp"
 #include "VkDeviceCreator.hpp"
+#include "VkRenderPassCreator.hpp"
 
 using namespace hiveVKT;
 
@@ -153,8 +154,6 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 		vkDestroyImageView(_device(), m_SwapChainImageViewSet[i], nullptr);
 	vkDestroySwapchainKHR(_device(), m_pSwapChain, nullptr);
 
-	vkDestroyDevice(_device(), nullptr);
-
 	CVkApplicationBase::_destroyV();
 }
 
@@ -225,80 +224,20 @@ void VulkanApp::CPerpixelShadingApp::__retrieveSwapChainImagesAndCreateImageView
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createRenderPass()
 {
-	VkAttachmentDescription ColorAttachment = {};
-	ColorAttachment.format = m_SwapChainImageFormat;
-	ColorAttachment.samples = m_SampleCount;
-	ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	ColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	ColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	ColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	ColorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	ColorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	hiveVKT::CVkRenderPassCreator RenderPassCreator;
 
-	VkAttachmentDescription DepthAttachment = {};
-	DepthAttachment.format = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	DepthAttachment.samples = m_SampleCount;
-	DepthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	DepthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	DepthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	DepthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	DepthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	DepthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	auto DepthAttachmentFormat = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	RenderPassCreator.addAttachment((vk::Format)m_SwapChainImageFormat, vk::ImageLayout::eColorAttachmentOptimal, (vk::SampleCountFlagBits)m_SampleCount);
+	RenderPassCreator.addAttachment((vk::Format)DepthAttachmentFormat, vk::ImageLayout::eDepthStencilAttachmentOptimal, (vk::SampleCountFlagBits)m_SampleCount);
+	RenderPassCreator.addAttachment((vk::Format)m_SwapChainImageFormat, vk::ImageLayout::ePresentSrcKHR);
+	RenderPassCreator.fetchLastAttachment().setLoadOp(vk::AttachmentLoadOp::eDontCare);
 
-	VkAttachmentDescription ColorAttachmentResolve = {};
-	ColorAttachmentResolve.format = m_SwapChainImageFormat;
-	ColorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-	ColorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	ColorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	ColorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	ColorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	ColorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	ColorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	std::vector<vk::AttachmentReference> ColorAttachmentRefs = { {0, vk::ImageLayout::eColorAttachmentOptimal} };
+	vk::AttachmentReference DepthStencilAttachmentRef = { 1, vk::ImageLayout::eDepthStencilAttachmentOptimal };
+	std::vector<vk::AttachmentReference> ResolveAttachmentRefs = { {2, vk::ImageLayout::ePresentSrcKHR} };
+	RenderPassCreator.addSubpass(ColorAttachmentRefs, DepthStencilAttachmentRef, ResolveAttachmentRefs, {}, {});
 
-	std::array<VkAttachmentDescription, 3> Attachments = { ColorAttachment,DepthAttachment,ColorAttachmentResolve };
-
-	VkAttachmentReference ColorAttachmentReference = {};
-	ColorAttachmentReference.attachment = 0;
-	ColorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference DepthAttachmentReference = {};
-	DepthAttachmentReference.attachment = 1;
-	DepthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference ColorAttachmentResolveReference = {};
-	ColorAttachmentResolveReference.attachment = 2;
-	ColorAttachmentResolveReference.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-	VkSubpassDescription SubpassDescription = {};
-	SubpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	SubpassDescription.colorAttachmentCount = 1;
-	SubpassDescription.pColorAttachments = &ColorAttachmentReference;
-	SubpassDescription.inputAttachmentCount = 0;
-	SubpassDescription.pInputAttachments = nullptr;
-	SubpassDescription.preserveAttachmentCount = 0;
-	SubpassDescription.pPreserveAttachments = nullptr;
-	SubpassDescription.pDepthStencilAttachment = &DepthAttachmentReference;
-	SubpassDescription.pResolveAttachments = &ColorAttachmentResolveReference;
-
-	VkSubpassDependency SubpassDependency = {};
-	SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	SubpassDependency.dstSubpass = 0;
-	SubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	SubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	SubpassDependency.srcAccessMask = 0;
-	SubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-	VkRenderPassCreateInfo RenderPassCreateInfo = {};
-	RenderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	RenderPassCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments.size());
-	RenderPassCreateInfo.pAttachments = Attachments.data();
-	RenderPassCreateInfo.dependencyCount = 1;
-	RenderPassCreateInfo.pDependencies = &SubpassDependency;
-	RenderPassCreateInfo.subpassCount = 1;
-	RenderPassCreateInfo.pSubpasses = &SubpassDescription;
-
-	if (vkCreateRenderPass(_device(), &RenderPassCreateInfo, nullptr, &m_pRenderPass) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create render pass!");
+	m_pRenderPass = RenderPassCreator.create(_device());
 }
 
 //************************************************************************************
@@ -363,12 +302,12 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	PipelineCreator.addVertexAttribute({ 1, 0, vk::Format::eR32G32B32Sfloat , offsetof(SVertex, SVertex::Color) });
 	PipelineCreator.addVertexAttribute({ 2, 0, vk::Format::eR32G32Sfloat , offsetof(SVertex, SVertex::TexCoord) });
 
-	PipelineCreator.setFrontFace(vk::FrontFace::eCounterClockwise);
+	PipelineCreator.fetchRasterizationState().setFrontFace(vk::FrontFace::eCounterClockwise);
 
 	PipelineCreator.setMultisampleState({ {}, vk::SampleCountFlagBits(m_SampleCount), VK_TRUE, .2f, nullptr, VK_FALSE, VK_FALSE });
 
-	PipelineCreator.setDepthTestEnable(VK_TRUE);
-	PipelineCreator.setDepthCompareOp(vk::CompareOp::eLess);
+	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(VK_TRUE);
+	PipelineCreator.fetchDepthStencilState().setDepthCompareOp(vk::CompareOp::eLess);
 
 	m_pGraphicsPipeline = PipelineCreator.create(_device(), m_pPipelineLayout, nullptr, m_pRenderPass);
 }

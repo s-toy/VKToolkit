@@ -1,6 +1,5 @@
 #pragma once
 #include <optional>
-#define GLFW_INCLUDE_VULKAN
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include "Common.hpp"

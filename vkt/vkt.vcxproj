@@ -27,8 +27,10 @@
     <ClInclude Include="src\VkDeviceCreator.hpp" />
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
     <ClInclude Include="src\VkInstanceCreator.hpp" />
+    <ClInclude Include="src\VkRenderPassCreator.hpp" />
     <ClInclude Include="src\VkShaderModuleCreator.hpp" />
     <ClInclude Include="src\VKTExport.hpp" />
+    <ClInclude Include="src\VkUtility.hpp" />
     <ClInclude Include="src\WindowCreator.hpp" />
   </ItemGroup>
   <ItemGroup>

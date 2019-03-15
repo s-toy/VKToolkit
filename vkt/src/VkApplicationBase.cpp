@@ -29,7 +29,7 @@ void hiveVKT::CVkApplicationBase::run()
 	}
 	catch (const std::runtime_error& e)
 	{
-		_OUTPUT_WARNING(e.what()); 
+		_OUTPUT_WARNING(e.what());
 		exit(EXIT_FAILURE);			//TODO: how to handle exceptions
 	}
 	catch (...)
@@ -74,6 +74,8 @@ bool hiveVKT::CVkApplicationBase::_isRenderLoopDoneV()
 //Function:
 void hiveVKT::CVkApplicationBase::_destroyV()
 {
+	m_VkDevice.destroy();
+
 	m_pDebugMessenger->destroyDebugMessenger(m_VkInstance);
 	_SAFE_DELETE(m_pDebugMessenger);
 
@@ -92,9 +94,7 @@ bool hiveVKT::CVkApplicationBase::__initWindow()
 	CWindowCreator WindowCreator;
 	m_pWindow = WindowCreator.create(m_DisplayInfo);
 
-	if (!m_pWindow) return false;
-
-	return true;
+	return m_pWindow ? true : false;
 }
 
 //************************************************************************************

@@ -2,7 +2,9 @@
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
 
-#if (defined(_DEBUG) || defined(DEBUG))
+#define FORCE_ENABLE_DEBUG_UTILS
+
+#if (defined(_DEBUG) || defined(DEBUG) || defined(FORCE_ENABLE_DEBUG_UTILS))
 #	define _ENABLE_DEBUG_UTILS
 #endif
 

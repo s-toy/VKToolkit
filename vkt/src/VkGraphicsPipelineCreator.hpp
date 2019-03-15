@@ -31,53 +31,30 @@ namespace hiveVKT
 		}
 
 		void setInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& vValue) { m_InputAssemblyStateCreateInfo = vValue; }
+		vk::PipelineInputAssemblyStateCreateInfo& fetchInputAssemblyState() { return m_InputAssemblyStateCreateInfo; }
+
 		void addVertexBinding(const vk::VertexInputBindingDescription& vValue) { m_VertexBindingDescriptionSet.emplace_back(vValue); }
 		void addVertexAttribute(const vk::VertexInputAttributeDescription& vValue) { m_VertexAttributeDescriptionSet.emplace_back(vValue); }
-		void setTopolopy(vk::PrimitiveTopology vValue) { m_InputAssemblyStateCreateInfo.topology = vValue; }
-		void setPrimitiveRestartEnable(vk::Bool32 vValue) { m_InputAssemblyStateCreateInfo.primitiveRestartEnable = vValue; }
 
 		void setTessellationState(const vk::PipelineTessellationStateCreateInfo& vValue) { m_TessellationStateCreateInfo = vValue; }
+		vk::PipelineTessellationStateCreateInfo& fetchTessellationState() { return m_TessellationStateCreateInfo.value(); }
 
 		void setViewport(const vk::Viewport& vValue) { m_Viewport = vValue; }
 		void setViewportSize(float vWidth, float vHeight) { m_Viewport.width = vWidth, m_Viewport.height = vHeight; }
 		void setScissor(const vk::Rect2D& vValue) { m_Scissor = vValue; }
 
 		void setRasterizationState(const vk::PipelineRasterizationStateCreateInfo& vValue) { m_RasterizationStateCreateInfo = vValue; }
-		void setDepthClampEnable(vk::Bool32 vValue) { m_RasterizationStateCreateInfo.depthClampEnable = vValue; }
-		void setRasterizerDiscardEnable(vk::Bool32 vValue) { m_RasterizationStateCreateInfo.rasterizerDiscardEnable = vValue; }
-		void setPolygonMode(vk::PolygonMode vValue) { m_RasterizationStateCreateInfo.polygonMode = vValue; }
-		void setCullMode(vk::CullModeFlags vValue) { m_RasterizationStateCreateInfo.cullMode = vValue; }
-		void setFrontFace(vk::FrontFace vValue) { m_RasterizationStateCreateInfo.frontFace = vValue; }
-		void setDepthBiasEnable(vk::Bool32 vValue) { m_RasterizationStateCreateInfo.depthBiasEnable = vValue; }
-		void setDepthBiasConstantFactor(float vValue) { m_RasterizationStateCreateInfo.depthBiasConstantFactor = vValue; }
-		void setDepthBiasClamp(float vValue) { m_RasterizationStateCreateInfo.depthBiasClamp = vValue; }
-		void setDepthBiasSlopeFactor(float vValue) { m_RasterizationStateCreateInfo.depthBiasSlopeFactor = vValue; }
-		void setLineWidth(float vValue) { m_RasterizationStateCreateInfo.lineWidth = vValue; }
+		vk::PipelineRasterizationStateCreateInfo& fetchRasterizationState() { return m_RasterizationStateCreateInfo; }
 
 		void setMultisampleState(const vk::PipelineMultisampleStateCreateInfo& vValue) { m_MultisampleStateCreateInfo = vValue; }
-		void setRasterizationSamples(vk::SampleCountFlagBits vValue) { m_MultisampleStateCreateInfo.rasterizationSamples = vValue; }
-		void setSampleShadingEnable(vk::Bool32 vValue) { m_MultisampleStateCreateInfo.sampleShadingEnable = vValue; }
-		void setMinSampleShading(float vValue) { m_MultisampleStateCreateInfo.minSampleShading = vValue; }
-		void setPSampleMask(const vk::SampleMask* vValue) { m_MultisampleStateCreateInfo.pSampleMask = vValue; }
-		void setAlphaToCoverageEnable(vk::Bool32 vValue) { m_MultisampleStateCreateInfo.alphaToCoverageEnable = vValue; }
-		void setAlphaToOneEnable(vk::Bool32 vValue) { m_MultisampleStateCreateInfo.alphaToOneEnable = vValue; }
+		vk::PipelineMultisampleStateCreateInfo& fetchMultisampleState() { return m_MultisampleStateCreateInfo; }
 
 		void setDepthStencilState(const vk::PipelineDepthStencilStateCreateInfo& vValue) { m_DepthStencilStateCreateInfo = vValue; }
-		void setDepthTestEnable(vk::Bool32 vValue) { m_DepthStencilStateCreateInfo.depthTestEnable = vValue; }
-		void setDepthWriteEnable(vk::Bool32 vValue) { m_DepthStencilStateCreateInfo.depthWriteEnable = vValue; }
-		void setDepthCompareOp(vk::CompareOp vValue) { m_DepthStencilStateCreateInfo.depthCompareOp = vValue; }
-		void setDepthBoundsTestEnable(vk::Bool32 vValue) { m_DepthStencilStateCreateInfo.depthBoundsTestEnable = vValue; }
-		void setStencilTestEnable(vk::Bool32 vValue) { m_DepthStencilStateCreateInfo.stencilTestEnable = vValue; }
-		void setFront(vk::StencilOpState vValue) { m_DepthStencilStateCreateInfo.front = vValue; }
-		void setBack(vk::StencilOpState vValue) { m_DepthStencilStateCreateInfo.back = vValue; }
-		void setMinDepthBounds(float vValue) { m_DepthStencilStateCreateInfo.minDepthBounds = vValue; }
-		void setMaxDepthBounds(float vValue) { m_DepthStencilStateCreateInfo.maxDepthBounds = vValue; }
+		vk::PipelineDepthStencilStateCreateInfo& fetchDepthStencilState() { return m_DepthStencilStateCreateInfo; }
 
 		void addColorBlendAttachment(const vk::PipelineColorBlendAttachmentState& vColorBlendAttachmentState) { m_ColorBlendAttachmentStateSet.emplace_back(vColorBlendAttachmentState); }
 		void setColorBlendState(const vk::PipelineColorBlendStateCreateInfo &vValue) { m_ColorBlendStateCreateInfo = vValue; }
-		void setLogicOpEnable(vk::Bool32 vValue) { m_ColorBlendStateCreateInfo.logicOpEnable = vValue; }
-		void setLogicOp(vk::LogicOp vValue) { m_ColorBlendStateCreateInfo.logicOp = vValue; }
-		void setBlendConstants(float r, float g, float b, float a) { float *bc = m_ColorBlendStateCreateInfo.blendConstants; bc[0] = r; bc[1] = g; bc[2] = b; bc[3] = a; }
+		vk::PipelineColorBlendStateCreateInfo& fetchColorBlendState() { return m_ColorBlendStateCreateInfo; }
 
 		void addDynamicState(const vk::DynamicState& vDynamicState) { m_DynamicStateSet.emplace_back(vDynamicState); }
 
