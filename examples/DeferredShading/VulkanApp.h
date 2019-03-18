@@ -1,26 +1,19 @@
 #pragma once
 #include "Common.h"
 #include <GLFW/glfw3.h>
+#include "VkApplicationBase.hpp"
 
 namespace DeferredShading
 {
-	class CDeferredShadingApp
+	class CDeferredShadingApp :public hiveVKT::CVkApplicationBase
 	{
-	public:
-		void run();
-
 	private:
-		void __initWindow();
-		void __initVulkan();
-		void __mainLoop();
+		virtual bool _initV() override;
+		virtual bool _renderV() override;
+		virtual void _destroyV() override;
+
 		void __cleanup();
 
-		void __prepareLayersAndExtensions();
-		void __createInstance();
-		void __setupDebugUtilsMessenger();
-		void __createSurface();
-		void __pickPhysicalDevice();
-		void __createDevice();
 		void __retrieveDeviceQueue();
 		void __createSwapChain();
 		void __retrieveSwapChainImagesAndCreateImageViews();
@@ -68,14 +61,8 @@ namespace DeferredShading
 		void __createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory);
 		void __transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel);
 
-		bool __checkInstanceLayerSupport()const;
-		bool __checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& vPhysicalDevice)const;
-		bool __isPhysicalDeviceSuitable(const VkPhysicalDevice& vPhysicalDevice)const;
-
-		SQueueFamilyIndices __findRequiredQueueFamilies(const VkPhysicalDevice& vPhysicalDevice)const;
-		SSwapChainSupportDetails __queryPhysicalDeviceSwapChainSupport(const VkPhysicalDevice& vPhysicalDevice)const;
-		VkSurfaceFormatKHR __determineSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
-		VkPresentModeKHR __determinePresentMode(const std::vector<VkPresentModeKHR>& vCandidatePresentModeSet)const;
+		VkSurfaceFormatKHR __determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
+		VkPresentModeKHR __determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const;
 		VkExtent2D __determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
@@ -85,18 +72,8 @@ namespace DeferredShading
 		VkCommandBuffer __beginSingleTimeCommands();
 		void __endSingleTimeCommands(VkCommandBuffer vCommandBuffer);
 
-		void __drawFrame();
-
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
-		GLFWwindow* m_pGLFWWindow = nullptr;
-
-		//basic vulkan object handler
-		VkInstance m_pInstance = VK_NULL_HANDLE;
-		VkDebugUtilsMessengerEXT m_pDebugUtilsMessenger = VK_NULL_HANDLE;
-		VkSurfaceKHR m_pSurface = VK_NULL_HANDLE;
-		VkPhysicalDevice m_pPhysicalDevice = VK_NULL_HANDLE;
-		VkDevice m_pDevice = VK_NULL_HANDLE;
 		VkQueue m_pQueue = VK_NULL_HANDLE;
 		VkSwapchainKHR m_pSwapChain = VK_NULL_HANDLE;
 		VkCommandPool m_pCommandPool = VK_NULL_HANDLE;
@@ -185,11 +162,6 @@ namespace DeferredShading
 		std::vector<VkSemaphore> m_ImageAvailableSemaphoreSet;
 		std::vector<VkSemaphore> m_RenderFinishedSemaphoreSet;
 		std::vector<VkFence> m_InFlightFenceSet;
-
-		std::vector<const char*> m_enabledLayersAtInstanceLevel;
-		std::vector<const char*> m_enabledLayersAtDeviceLevel;
-		std::vector<const char*> m_enabledExtensionsAtInstanceLevel;
-		std::vector<const char*> m_enabledExtensionsAtDeviceLevel;
 
 		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D m_SwapChainExtent = { 0,0 };

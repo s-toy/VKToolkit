@@ -17,26 +17,6 @@ namespace DeferredShading
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
-#if defined(DEBUG) | defined(_DEBUG)
-	const bool gEnableValidationLayers = true;
-#else
-	const bool gEnableValidationLayers = false;
-#endif
-
-	struct SQueueFamilyIndices
-	{
-		std::optional<uint32_t> QueueFamily;
-
-		bool IsComplete() { return QueueFamily.has_value(); }
-	};
-
-	struct SSwapChainSupportDetails
-	{
-		VkSurfaceCapabilitiesKHR SurfaceCapabilities;
-		std::vector<VkSurfaceFormatKHR> SurfaceFormatSet;
-		std::vector<VkPresentModeKHR> PresentModeSet;
-	};
-
 	struct SVertex
 	{
 		glm::vec3 Position;
@@ -170,9 +150,6 @@ namespace DeferredShading
 	{
 		glm::vec3 ViewPosition = glm::vec3();
 	};
-
-	VkResult CreateDebugUtilsMessengerEXT(VkInstance vVulkanInstance, const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessengerCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugUtilsMessenger);
-	void DestroyDebugUtilsMessengerEXT(VkInstance vVulkanInstance, VkDebugUtilsMessengerEXT vDebugUtilsMessenger, const VkAllocationCallbacks* pAllocator);
 
 	std::vector<char> ReadFile(const std::string& vFileName);
 }

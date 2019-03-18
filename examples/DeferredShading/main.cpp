@@ -26,6 +26,10 @@ int main()
 
 	try
 	{
+		app.setWindowSize(1600, 900);
+		app.setWindowPos(100, 100);
+		app.setWindowTitle("Deferred Shading");
+
 		app.run();
 	}
 	catch (std::runtime_error e)

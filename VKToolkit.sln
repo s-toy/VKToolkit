@@ -16,6 +16,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit tests", "unit tests", "{8F608AC5-E7D1-44F6-8F9A-3AD1BB468C6D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeferredShading", "examples\DeferredShading\DeferredShading.vcxproj", "{B5B1CD72-4AA0-4AFA-8A2C-8CA3E3A9F2E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9AE0893-58B4-409D-BCFB-E97748BAFA16} = {B9AE0893-58B4-409D-BCFB-E97748BAFA16}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

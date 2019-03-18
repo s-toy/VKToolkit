@@ -36,6 +36,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanApp.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\vkt\vkt.vcxproj">
+      <Project>{b9ae0893-58b4-409d-bcfb-e97748bafa16}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{B5B1CD72-4AA0-4AFA-8A2C-8CA3E3A9F2E5}</ProjectGuid>
@@ -94,7 +99,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN)\include;$(GLFW)\include;$(GLM)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN)\include;$(GLFW)\include;$(GLM);$(HIVE_ROOT)/include;$(SolutionDir)\vkt\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -136,7 +141,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN)\include;$(GLFW)\include;$(GLM)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN)\include;$(GLFW)\include;$(GLM);$(HIVE_ROOT)/include;$(SolutionDir)\vkt\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
