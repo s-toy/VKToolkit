@@ -29,10 +29,10 @@
     <ClInclude Include="VulkanApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stb_image.h">
+    <ClInclude Include="..\external\stb_image.h">
       <Filter>Third Party</Filter>
     </ClInclude>
-    <ClInclude Include="tiny_obj_loader.h">
+    <ClInclude Include="..\external\tiny_obj_loader.h">
       <Filter>Third Party</Filter>
     </ClInclude>
   </ItemGroup>

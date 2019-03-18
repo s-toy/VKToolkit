@@ -39,7 +39,7 @@ namespace hiveVKT
 		SprivCodeType __readSpvFile(const std::string& vSpvFileName)
 		{
 			SprivCodeType Buffer;
-			if (!readFile(vSpvFileName, Buffer)) _THROW_RUNTINE_ERROR(format("Failed to read file: %s", vSpvFileName.c_str()));
+			if (!readFile(vSpvFileName, Buffer)) _THROW_RUNTIME_ERROR(format("Failed to read file: %s", vSpvFileName.c_str()));
 			return Buffer;
 		}
 	};

@@ -13,13 +13,13 @@ void hiveVKT::CVkApplicationBase::run()
 {
 	try
 	{
-		if (!_initV()) _THROW_RUNTINE_ERROR("Failed to run application due to failure of initialization!");
+		if (!_initV()) _THROW_RUNTIME_ERROR("Failed to run application due to failure of initialization!");
 
 		_OUTPUT_EVENT("Succeed to init application.");
 
 		while (!m_IsRenderLoopDone)
 		{
-			if (!_renderV()) _THROW_RUNTINE_ERROR("Render loop interrupted due to render failure!");
+			if (!_renderV()) _THROW_RUNTIME_ERROR("Render loop interrupted due to render failure!");
 			m_IsRenderLoopDone = _isRenderLoopDoneV();
 		}
 
@@ -143,7 +143,7 @@ void hiveVKT::CVkApplicationBase::__createDebugMessenger()
 void hiveVKT::CVkApplicationBase::__createSurface()
 {
 	if (glfwCreateWindowSurface(m_VkInstance, _window(), nullptr, &m_VkSurface) != VK_SUCCESS)
-		_THROW_RUNTINE_ERROR("Failed to create window surface!");
+		_THROW_RUNTIME_ERROR("Failed to create window surface!");
 }
 
 //************************************************************************************
@@ -163,7 +163,7 @@ void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 		}
 	}
 
-	if (!IsDeviceFound)	_THROW_RUNTINE_ERROR("Failed to find a suitable GPU!");
+	if (!IsDeviceFound)	_THROW_RUNTIME_ERROR("Failed to find a suitable GPU!");
 }
 
 //************************************************************************************
