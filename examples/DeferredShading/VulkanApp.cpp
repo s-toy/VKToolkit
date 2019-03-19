@@ -200,8 +200,6 @@ void DeferredShading::CDeferredShadingApp::__cleanup()
 	vkDestroyRenderPass(_device(), m_pOffScreenRenderPass, nullptr);
 
 	vkDestroyCommandPool(_device(), m_pCommandPool, nullptr);
-
-	vkDestroySwapchainKHR(_device(), _swapchain(), nullptr);
 }
 
 //************************************************************************************

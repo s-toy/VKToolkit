@@ -29,8 +29,6 @@ namespace hiveVKT
 
 		SSwapChainSupportDetails queryPhysicalDeviceSwapChainSupport(vk::SurfaceKHR vSurface, const vk::PhysicalDevice& vPhysicalDevice)
 		{
-			_ASSERTE(vSurface != VK_NULL_HANDLE);
-
 			SSwapChainSupportDetails SwapChainSupportDetails;
 			SwapChainSupportDetails.SurfaceCapabilities = vPhysicalDevice.getSurfaceCapabilitiesKHR(vSurface);
 			SwapChainSupportDetails.SurfaceFormatSet = vPhysicalDevice.getSurfaceFormatsKHR(vSurface);
