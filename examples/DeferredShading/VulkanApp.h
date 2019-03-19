@@ -15,7 +15,6 @@ namespace DeferredShading
 		void __cleanup();
 
 		void __retrieveDeviceQueue();
-		void __createSwapChain();
 		void __retrieveSwapChainImagesAndCreateImageViews();
 		void __createCommandPool();
 
@@ -61,9 +60,6 @@ namespace DeferredShading
 		void __createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory);
 		void __transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel);
 
-		VkSurfaceFormatKHR __determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
-		VkPresentModeKHR __determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const;
-		VkExtent2D __determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
 		uint32_t __findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty);
@@ -72,7 +68,6 @@ namespace DeferredShading
 		void __endSingleTimeCommands(VkCommandBuffer vCommandBuffer);
 
 		VkQueue m_pQueue = VK_NULL_HANDLE;
-		VkSwapchainKHR m_pSwapChain = VK_NULL_HANDLE;
 		VkCommandPool m_pCommandPool = VK_NULL_HANDLE;
 
 		//off-screen: pipeline
@@ -159,9 +154,6 @@ namespace DeferredShading
 		std::vector<VkSemaphore> m_ImageAvailableSemaphoreSet;
 		std::vector<VkSemaphore> m_RenderFinishedSemaphoreSet;
 		std::vector<VkFence> m_InFlightFenceSet;
-
-		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
-		VkExtent2D m_SwapChainExtent = { 0,0 };
 
 		size_t m_CurrentFrame = 0;
 	};

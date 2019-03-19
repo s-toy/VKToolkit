@@ -13,7 +13,6 @@ namespace VulkanApp
 		virtual void _destroyV() override;
 
 		void __retrieveDeviceQueue();
-		void __createSwapChain();
 		void __retrieveSwapChainImagesAndCreateImageViews();
 		void __createRenderPass();
 		void __createDescriptorSetLayout();
@@ -40,9 +39,6 @@ namespace VulkanApp
 		void __updateUniformBuffer(uint32_t vImageIndex);
 		void __loadModel();
 
-		vk::SurfaceFormatKHR __determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const;
-		vk::PresentModeKHR __determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const;
-		VkExtent2D __determineSwapChainExtent(const vk::SurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
 		uint32_t __findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty);
@@ -56,7 +52,6 @@ namespace VulkanApp
 		GLFWwindow* m_pGLFWWindow = nullptr;
 
 		VkQueue m_pQueue = VK_NULL_HANDLE;
-		VkSwapchainKHR m_pSwapChain = VK_NULL_HANDLE;
 		VkRenderPass m_pRenderPass = VK_NULL_HANDLE;
 		VkDescriptorSetLayout m_pDescriptorSetLayout = VK_NULL_HANDLE;
 		VkPipelineLayout m_pPipelineLayout = VK_NULL_HANDLE;
@@ -93,9 +88,6 @@ namespace VulkanApp
 
 		std::vector<SVertex> m_VertexData;
 		std::vector<uint32_t> m_IndexData;
-
-		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
-		VkExtent2D m_SwapChainExtent = { 0,0 };
 
 		size_t m_CurrentFrame = 0;
 

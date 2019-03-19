@@ -20,7 +20,6 @@ bool DeferredShading::CDeferredShadingApp::_initV()
 	if (!hiveVKT::CVkApplicationBase::_initV()) return false;
 
 	__retrieveDeviceQueue();
-	__createSwapChain();
 	__retrieveSwapChainImagesAndCreateImageViews();
 	__createCommandPool();
 
@@ -67,7 +66,7 @@ bool DeferredShading::CDeferredShadingApp::_renderV()
 	vkWaitForFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t ImageIndex = 0;
-	VkResult Result = vkAcquireNextImageKHR(_device(), m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
+	VkResult Result = vkAcquireNextImageKHR(_device(), _swapchain(), std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 	if (Result != VK_SUCCESS)
 		throw std::runtime_error("Failed to acquire swap chain image!");
 
@@ -103,7 +102,7 @@ bool DeferredShading::CDeferredShadingApp::_renderV()
 	PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	PresentInfo.waitSemaphoreCount = 1;
 	PresentInfo.pWaitSemaphores = SignalSemaphores_Deferred;
-	VkSwapchainKHR SwapChains[] = { m_pSwapChain };
+	VkSwapchainKHR SwapChains[] = { _swapchain() };
 	PresentInfo.swapchainCount = 1;
 	PresentInfo.pSwapchains = SwapChains;
 	PresentInfo.pImageIndices = &ImageIndex;
@@ -202,7 +201,7 @@ void DeferredShading::CDeferredShadingApp::__cleanup()
 
 	vkDestroyCommandPool(_device(), m_pCommandPool, nullptr);
 
-	vkDestroySwapchainKHR(_device(), m_pSwapChain, nullptr);
+	vkDestroySwapchainKHR(_device(), _swapchain(), nullptr);
 }
 
 //************************************************************************************
@@ -216,55 +215,18 @@ void DeferredShading::CDeferredShadingApp::__retrieveDeviceQueue()
 
 //************************************************************************************
 //Function:
-void DeferredShading::CDeferredShadingApp::__createSwapChain()
-{
-	hiveVKT::SSwapChainSupportDetails SwapChainSupportDetails = _swapChainSupportDetails();
-	VkSurfaceFormatKHR SurfaceFormat = __determineSurfaceFormat(SwapChainSupportDetails.SurfaceFormatSet);
-	VkPresentModeKHR PresentMode = __determinePresentMode(SwapChainSupportDetails.PresentModeSet);
-	VkExtent2D Extent = __determineSwapChainExtent(SwapChainSupportDetails.SurfaceCapabilities);
-	uint32_t ImageCount = SwapChainSupportDetails.SurfaceCapabilities.minImageCount + 1;
-	if (SwapChainSupportDetails.SurfaceCapabilities.maxImageCount > 0 && ImageCount > SwapChainSupportDetails.SurfaceCapabilities.maxImageCount)
-		ImageCount = SwapChainSupportDetails.SurfaceCapabilities.maxImageCount;
-
-	VkSwapchainCreateInfoKHR SwapchainCreateInfo = {};
-	SwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	SwapchainCreateInfo.surface = _surface();
-	SwapchainCreateInfo.imageFormat = SurfaceFormat.format;
-	SwapchainCreateInfo.imageColorSpace = SurfaceFormat.colorSpace;
-	SwapchainCreateInfo.imageExtent = Extent;
-	SwapchainCreateInfo.imageArrayLayers = 1;
-	SwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	SwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	SwapchainCreateInfo.queueFamilyIndexCount = 0;
-	SwapchainCreateInfo.pQueueFamilyIndices = nullptr;
-	SwapchainCreateInfo.minImageCount = ImageCount;
-	SwapchainCreateInfo.presentMode = PresentMode;
-	SwapchainCreateInfo.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(SwapChainSupportDetails.SurfaceCapabilities.currentTransform);
-	SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	SwapchainCreateInfo.clipped = VK_TRUE;
-	SwapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-
-	if (vkCreateSwapchainKHR(_device(), &SwapchainCreateInfo, nullptr, &m_pSwapChain) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create swap chain!");
-
-	m_SwapChainImageFormat = SurfaceFormat.format;
-	m_SwapChainExtent = Extent;
-}
-
-//************************************************************************************
-//Function:
 void DeferredShading::CDeferredShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
 {
 	uint32_t SwapChainImageCount = 0;
-	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, nullptr);
+	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, nullptr);
 	m_SwapChainImageSet.resize(SwapChainImageCount);
-	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, m_SwapChainImageSet.data());
+	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, m_SwapChainImageSet.data());
 
 	m_SwapChainImageViewSet.resize(SwapChainImageCount);
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], (VkFormat)_swapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	}
 }
 
@@ -387,7 +349,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenPipelineLayout()
 void DeferredShading::CDeferredShadingApp::__createDeferredRenderPass()
 {
 	VkAttachmentDescription ColorAttachment = {};
-	ColorAttachment.format = m_SwapChainImageFormat;
+	ColorAttachment.format = (VkFormat)_swapchainImageFormat();
 	ColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	ColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -494,8 +456,8 @@ void DeferredShading::CDeferredShadingApp::__createDeferredPipelineLayout()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 {
-	hiveVKT::CVkGraphicsPipelineCreator OffScreenPipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
-	hiveVKT::CVkGraphicsPipelineCreator DeferredPipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
+	hiveVKT::CVkGraphicsPipelineCreator OffScreenPipelineCreator(_swapchainExtent().width, _swapchainExtent().height);
+	hiveVKT::CVkGraphicsPipelineCreator DeferredPipelineCreator(_swapchainExtent().width, _swapchainExtent().height);
 
 	vk::PipelineRasterizationStateCreateInfo RasterizationStateCreateInfo = {};
 	RasterizationStateCreateInfo.lineWidth = 1.0f;
@@ -569,21 +531,21 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createOffScreenRenderTargets()
 {
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenPositionImage, m_pOffScreenPositionImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenPositionImage, m_pOffScreenPositionImageDeviceMemory);
 	m_pOffScreenPositionImageView = __createImageView(m_pOffScreenPositionImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenPositionImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenNormalImage, m_pOffScreenNormalImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenNormalImage, m_pOffScreenNormalImageDeviceMemory);
 	m_pOffScreenNormalImageView = __createImageView(m_pOffScreenNormalImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenNormalImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenColorImage, m_pOffScreenColorImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenColorImage, m_pOffScreenColorImageDeviceMemory);
 	m_pOffScreenColorImageView = __createImageView(m_pOffScreenColorImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenColorImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
 
 	VkFormat DepthFormat = __findSupportedFormat(gDepthFormatSet, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, DepthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenDepthImage, m_pOffScreenDepthImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, DepthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenDepthImage, m_pOffScreenDepthImageDeviceMemory);
 	m_pOffScreenDepthImageView = __createImageView(m_pOffScreenDepthImage, DepthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 	__transitionImageLayout(m_pOffScreenDepthImage, DepthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
 }
@@ -600,8 +562,8 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenFramebuffer()
 	FramebufferCreateInfo.pAttachments = Attachments.data();
 	FramebufferCreateInfo.renderPass = m_pOffScreenRenderPass;
 	FramebufferCreateInfo.layers = 1;
-	FramebufferCreateInfo.width = m_SwapChainExtent.width;
-	FramebufferCreateInfo.height = m_SwapChainExtent.height;
+	FramebufferCreateInfo.width = _swapchainExtent().width;
+	FramebufferCreateInfo.height = _swapchainExtent().height;
 
 	if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_pOffScreenFramebuffer) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create frame buffer!");
@@ -621,8 +583,8 @@ void DeferredShading::CDeferredShadingApp::__createDeferredFramebuffers()
 		FramebufferCreateInfo.pAttachments = &m_SwapChainImageViewSet[i];
 		FramebufferCreateInfo.renderPass = m_pDeferredRenderPass;
 		FramebufferCreateInfo.layers = 1;
-		FramebufferCreateInfo.width = m_SwapChainExtent.width;
-		FramebufferCreateInfo.height = m_SwapChainExtent.height;
+		FramebufferCreateInfo.width = _swapchainExtent().width;
+		FramebufferCreateInfo.height = _swapchainExtent().height;
 
 		if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_DeferredFramebufferSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create frame buffer!");
@@ -1294,7 +1256,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenCommandBuffers()
 		RenderPassBeginInfo.renderPass = m_pOffScreenRenderPass;
 		RenderPassBeginInfo.framebuffer = m_pOffScreenFramebuffer;
 		RenderPassBeginInfo.renderArea.offset = { 0, 0 };
-		RenderPassBeginInfo.renderArea.extent = m_SwapChainExtent;
+		RenderPassBeginInfo.renderArea.extent = _swapchainExtent();
 
 		std::array<VkClearValue, 4> ClearValueSet = {};
 		ClearValueSet[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1351,7 +1313,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredCommandBuffers()
 		RenderPassBeginInfo.renderPass = m_pDeferredRenderPass;
 		RenderPassBeginInfo.framebuffer = m_DeferredFramebufferSet[i];
 		RenderPassBeginInfo.renderArea.offset = { 0, 0 };
-		RenderPassBeginInfo.renderArea.extent = m_SwapChainExtent;
+		RenderPassBeginInfo.renderArea.extent = _swapchainExtent();
 
 		std::array<VkClearValue, 1> ClearValueSet = {};
 		ClearValueSet[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1434,7 +1396,7 @@ void DeferredShading::CDeferredShadingApp::__updateUniformBuffer(uint32_t vImage
 
 	UBO.Model = glm::scale(glm::mat4(1.0f), glm::vec3(0.45f, 0.45f, 0.45f));
 	UBO.View = glm::lookAt(ViewPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	UBO.Projection = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / (float)m_SwapChainExtent.height, 0.1f, 10.0f);
+	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / (float)_swapchainExtent().height, 0.1f, 10.0f);
 
 	UBO.Projection[1][1] *= -1;
 
@@ -1522,60 +1484,6 @@ void DeferredShading::CDeferredShadingApp::__createInstanceDataBuffer()
 
 	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
 	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
-}
-
-//************************************************************************************
-//Function:
-VkSurfaceFormatKHR DeferredShading::CDeferredShadingApp::__determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
-{
-	if (vCandidateSurfaceFormatSet.size() == 1 && vCandidateSurfaceFormatSet[0].format == vk::Format::eUndefined)
-		return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-
-	for (const auto& Format : vCandidateSurfaceFormatSet)
-	{
-		if (Format.format == vk::Format::eB8G8R8A8Unorm && Format.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear)
-			return Format;
-	}
-	return vCandidateSurfaceFormatSet[0];
-}
-
-//************************************************************************************
-//Function:
-VkPresentModeKHR DeferredShading::CDeferredShadingApp::__determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const
-{
-	VkPresentModeKHR BestPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-
-	for (const auto& PresentMode : vCandidatePresentModeSet)
-	{
-		if (static_cast<VkPresentModeKHR>(PresentMode) == VK_PRESENT_MODE_MAILBOX_KHR)
-			return static_cast<VkPresentModeKHR>(PresentMode);
-		else if (static_cast<VkPresentModeKHR>(PresentMode) == VK_PRESENT_MODE_IMMEDIATE_KHR)
-			BestPresentMode = static_cast<VkPresentModeKHR>(PresentMode);
-	}
-
-	return BestPresentMode;
-}
-
-//************************************************************************************
-//Function:
-VkExtent2D DeferredShading::CDeferredShadingApp::__determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const
-{
-	if (vSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-	{
-		return vSurfaceCapabilities.currentExtent;
-	}
-	else
-	{
-		int WindowWidth = 0, WindowHeight = 0;
-		//glfwGetFramebufferSize(m_pGLFWWindow, &WindowWidth, &WindowHeight);
-
-		VkExtent2D ActualExtent = { static_cast<uint32_t>(WindowWidth), static_cast<uint32_t>(WindowHeight) };
-
-		ActualExtent.width = std::max(vSurfaceCapabilities.minImageExtent.width, std::min(vSurfaceCapabilities.maxImageExtent.width, ActualExtent.width));
-		ActualExtent.height = std::max(vSurfaceCapabilities.minImageExtent.height, std::min(vSurfaceCapabilities.maxImageExtent.height, ActualExtent.height));
-
-		return ActualExtent;
-	}
 }
 
 //************************************************************************************
