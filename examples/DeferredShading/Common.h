@@ -2,6 +2,7 @@
 #include <vector>
 #include <optional>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <GLM/glm.hpp>
 #include <array>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -23,30 +24,30 @@ namespace DeferredShading
 		glm::vec2 TexCoord;
 		glm::vec3 Normal;
 
-		static VkVertexInputBindingDescription getBindingDescription()
+		static vk::VertexInputBindingDescription getBindingDescription()
 		{
-			VkVertexInputBindingDescription VertexInputBindingDescription = {};
+			vk::VertexInputBindingDescription VertexInputBindingDescription = {};
 			VertexInputBindingDescription.binding = PER_VERTEX_DATA_BINDING;
 			VertexInputBindingDescription.stride = sizeof(SVertex);
-			VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			VertexInputBindingDescription.inputRate = vk::VertexInputRate::eVertex;
 
 			return VertexInputBindingDescription;
 		}
 
-		static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescription()
+		static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescription()
 		{
-			std::array<VkVertexInputAttributeDescription, 3> VertexInputAttributeDescriptions = {};
+			std::array<vk::VertexInputAttributeDescription, 3> VertexInputAttributeDescriptions = {};
 			VertexInputAttributeDescriptions[0].binding = PER_VERTEX_DATA_BINDING;
 			VertexInputAttributeDescriptions[0].location = 0;
-			VertexInputAttributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+			VertexInputAttributeDescriptions[0].format = vk::Format::eR32G32B32A32Sfloat;
 			VertexInputAttributeDescriptions[0].offset = offsetof(SVertex, Position);
 			VertexInputAttributeDescriptions[1].binding = PER_VERTEX_DATA_BINDING;
 			VertexInputAttributeDescriptions[1].location = 1;
-			VertexInputAttributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+			VertexInputAttributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
 			VertexInputAttributeDescriptions[1].offset = offsetof(SVertex, TexCoord);
 			VertexInputAttributeDescriptions[2].binding = PER_VERTEX_DATA_BINDING;
 			VertexInputAttributeDescriptions[2].location = 2;
-			VertexInputAttributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+			VertexInputAttributeDescriptions[2].format = vk::Format::eR32G32B32A32Sfloat;
 			VertexInputAttributeDescriptions[2].offset = offsetof(SVertex, Normal);
 
 			return VertexInputAttributeDescriptions;
@@ -62,22 +63,22 @@ namespace DeferredShading
 	{
 		glm::vec3 Position;
 
-		static VkVertexInputBindingDescription getBindingDescription()
+		static vk::VertexInputBindingDescription getBindingDescription()
 		{
-			VkVertexInputBindingDescription VertexInputBindingDescription = {};
+			vk::VertexInputBindingDescription VertexInputBindingDescription = {};
 			VertexInputBindingDescription.binding = PER_INSTANCE_DATA_BINDING;
 			VertexInputBindingDescription.stride = sizeof(SInstanceData);
-			VertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+			VertexInputBindingDescription.inputRate = vk::VertexInputRate::eInstance;;
 
 			return VertexInputBindingDescription;
 		}
 
-		static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescription()
+		static std::array<vk::VertexInputAttributeDescription, 1> getAttributeDescription()
 		{
-			std::array<VkVertexInputAttributeDescription, 1> VertexInputAttributeDescriptions = {};
+			std::array<vk::VertexInputAttributeDescription, 1> VertexInputAttributeDescriptions = {};
 			VertexInputAttributeDescriptions[0].binding = PER_INSTANCE_DATA_BINDING;
 			VertexInputAttributeDescriptions[0].location = 3;
-			VertexInputAttributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+			VertexInputAttributeDescriptions[0].format = vk::Format::eR32G32B32A32Sfloat;
 			VertexInputAttributeDescriptions[0].offset = offsetof(SInstanceData, Position);
 
 			return VertexInputAttributeDescriptions;

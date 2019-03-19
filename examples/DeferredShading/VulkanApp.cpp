@@ -505,7 +505,6 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	OffScreenPipelineCreator.setRasterizationState(RasterizationStateCreateInfo);
 	DeferredPipelineCreator.setRasterizationState(RasterizationStateCreateInfo);
 
-
 	vk::PipelineMultisampleStateCreateInfo MultisampleStateCreateInfo = {};
 	MultisampleStateCreateInfo.sampleShadingEnable = true;
 	MultisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
@@ -531,18 +530,18 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	auto AttributeDescription = SVertex::getAttributeDescription();
 	auto BindingDescription4Instance = SInstanceData::getBindingDescription();
 	auto AttributeDescription4Instance = SInstanceData::getAttributeDescription();
-	OffScreenPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription));
-	OffScreenPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription4Instance));
+	OffScreenPipelineCreator.addVertexBinding(BindingDescription);
+	OffScreenPipelineCreator.addVertexBinding(BindingDescription4Instance);
 	for (auto Attribute : AttributeDescription)
-		OffScreenPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
+		OffScreenPipelineCreator.addVertexAttribute(Attribute);
 	for (auto Attribute : AttributeDescription4Instance)
-		OffScreenPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
+		OffScreenPipelineCreator.addVertexAttribute(Attribute);
 
 	auto BindingDescription_Deferred = SQuadVertex::getBindingDescription();
 	auto AttributeDescription_Deferred = SQuadVertex::getAttributeDescription();
-	DeferredPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription_Deferred));
+	DeferredPipelineCreator.addVertexBinding(BindingDescription_Deferred);
 	for (auto Attribute : AttributeDescription_Deferred)
-		DeferredPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
+		DeferredPipelineCreator.addVertexAttribute(Attribute);
 
 	//blend
 	vk::PipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
@@ -559,6 +558,8 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
 	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
 	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
+
+	OffScreenPipelineCreator.fetchDepthStencilState().setDepthTestEnable(VK_TRUE);
 
 	m_pOffScreenPipeline = OffScreenPipelineCreator.create(_device(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass);
 	m_pDeferredPipeline = DeferredPipelineCreator.create(_device(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass);
