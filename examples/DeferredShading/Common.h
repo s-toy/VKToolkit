@@ -150,8 +150,6 @@ namespace DeferredShading
 	{
 		glm::vec3 ViewPosition = glm::vec3();
 	};
-
-	std::vector<char> ReadFile(const std::string& vFileName);
 }
 
 namespace std

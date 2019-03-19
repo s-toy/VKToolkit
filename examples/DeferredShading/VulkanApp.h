@@ -66,13 +66,10 @@ namespace DeferredShading
 		VkExtent2D __determineSwapChainExtent(const VkSurfaceCapabilitiesKHR& vSurfaceCapabilities)const;
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
-		VkShaderModule __createShaderModule(const std::vector<char>& vShaderCode);
 		uint32_t __findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty);
 
 		VkCommandBuffer __beginSingleTimeCommands();
 		void __endSingleTimeCommands(VkCommandBuffer vCommandBuffer);
-
-		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
 		VkQueue m_pQueue = VK_NULL_HANDLE;
 		VkSwapchainKHR m_pSwapChain = VK_NULL_HANDLE;

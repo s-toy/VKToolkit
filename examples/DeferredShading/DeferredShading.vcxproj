@@ -32,7 +32,6 @@
     <None Include="OffScreen.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Common.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanApp.cpp" />
   </ItemGroup>

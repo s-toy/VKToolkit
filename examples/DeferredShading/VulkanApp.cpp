@@ -10,6 +10,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkRenderPassCreator.hpp"
+#include "VkGraphicsPipelineCreator.hpp"
+#include "VkShaderModuleCreator.hpp"
 
 //************************************************************************************
 //Function:
@@ -122,6 +124,8 @@ void DeferredShading::CDeferredShadingApp::_destroyV()
 	_device().waitIdle();
 
 	__cleanup();
+
+	CVkApplicationBase::_destroyV();
 }
 
 //************************************************************************************
@@ -490,214 +494,74 @@ void DeferredShading::CDeferredShadingApp::__createDeferredPipelineLayout()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 {
-	//common states for both pipelines
-	VkPipelineInputAssemblyStateCreateInfo InputAssemblyStateCreateInfo = {};
-	InputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	InputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	InputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+	hiveVKT::CVkGraphicsPipelineCreator OffScreenPipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
+	hiveVKT::CVkGraphicsPipelineCreator DeferredPipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
 
-	VkViewport Viewport = {};
-	Viewport.x = 0.0f;
-	Viewport.y = 0.0f;
-	Viewport.width = static_cast<float>(m_SwapChainExtent.width);
-	Viewport.height = static_cast<float>(m_SwapChainExtent.height);
-	Viewport.minDepth = 0.0f;
-	Viewport.maxDepth = 1.0f;
-
-	VkRect2D Scissor = {};
-	Scissor.extent = m_SwapChainExtent;
-	Scissor.offset = { 0,0 };
-
-	VkPipelineViewportStateCreateInfo ViewportStateCreateInfo = {};
-	ViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	ViewportStateCreateInfo.viewportCount = 1;
-	ViewportStateCreateInfo.pViewports = &Viewport;
-	ViewportStateCreateInfo.scissorCount = 1;
-	ViewportStateCreateInfo.pScissors = &Scissor;
-
-	VkPipelineRasterizationStateCreateInfo RasterizationStateCreateInfo = {};
-	RasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	RasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-	RasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-	RasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	vk::PipelineRasterizationStateCreateInfo RasterizationStateCreateInfo = {};
 	RasterizationStateCreateInfo.lineWidth = 1.0f;
-	RasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-	RasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	RasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-	RasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
-	RasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-	RasterizationStateCreateInfo.depthBiasClamp = 0.0f;
+	RasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+	RasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
 
-	VkPipelineMultisampleStateCreateInfo MultisampleStateCreateInfo = {};
-	MultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	MultisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
-	MultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	OffScreenPipelineCreator.setRasterizationState(RasterizationStateCreateInfo);
+	DeferredPipelineCreator.setRasterizationState(RasterizationStateCreateInfo);
+
+
+	vk::PipelineMultisampleStateCreateInfo MultisampleStateCreateInfo = {};
+	MultisampleStateCreateInfo.sampleShadingEnable = true;
+	MultisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
 	MultisampleStateCreateInfo.minSampleShading = .2f;
-	MultisampleStateCreateInfo.pSampleMask = nullptr;
-	MultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
-	MultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
-	VkPipelineDepthStencilStateCreateInfo DepthStencilStateCreateInfo = {};
-	DepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	DepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-	DepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
-	DepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
-	DepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
-	DepthStencilStateCreateInfo.minDepthBounds = 0.0f;
-	DepthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-	DepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
-	DepthStencilStateCreateInfo.front = {};
-	DepthStencilStateCreateInfo.back = {};
+	OffScreenPipelineCreator.setMultisampleState(MultisampleStateCreateInfo);
+	DeferredPipelineCreator.setMultisampleState(MultisampleStateCreateInfo);
 
-	//create off screen pipeline
-	auto VertexShaderCode = ReadFile("OffScreen_vert.spv");
-	auto FragmentShaderCode = ReadFile("OffScreen_frag.spv");
-	VkShaderModule VertexShaderModule = __createShaderModule(VertexShaderCode);
-	VkShaderModule FragmentShaderModule = __createShaderModule(FragmentShaderCode);
+	//shader module
+	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
+	auto OffScreenVertexShaderModule = ShaderModuleCreator.createUnique(_device(), "OffScreen_vert.spv");
+	auto OffScreenFragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "OffScreen_frag.spv");
+	auto DeferredVertexShaderModule = ShaderModuleCreator.createUnique(_device(), "Deferred_vert.spv");
+	auto DeferredFragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "Deferred_frag.spv");
 
-	VkPipelineShaderStageCreateInfo VertexShaderStageCreateInfo = {};
-	VertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	VertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	VertexShaderStageCreateInfo.module = VertexShaderModule;
-	VertexShaderStageCreateInfo.pName = "main";
-	VertexShaderStageCreateInfo.pSpecializationInfo = nullptr;
+	OffScreenPipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, OffScreenVertexShaderModule.get());
+	OffScreenPipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, OffScreenFragmentShaderModule.get());
+	DeferredPipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, DeferredVertexShaderModule.get());
+	DeferredPipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, DeferredFragmentShaderModule.get());
 
-	VkPipelineShaderStageCreateInfo FragmentShaderStageCreateInfo = {};
-	FragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	FragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	FragmentShaderStageCreateInfo.module = FragmentShaderModule;
-	FragmentShaderStageCreateInfo.pName = "main";
-	FragmentShaderStageCreateInfo.pSpecializationInfo = nullptr;
-
-	VkPipelineShaderStageCreateInfo ShaderStageCreateInfoSet_OffScreen[] = { VertexShaderStageCreateInfo,FragmentShaderStageCreateInfo };
-
+	//vertex input
 	auto BindingDescription = SVertex::getBindingDescription();
 	auto AttributeDescription = SVertex::getAttributeDescription();
 	auto BindingDescription4Instance = SInstanceData::getBindingDescription();
 	auto AttributeDescription4Instance = SInstanceData::getAttributeDescription();
-
-	std::vector<VkVertexInputBindingDescription> BindingDescriptions;
-	std::vector<VkVertexInputAttributeDescription> AttributeDescriptions;
-	BindingDescriptions = { BindingDescription , BindingDescription4Instance };
-	for (auto i = 0; i < AttributeDescription.size(); ++i)
-		AttributeDescriptions.push_back(AttributeDescription[i]);
-	for (auto i = 0; i < AttributeDescription4Instance.size(); ++i)
-		AttributeDescriptions.push_back(AttributeDescription4Instance[i]);
-
-	VkPipelineVertexInputStateCreateInfo VertexInputStateCreateInfo = {};
-	VertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	VertexInputStateCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(BindingDescriptions.size());;
-	VertexInputStateCreateInfo.pVertexBindingDescriptions = BindingDescriptions.data();
-	VertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(AttributeDescriptions.size());
-	VertexInputStateCreateInfo.pVertexAttributeDescriptions = AttributeDescriptions.data();
-
-	VkPipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
-	ColorBlendAttachmentState.blendEnable = VK_FALSE;
-	ColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	ColorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-	ColorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
-	ColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-	ColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-	ColorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-	ColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-
-	std::array<VkPipelineColorBlendAttachmentState, 3> ColorBlendAttachmentStates = {
-		ColorBlendAttachmentState,
-		ColorBlendAttachmentState,
-		ColorBlendAttachmentState
-	};
-
-	VkPipelineColorBlendStateCreateInfo ColorBlendStateCreateInfo = {};
-	ColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	ColorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-	ColorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlendStateCreateInfo.attachmentCount = static_cast<uint32_t>(ColorBlendAttachmentStates.size());
-	ColorBlendStateCreateInfo.pAttachments = ColorBlendAttachmentStates.data();
-	ColorBlendStateCreateInfo.blendConstants[0] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[1] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[2] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[3] = 0.0f;
-
-	VkGraphicsPipelineCreateInfo GraphicsPipelineCreateInfo = {};
-	GraphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	GraphicsPipelineCreateInfo.stageCount = 2;
-	GraphicsPipelineCreateInfo.pStages = ShaderStageCreateInfoSet_OffScreen;
-	GraphicsPipelineCreateInfo.pVertexInputState = &VertexInputStateCreateInfo;
-	GraphicsPipelineCreateInfo.pInputAssemblyState = &InputAssemblyStateCreateInfo;
-	GraphicsPipelineCreateInfo.pViewportState = &ViewportStateCreateInfo;
-	GraphicsPipelineCreateInfo.pRasterizationState = &RasterizationStateCreateInfo;
-	GraphicsPipelineCreateInfo.pMultisampleState = &MultisampleStateCreateInfo;
-	GraphicsPipelineCreateInfo.pDepthStencilState = &DepthStencilStateCreateInfo;
-	GraphicsPipelineCreateInfo.pColorBlendState = &ColorBlendStateCreateInfo;
-	GraphicsPipelineCreateInfo.pDynamicState = nullptr;
-	GraphicsPipelineCreateInfo.layout = m_pOffScreenPipelineLayout;
-	GraphicsPipelineCreateInfo.renderPass = m_pOffScreenRenderPass;
-	GraphicsPipelineCreateInfo.subpass = 0;
-	GraphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-	GraphicsPipelineCreateInfo.basePipelineIndex = -1;
-
-	if (vkCreateGraphicsPipelines(_device(), VK_NULL_HANDLE, 1, &GraphicsPipelineCreateInfo, nullptr, &m_pOffScreenPipeline) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create pipeline!");
-
-	vkDestroyShaderModule(_device(), VertexShaderModule, nullptr);
-	vkDestroyShaderModule(_device(), FragmentShaderModule, nullptr);
-
-	//create deferred shading pipeline
-	//RasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;// NOTE 
-
-	VertexShaderCode = ReadFile("Deferred_vert.spv");
-	FragmentShaderCode = ReadFile("Deferred_frag.spv");
-	VertexShaderModule = __createShaderModule(VertexShaderCode);
-	FragmentShaderModule = __createShaderModule(FragmentShaderCode);
-
-	VertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	VertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	VertexShaderStageCreateInfo.module = VertexShaderModule;
-	VertexShaderStageCreateInfo.pName = "main";
-	VertexShaderStageCreateInfo.pSpecializationInfo = nullptr;
-
-	FragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	FragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	FragmentShaderStageCreateInfo.module = FragmentShaderModule;
-	FragmentShaderStageCreateInfo.pName = "main";
-	FragmentShaderStageCreateInfo.pSpecializationInfo = nullptr;
-
-	VkPipelineShaderStageCreateInfo ShaderStageCreateInfoSet_Deferred[] = { VertexShaderStageCreateInfo,FragmentShaderStageCreateInfo };
+	OffScreenPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription));
+	OffScreenPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription4Instance));
+	for (auto Attribute : AttributeDescription)
+		OffScreenPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
+	for (auto Attribute : AttributeDescription4Instance)
+		OffScreenPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
 
 	auto BindingDescription_Deferred = SQuadVertex::getBindingDescription();
 	auto AttributeDescription_Deferred = SQuadVertex::getAttributeDescription();
+	DeferredPipelineCreator.addVertexBinding(static_cast<vk::VertexInputBindingDescription>(BindingDescription_Deferred));
+	for (auto Attribute : AttributeDescription_Deferred)
+		DeferredPipelineCreator.addVertexAttribute(static_cast<vk::VertexInputAttributeDescription>(Attribute));
 
-	VertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	VertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-	VertexInputStateCreateInfo.pVertexBindingDescriptions = &BindingDescription_Deferred;
-	VertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(AttributeDescription_Deferred.size());
-	VertexInputStateCreateInfo.pVertexAttributeDescriptions = AttributeDescription_Deferred.data();
+	//blend
+	vk::PipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
+	ColorBlendAttachmentState.blendEnable = false;
+	ColorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+	ColorBlendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+	ColorBlendAttachmentState.alphaBlendOp = vk::BlendOp::eAdd;
+	ColorBlendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
+	ColorBlendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eZero;
+	ColorBlendAttachmentState.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+	ColorBlendAttachmentState.dstAlphaBlendFactor = vk::BlendFactor::eZero;
 
-	ColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	ColorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-	ColorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlendStateCreateInfo.attachmentCount = 1;
-	ColorBlendStateCreateInfo.pAttachments = &ColorBlendAttachmentState;
-	ColorBlendStateCreateInfo.blendConstants[0] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[1] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[2] = 0.0f;
-	ColorBlendStateCreateInfo.blendConstants[3] = 0.0f;
+	//for off-screen, there are 3 color attachement, so add 3 default color blend attachement
+	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
+	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
+	OffScreenPipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
 
-	GraphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	GraphicsPipelineCreateInfo.stageCount = 2;
-	GraphicsPipelineCreateInfo.pStages = ShaderStageCreateInfoSet_Deferred;
-	GraphicsPipelineCreateInfo.pVertexInputState = &VertexInputStateCreateInfo;
-	GraphicsPipelineCreateInfo.pColorBlendState = &ColorBlendStateCreateInfo;
-	GraphicsPipelineCreateInfo.layout = m_pDeferredPipelineLayout;
-	GraphicsPipelineCreateInfo.renderPass = m_pDeferredRenderPass;
-	GraphicsPipelineCreateInfo.subpass = 0;
-	//the rest state is the same with off-screen pipeline
-
-	if (vkCreateGraphicsPipelines(_device(), VK_NULL_HANDLE, 1, &GraphicsPipelineCreateInfo, nullptr, &m_pDeferredPipeline) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create pipeline!");
-
-	vkDestroyShaderModule(_device(), VertexShaderModule, nullptr);
-	vkDestroyShaderModule(_device(), FragmentShaderModule, nullptr);
+	m_pOffScreenPipeline = OffScreenPipelineCreator.create(_device(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass);
+	m_pDeferredPipeline = DeferredPipelineCreator.create(_device(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass);
 }
 
 //************************************************************************************
@@ -1760,22 +1624,6 @@ VkFormat DeferredShading::CDeferredShadingApp::__findSupportedFormat(const std::
 
 //************************************************************************************
 //Function:
-VkShaderModule DeferredShading::CDeferredShadingApp::__createShaderModule(const std::vector<char>& vShaderCode)
-{
-	VkShaderModuleCreateInfo ShaderModuleCreateInfo = {};
-	ShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	ShaderModuleCreateInfo.codeSize = vShaderCode.size();
-	ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vShaderCode.data());
-
-	VkShaderModule ShaderModule;
-	if (vkCreateShaderModule(_device(), &ShaderModuleCreateInfo, nullptr, &ShaderModule) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create shader module!");
-
-	return ShaderModule;
-}
-
-//************************************************************************************
-//Function:
 uint32_t DeferredShading::CDeferredShadingApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
 {
 	VkPhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = {};
@@ -1832,14 +1680,4 @@ void DeferredShading::CDeferredShadingApp::__endSingleTimeCommands(VkCommandBuff
 	vkQueueWaitIdle(m_pQueue);
 
 	vkFreeCommandBuffers(_device(), m_pCommandPool, 1, &vCommandBuffer);
-}
-
-//************************************************************************************
-//Function:
-VKAPI_ATTR VkBool32 VKAPI_CALL DeferredShading::CDeferredShadingApp::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
-	if (vMessageSeverityFlags >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-		std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
-
-	return VK_FALSE;
 }
