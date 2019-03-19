@@ -28,6 +28,10 @@ int main()
 	Application.setWindowPos(100, 100);
 	Application.setWindowTitle("perpixel shading demo");
 
+	auto& PhsicalDeviceFeatures = Application.fetchPhysicalDeviceFeatures();
+	PhsicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
+	PhsicalDeviceFeatures.sampleRateShading = VK_TRUE;
+
 	Application.run();
 
 	return EXIT_SUCCESS;

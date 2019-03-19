@@ -24,6 +24,10 @@ int main()
 
 	CDeferredShadingApp app;
 
+	auto& PhsicalDeviceFeatures = app.fetchPhysicalDeviceFeatures();
+	PhsicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
+	PhsicalDeviceFeatures.sampleRateShading = VK_TRUE;
+
 	try
 	{
 		app.setWindowSize(1600, 900);
