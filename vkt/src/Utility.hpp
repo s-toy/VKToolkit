@@ -19,7 +19,7 @@ namespace hiveVKT
 		return Ret;
 	}
 
-	template<typename T>
+	template <class T>
 	static bool readFile(const std::string& vFilename, T& voBuffer)
 	{
 		std::ifstream Fin(vFilename, std::ios::ate | std::ios::binary);

@@ -36,6 +36,8 @@ namespace hiveVKT
 		void setWindowResizable(bool vResizable) { m_DisplayInfo.IsWindowResizable = vResizable; }
 		void setWindowTitle(const std::string& vTitle) { m_DisplayInfo.WindowTitle = vTitle; }
 
+		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
+
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
 
@@ -63,13 +65,11 @@ namespace hiveVKT
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
 		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 
-		std::vector<const char*> m_EnabledExtensionsAtDeviceLevel;
-		std::vector<const char*> m_EnabledLayersAtDeviceLevel;
-
 		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
 
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;
+		vk::PhysicalDeviceFeatures m_VkPhysicalDeviceFeatures;
 		vk::Device m_VkDevice;
 
 		bool m_IsInitialized = false;
@@ -78,15 +78,11 @@ namespace hiveVKT
 		bool __initWindow();
 		bool __initVulkan();
 
-		void __prepareLayersAndExtensions();
 		void __createInstance();
 		void __createDebugMessenger();
 		void __createSurface();
 		void __pickPhysicalDevice();
 		void __createDevice();
-
-		bool __isPhysicalDeviceSuitable(const vk::PhysicalDevice& vPhysicalDevice);
-		bool __checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& vPhysicalDevice)const;
 
 		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
 		SSwapChainSupportDetails __queryPhysicalDeviceSwapChainSupport(const vk::PhysicalDevice& vPhysicalDevice);

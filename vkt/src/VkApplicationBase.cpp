@@ -101,7 +101,6 @@ bool hiveVKT::CVkApplicationBase::__initWindow()
 //Function:
 bool hiveVKT::CVkApplicationBase::__initVulkan()
 {
-	__prepareLayersAndExtensions();
 	__createInstance();
 	__createDebugMessenger();
 	__createSurface();
@@ -109,17 +108,6 @@ bool hiveVKT::CVkApplicationBase::__initVulkan()
 	__createDevice();
 
 	return true;
-}
-
-//************************************************************************************
-//Function:
-void hiveVKT::CVkApplicationBase::__prepareLayersAndExtensions()
-{
-#ifdef _ENABLE_DEBUG_UTILS
-	m_EnabledLayersAtDeviceLevel.emplace_back("VK_LAYER_LUNARG_standard_validation");
-#endif
-
-	m_EnabledExtensionsAtDeviceLevel.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 }
 
 //************************************************************************************
@@ -151,19 +139,11 @@ void hiveVKT::CVkApplicationBase::__createSurface()
 void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 {
 	auto PhysicalDeviceSet = m_VkInstance.enumeratePhysicalDevices();
+	_ASSERTE(!PhysicalDeviceSet.empty());
+	m_VkPhysicalDevice = PhysicalDeviceSet[0];	//TODO: check whether the physical device is suitable.
 
-	bool IsDeviceFound = false;
-	for (auto PhysicalDevice : PhysicalDeviceSet)
-	{
-		if (__isPhysicalDeviceSuitable(PhysicalDevice))
-		{
-			m_VkPhysicalDevice = PhysicalDevice;
-			IsDeviceFound = true;
-			break;
-		}
-	}
-
-	if (!IsDeviceFound)	_THROW_RUNTIME_ERROR("Failed to find a suitable GPU!");
+	__findRequiredQueueFamilies(m_VkPhysicalDevice);
+	__queryPhysicalDeviceSwapChainSupport(m_VkPhysicalDevice);
 }
 
 //************************************************************************************
@@ -171,45 +151,9 @@ void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 void hiveVKT::CVkApplicationBase::__createDevice()
 {
 	hiveVKT::CVkDeviceCreator DeviceCreator;
-
 	DeviceCreator.addQueue(m_RequiredQueueFamilyIndices.QueueFamily.value(), 1, 1.0f);
-
-	vk::PhysicalDeviceFeatures PhysicalDeviceFeatures;
-	PhysicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
-	PhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
-	DeviceCreator.setPhysicalDeviceFeatures(&PhysicalDeviceFeatures);
-
+	DeviceCreator.setPhysicalDeviceFeatures(&m_VkPhysicalDeviceFeatures);
 	m_VkDevice = DeviceCreator.create(_physicalDevice());
-}
-
-//************************************************************************************
-//Function:
-bool hiveVKT::CVkApplicationBase::__isPhysicalDeviceSuitable(const vk::PhysicalDevice& vPhysicalDevice)
-{
-	SQueueFamilyIndices QueueFamily = __findRequiredQueueFamilies(vPhysicalDevice);
-	bool IsExtensionSupport = __checkPhysicalDeviceExtensionSupport(vPhysicalDevice);
-	bool IsSwapChainAdequate = false;
-	if (IsExtensionSupport)
-	{
-		SSwapChainSupportDetails SwapChainSupportDetails = __queryPhysicalDeviceSwapChainSupport(vPhysicalDevice);
-		IsSwapChainAdequate = !SwapChainSupportDetails.SurfaceFormatSet.empty() && !SwapChainSupportDetails.PresentModeSet.empty();
-	}
-
-	return QueueFamily.IsComplete() && IsExtensionSupport && IsSwapChainAdequate;
-}
-
-//************************************************************************************
-//Function:
-bool hiveVKT::CVkApplicationBase::__checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& vPhysicalDevice) const
-{
-	auto PhysicalDeviceExtensionPropertySet = vPhysicalDevice.enumerateDeviceExtensionProperties();
-
-	std::set<std::string> RequiredPhysicalDeviceExtensionSet(m_EnabledExtensionsAtDeviceLevel.begin(), m_EnabledExtensionsAtDeviceLevel.end());
-
-	for (const auto& ExtensionProperty : PhysicalDeviceExtensionPropertySet)
-		RequiredPhysicalDeviceExtensionSet.erase(ExtensionProperty.extensionName);
-
-	return RequiredPhysicalDeviceExtensionSet.empty();
 }
 
 //************************************************************************************
@@ -230,10 +174,13 @@ SQueueFamilyIndices hiveVKT::CVkApplicationBase::__findRequiredQueueFamilies(con
 		if (GraphicsSupport && PresentSupport && TransferSupport)
 		{
 			m_RequiredQueueFamilyIndices.QueueFamily = i;
+			break;
 		}
+
+		i++;
 	}
 
-	return m_RequiredQueueFamilyIndices;
+	return m_RequiredQueueFamilyIndices; //HACK:
 }
 
 //************************************************************************************
