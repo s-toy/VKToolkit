@@ -74,6 +74,7 @@ bool hiveVKT::CVkApplicationBase::_isRenderLoopDoneV()
 //Function:
 void hiveVKT::CVkApplicationBase::_destroyV()
 {
+	m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
 	m_VkDevice.destroy();
 
 	m_pDebugMessenger->destroyDebugMessenger(m_VkInstance);
@@ -106,6 +107,7 @@ bool hiveVKT::CVkApplicationBase::__initVulkan()
 	__createSurface();
 	__pickPhysicalDevice();
 	__createDevice();
+	__createSwapChain();
 
 	return true;
 }
@@ -143,7 +145,6 @@ void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 	m_VkPhysicalDevice = PhysicalDeviceSet[0];	//TODO: check whether the physical device is suitable.
 
 	__findRequiredQueueFamilies(m_VkPhysicalDevice);
-	__queryPhysicalDeviceSwapChainSupport(m_VkPhysicalDevice);
 }
 
 //************************************************************************************
@@ -154,6 +155,18 @@ void hiveVKT::CVkApplicationBase::__createDevice()
 	DeviceCreator.addQueue(m_RequiredQueueFamilyIndices.QueueFamily.value(), 1, 1.0f);
 	DeviceCreator.setPhysicalDeviceFeatures(&m_VkPhysicalDeviceFeatures);
 	m_VkDevice = DeviceCreator.create(_physicalDevice());
+}
+
+//************************************************************************************
+//Function:
+void hiveVKT::CVkApplicationBase::__createSwapChain()
+{
+	CVkSwapChainCreator SwapchainCreator;
+	m_VkSwapchain = SwapchainCreator.create(m_VkSurface, m_VkDevice, m_VkPhysicalDevice, m_DisplayInfo.WindowWidth, m_DisplayInfo.WindowHeight);
+
+	m_SwapChainSupportDetails = SwapchainCreator.queryPhysicalDeviceSwapChainSupport(m_VkSurface, m_VkPhysicalDevice);
+	m_SwapChainImageFormat = SwapchainCreator.getSwapChainImageFormat();
+	m_SwapChainExtent = SwapchainCreator.getSwapChainExtent();
 }
 
 //************************************************************************************
@@ -181,17 +194,4 @@ SQueueFamilyIndices hiveVKT::CVkApplicationBase::__findRequiredQueueFamilies(con
 	}
 
 	return m_RequiredQueueFamilyIndices; //HACK:
-}
-
-//************************************************************************************
-//Function:
-SSwapChainSupportDetails hiveVKT::CVkApplicationBase::__queryPhysicalDeviceSwapChainSupport(const vk::PhysicalDevice& vPhysicalDevice)
-{
-	_ASSERTE(m_VkSurface != VK_NULL_HANDLE);
-
-	m_SwapChainSupportDetails.SurfaceCapabilities = vPhysicalDevice.getSurfaceCapabilitiesKHR(m_VkSurface);
-	m_SwapChainSupportDetails.SurfaceFormatSet = vPhysicalDevice.getSurfaceFormatsKHR(m_VkSurface);
-	m_SwapChainSupportDetails.PresentModeSet = vPhysicalDevice.getSurfacePresentModesKHR(m_VkSurface);
-
-	return m_SwapChainSupportDetails;
 }

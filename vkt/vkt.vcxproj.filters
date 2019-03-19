@@ -54,6 +54,9 @@
     <ClInclude Include="src\VkRenderPassCreator.hpp">
       <Filter>vulkan\toolkit</Filter>
     </ClInclude>
+    <ClInclude Include="src\VkSwapChainCreator.hpp">
+      <Filter>vulkan\toolkit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp">

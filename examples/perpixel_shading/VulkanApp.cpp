@@ -25,7 +25,6 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 	m_SampleCount = __getMaxSampleCount();
 
 	__retrieveDeviceQueue();
-	__createSwapChain();
 	__retrieveSwapChainImagesAndCreateImageViews();
 	__createRenderPass();
 	__createDescriptorSetLayout();
@@ -57,7 +56,7 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 	vkWaitForFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t ImageIndex = 0;
-	VkResult Result = vkAcquireNextImageKHR(_device(), m_pSwapChain, std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
+	VkResult Result = vkAcquireNextImageKHR(_device(), _swapchain(), std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 	if (Result == VK_ERROR_OUT_OF_DATE_KHR)
 		throw std::runtime_error("Failed to acquire swap chain image!");
 	else if (Result != VK_SUCCESS && Result != VK_SUBOPTIMAL_KHR)
@@ -85,7 +84,7 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 	PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	PresentInfo.waitSemaphoreCount = 1;
 	PresentInfo.pWaitSemaphores = SignalSemaphores;
-	VkSwapchainKHR SwapChains[] = { m_pSwapChain };
+	VkSwapchainKHR SwapChains[] = { _swapchain() };
 	PresentInfo.swapchainCount = 1;
 	PresentInfo.pSwapchains = SwapChains;
 	PresentInfo.pImageIndices = &ImageIndex;
@@ -152,7 +151,6 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 
 	for (auto i = 0; i < m_SwapChainImageViewSet.size(); ++i)
 		vkDestroyImageView(_device(), m_SwapChainImageViewSet[i], nullptr);
-	vkDestroySwapchainKHR(_device(), m_pSwapChain, nullptr);
 
 	CVkApplicationBase::_destroyV();
 }
@@ -168,55 +166,18 @@ void VulkanApp::CPerpixelShadingApp::__retrieveDeviceQueue()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__createSwapChain()
-{
-	SSwapChainSupportDetails SwapChainSupportDetails = _swapChainSupportDetails();
-	vk::SurfaceFormatKHR SurfaceFormat = __determineSurfaceFormat(SwapChainSupportDetails.SurfaceFormatSet);
-	vk::PresentModeKHR PresentMode = __determinePresentMode(SwapChainSupportDetails.PresentModeSet);
-	VkExtent2D Extent = __determineSwapChainExtent(SwapChainSupportDetails.SurfaceCapabilities);
-	uint32_t ImageCount = SwapChainSupportDetails.SurfaceCapabilities.minImageCount + 1;
-	if (SwapChainSupportDetails.SurfaceCapabilities.maxImageCount > 0 && ImageCount > SwapChainSupportDetails.SurfaceCapabilities.maxImageCount)
-		ImageCount = SwapChainSupportDetails.SurfaceCapabilities.maxImageCount;
-
-	VkSwapchainCreateInfoKHR SwapchainCreateInfo = {};
-	SwapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	SwapchainCreateInfo.surface = _surface();
-	SwapchainCreateInfo.imageFormat = (VkFormat)SurfaceFormat.format;
-	SwapchainCreateInfo.imageColorSpace = (VkColorSpaceKHR)SurfaceFormat.colorSpace;
-	SwapchainCreateInfo.imageExtent = Extent;
-	SwapchainCreateInfo.imageArrayLayers = 1;
-	SwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	SwapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	SwapchainCreateInfo.queueFamilyIndexCount = 0;
-	SwapchainCreateInfo.pQueueFamilyIndices = nullptr;
-	SwapchainCreateInfo.minImageCount = ImageCount;
-	SwapchainCreateInfo.presentMode = (VkPresentModeKHR)PresentMode;
-	SwapchainCreateInfo.preTransform = (VkSurfaceTransformFlagBitsKHR)SwapChainSupportDetails.SurfaceCapabilities.currentTransform;
-	SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	SwapchainCreateInfo.clipped = VK_TRUE;
-	SwapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-
-	if (vkCreateSwapchainKHR(_device(), &SwapchainCreateInfo, nullptr, &m_pSwapChain) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create swap chain!");
-
-	m_SwapChainImageFormat = (VkFormat)SurfaceFormat.format;
-	m_SwapChainExtent = Extent;
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
 {
 	uint32_t SwapChainImageCount = 0;
-	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, nullptr);
+	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, nullptr);
 	m_SwapChainImageSet.resize(SwapChainImageCount);
-	vkGetSwapchainImagesKHR(_device(), m_pSwapChain, &SwapChainImageCount, m_SwapChainImageSet.data());
+	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, m_SwapChainImageSet.data());
 
 	m_SwapChainImageViewSet.resize(SwapChainImageCount);
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], (VkFormat)_swapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	}
 }
 
@@ -227,9 +188,9 @@ void VulkanApp::CPerpixelShadingApp::__createRenderPass()
 	hiveVKT::CVkRenderPassCreator RenderPassCreator;
 
 	auto DepthAttachmentFormat = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	RenderPassCreator.addAttachment((vk::Format)m_SwapChainImageFormat, vk::ImageLayout::eColorAttachmentOptimal, (vk::SampleCountFlagBits)m_SampleCount);
+	RenderPassCreator.addAttachment(_swapchainImageFormat(), vk::ImageLayout::eColorAttachmentOptimal, (vk::SampleCountFlagBits)m_SampleCount);
 	RenderPassCreator.addAttachment((vk::Format)DepthAttachmentFormat, vk::ImageLayout::eDepthStencilAttachmentOptimal, (vk::SampleCountFlagBits)m_SampleCount);
-	RenderPassCreator.addAttachment((vk::Format)m_SwapChainImageFormat, vk::ImageLayout::ePresentSrcKHR);
+	RenderPassCreator.addAttachment(_swapchainImageFormat(), vk::ImageLayout::ePresentSrcKHR);
 	RenderPassCreator.fetchLastAttachment().setLoadOp(vk::AttachmentLoadOp::eDontCare);
 
 	std::vector<vk::AttachmentReference> ColorAttachmentRefs = { {0, vk::ImageLayout::eColorAttachmentOptimal} };
@@ -292,7 +253,7 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	auto VertexShaderModule = ShaderModuleCreator.createUnique(_device(), "vert.spv");
 	auto FragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "frag.spv");
 
-	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(m_SwapChainExtent.width, m_SwapChainExtent.height);
+	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(_swapchainExtent().width, _swapchainExtent().height);
 
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, VertexShaderModule.get());
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, FragmentShaderModule.get());
@@ -330,11 +291,11 @@ void VulkanApp::CPerpixelShadingApp::__createCommandPool()
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 {
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_SampleCount, m_SwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pMsaaImage, m_pMsaaImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, m_SampleCount, (VkFormat)_swapchainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pMsaaImage, m_pMsaaImageDeviceMemory);
 
-	m_pMsaaImageView = __createImageView(m_pMsaaImage, m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+	m_pMsaaImageView = __createImageView(m_pMsaaImage, (VkFormat)_swapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
-	__transitionImageLayout(m_pMsaaImage, m_SwapChainImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+	__transitionImageLayout(m_pMsaaImage, (VkFormat)_swapchainImageFormat(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 }
 
 //************************************************************************************
@@ -342,7 +303,7 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 {
 	VkFormat DepthImageFormat = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	__createImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_SampleCount, DepthImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pDepthImage, m_pDepthImageDeviceMemory);
+	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, m_SampleCount, DepthImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pDepthImage, m_pDepthImageDeviceMemory);
 	m_pDepthImageView = __createImageView(m_pDepthImage, DepthImageFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 	__transitionImageLayout(m_pDepthImage, DepthImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
 }
@@ -470,8 +431,8 @@ void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 		FramebufferCreateInfo.pAttachments = Attachments.data();
 		FramebufferCreateInfo.renderPass = m_pRenderPass;
 		FramebufferCreateInfo.layers = 1;
-		FramebufferCreateInfo.width = m_SwapChainExtent.width;
-		FramebufferCreateInfo.height = m_SwapChainExtent.height;
+		FramebufferCreateInfo.width = _swapchainExtent().width;
+		FramebufferCreateInfo.height = _swapchainExtent().height;
 
 		if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_FramebufferSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create frame buffer!");
@@ -818,7 +779,7 @@ void VulkanApp::CPerpixelShadingApp::__createCommandBuffers()
 		RenderPassBeginInfo.renderPass = m_pRenderPass;
 		RenderPassBeginInfo.framebuffer = m_FramebufferSet[i];
 		RenderPassBeginInfo.renderArea.offset = { 0, 0 };
-		RenderPassBeginInfo.renderArea.extent = m_SwapChainExtent;
+		RenderPassBeginInfo.renderArea.extent = _swapchainExtent();
 
 		std::array<VkClearValue, 2> ClearValueSet = {};
 		ClearValueSet[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -896,7 +857,7 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 	SUniformBufferObject UBO = {};
 	UBO.Model = glm::rotate(glm::mat4(1.0f), Time*glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	UBO.View = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	UBO.Projection = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / static_cast<float>(m_SwapChainExtent.height), 0.1f, 10.0f);
+	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / static_cast<float>(_swapchainExtent().height), 0.1f, 10.0f);
 
 	UBO.Projection[1][1] *= -1;
 
@@ -947,61 +908,6 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 
 			m_IndexData.push_back(UniqueVertices[Vertex]);
 		}
-	}
-}
-
-//************************************************************************************
-//Function:
-vk::SurfaceFormatKHR VulkanApp::CPerpixelShadingApp::__determineSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& vCandidateSurfaceFormatSet)const
-{
-	if (vCandidateSurfaceFormatSet.size() == 1 && vCandidateSurfaceFormatSet[0].format == vk::Format::eUndefined)
-		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
-
-	for (const auto& Format : vCandidateSurfaceFormatSet)
-	{
-		if (Format.format == vk::Format::eB8G8R8A8Unorm && Format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
-			return Format;
-	}
-
-	return vCandidateSurfaceFormatSet[0];
-}
-
-//************************************************************************************
-//Function:
-vk::PresentModeKHR VulkanApp::CPerpixelShadingApp::__determinePresentMode(const std::vector<vk::PresentModeKHR>& vCandidatePresentModeSet)const
-{
-	vk::PresentModeKHR BestPresentMode = vk::PresentModeKHR::eFifo;
-
-	for (const auto& PresentMode : vCandidatePresentModeSet)
-	{
-		if (PresentMode == vk::PresentModeKHR::eMailbox)
-			return PresentMode;
-		else if (PresentMode == vk::PresentModeKHR::eImmediate)
-			BestPresentMode = PresentMode;
-	}
-
-	return BestPresentMode;
-}
-
-//************************************************************************************
-//Function:
-VkExtent2D VulkanApp::CPerpixelShadingApp::__determineSwapChainExtent(const vk::SurfaceCapabilitiesKHR& vSurfaceCapabilities)const
-{
-	if (vSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-	{
-		return vSurfaceCapabilities.currentExtent;
-	}
-	else
-	{
-		int WindowWidth = 0, WindowHeight = 0;
-		glfwGetFramebufferSize(m_pGLFWWindow, &WindowWidth, &WindowHeight);
-
-		VkExtent2D ActualExtent = { static_cast<uint32_t>(WindowWidth), static_cast<uint32_t>(WindowHeight) };
-
-		ActualExtent.width = std::max(vSurfaceCapabilities.minImageExtent.width, std::min(vSurfaceCapabilities.maxImageExtent.width, ActualExtent.width));
-		ActualExtent.height = std::max(vSurfaceCapabilities.minImageExtent.height, std::min(vSurfaceCapabilities.maxImageExtent.height, ActualExtent.height));
-
-		return ActualExtent;
 	}
 }
 
