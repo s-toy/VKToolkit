@@ -48,7 +48,7 @@ namespace hiveVKT
 		vk::PhysicalDevice _physicalDevice()	const { return m_VkPhysicalDevice; }
 		vk::Device _device()					const { return m_VkDevice; }
 		vk::SwapchainKHR _swapchain()			const { return m_VkSwapchain; }
-		vk::Format _swapchainImageFormat()			const { return m_SwapChainImageFormat; }
+		vk::Format _swapchainImageFormat()		const { return m_SwapChainImageFormat; }
 		vk::Extent2D _swapchainExtent()			const { return m_SwapChainExtent; }
 
 		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }

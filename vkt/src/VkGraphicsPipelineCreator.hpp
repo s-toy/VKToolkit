@@ -29,24 +29,14 @@ namespace hiveVKT
 			vk::PipelineShaderStageCreateInfo ShaderStage{ {}, vStageFlag , vModule, vEntryName };
 			m_ShaderStageSet.emplace_back(ShaderStage);
 		}
-		void clearShaderStage()
-		{
-			while (!m_ShaderStageSet.empty())
-				m_ShaderStageSet.pop_back();
-		}
+		void clearShaderStage() { m_ShaderStageSet.clear(); }
 
 		void setInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& vValue) { m_InputAssemblyStateCreateInfo = vValue; }
 		vk::PipelineInputAssemblyStateCreateInfo& fetchInputAssemblyState() { return m_InputAssemblyStateCreateInfo; }
 
 		void addVertexBinding(const vk::VertexInputBindingDescription& vValue) { m_VertexBindingDescriptionSet.emplace_back(vValue); }
 		void addVertexAttribute(const vk::VertexInputAttributeDescription& vValue) { m_VertexAttributeDescriptionSet.emplace_back(vValue); }
-		void clearVertexInputInfo()
-		{
-			while (!m_VertexBindingDescriptionSet.empty())
-				m_VertexBindingDescriptionSet.pop_back();
-			while (!m_VertexAttributeDescriptionSet.empty())
-				m_VertexAttributeDescriptionSet.pop_back();
-		}
+		void clearVertexInputInfo() { m_VertexBindingDescriptionSet.clear(); m_VertexAttributeDescriptionSet.clear(); }
 
 		void setTessellationState(const vk::PipelineTessellationStateCreateInfo& vValue) { m_TessellationStateCreateInfo = vValue; }
 		vk::PipelineTessellationStateCreateInfo& fetchTessellationState() { return m_TessellationStateCreateInfo.value(); }
@@ -65,20 +55,12 @@ namespace hiveVKT
 		vk::PipelineDepthStencilStateCreateInfo& fetchDepthStencilState() { return m_DepthStencilStateCreateInfo; }
 
 		void addColorBlendAttachment(const vk::PipelineColorBlendAttachmentState& vColorBlendAttachmentState) { m_ColorBlendAttachmentStateSet.emplace_back(vColorBlendAttachmentState); }
-		void clearColorBlendAttachment()
-		{
-			while (!m_ColorBlendAttachmentStateSet.empty())
-				m_ColorBlendAttachmentStateSet.pop_back();
-		}
+		void clearColorBlendAttachment() { m_ColorBlendAttachmentStateSet.clear(); }
 		void setColorBlendState(const vk::PipelineColorBlendStateCreateInfo &vValue) { m_ColorBlendStateCreateInfo = vValue; }
 		vk::PipelineColorBlendStateCreateInfo& fetchColorBlendState() { return m_ColorBlendStateCreateInfo; }
 
 		void addDynamicState(const vk::DynamicState& vDynamicState) { m_DynamicStateSet.emplace_back(vDynamicState); }
-		void clearDynamicState()
-		{
-			while (!m_DynamicStateSet.empty())
-				m_DynamicStateSet.pop_back();
-		}
+		void clearDynamicState() { m_DynamicStateSet.clear(); }
 
 		void setSubPass(uint32_t vSubPass) { m_Subpass = vSubPass; }
 

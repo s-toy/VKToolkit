@@ -21,7 +21,7 @@ namespace hiveVKT
 			glfwWindowHint(GLFW_RESIZABLE, vDisplayInfo.IsWindowResizable);
 
 		#ifdef _ENABLE_DEBUG_UTILS
-			glfwSetErrorCallback(__glfwErrorCallback);
+			glfwSetErrorCallback(__glfwErrorCallback);	//HACK:
 		#endif
 
 			auto pWindow = vDisplayInfo.IsWindowFullScreen ? __createFullScreenWindow(vDisplayInfo) : 
@@ -58,6 +58,7 @@ namespace hiveVKT
 		static GLFWwindow* __createFullScreenWindow(const SDisplayInfo& vDisplayInfo)
 		{
 			GLFWmonitor *pMonitor = glfwGetPrimaryMonitor();
+			_ASSERTE(pMonitor);
 
 			int ScreenWidth, ScreenHeight;
 			__queryScreenSize(ScreenWidth, ScreenHeight);
