@@ -50,7 +50,7 @@ namespace hiveVKT
 			SubpassDesc.pInputAttachments = vInputAttachmentReferences.data();
 			SubpassDesc.preserveAttachmentCount = static_cast<uint32_t>(vPreserveAttachmentReferences.size());
 			SubpassDesc.pPreserveAttachments = vPreserveAttachmentReferences.data();
-			SubpassDesc.pDepthStencilAttachment = &vDepthStencilAttachmentReference;
+			SubpassDesc.pDepthStencilAttachment = (vDepthStencilAttachmentReference == vk::AttachmentReference()) ? nullptr : &vDepthStencilAttachmentReference;
 			SubpassDesc.pResolveAttachments = vResolveAttachmentReferences.data();
 			m_SubpassDescriptionSet.push_back(SubpassDesc);
 		}

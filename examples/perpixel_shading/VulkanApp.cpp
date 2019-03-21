@@ -160,7 +160,6 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 void VulkanApp::CPerpixelShadingApp::__retrieveDeviceQueue()
 {
 	SQueueFamilyIndices QueueFamilyIndices = _requiredQueueFamilyIndices();
-
 	vkGetDeviceQueue(_device(), QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
 }
 

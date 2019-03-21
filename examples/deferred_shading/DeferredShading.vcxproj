@@ -45,6 +45,7 @@
     <ProjectGuid>{B5B1CD72-4AA0-4AFA-8A2C-8CA3E3A9F2E5}</ProjectGuid>
     <RootNamespace>DeferredShading</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>deferred_shading</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

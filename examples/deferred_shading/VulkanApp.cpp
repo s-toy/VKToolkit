@@ -279,10 +279,10 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenRenderPass()
 	SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	SubpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 	SubpassDependency.dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-	SubpassDependency.srcAccessMask= vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+	SubpassDependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
 	SubpassDependency.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
 	SubpassDependency.dependencyFlags = vk::DependencyFlagBits::eByRegion;
-	
+
 	RenderPassCreator.addSubpassDependency(SubpassDependency);
 
 	m_pOffScreenRenderPass = RenderPassCreator.create(_device());
@@ -346,50 +346,19 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenPipelineLayout()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createDeferredRenderPass()
 {
-	VkAttachmentDescription ColorAttachment = {};
-	ColorAttachment.format = (VkFormat)_swapchainImageFormat();
-	ColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	ColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	ColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	ColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	ColorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	ColorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	hiveVKT::CVkRenderPassCreator RenderPassCreator;
+	RenderPassCreator.addAttachment(_swapchainImageFormat(), vk::ImageLayout::ePresentSrcKHR);
+	const std::vector<vk::AttachmentReference> ColorAttachmentReferences = { {0, vk::ImageLayout::eColorAttachmentOptimal} };
+	RenderPassCreator.addSubpass(ColorAttachmentReferences, {}, {}, {}, {});
 
-	VkAttachmentReference ColorAttachmentReference = {};
-	ColorAttachmentReference.attachment = 0;
-	ColorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkSubpassDescription SubpassDescription = {};
-	SubpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	SubpassDescription.colorAttachmentCount = 1;
-	SubpassDescription.pColorAttachments = &ColorAttachmentReference;
-	SubpassDescription.inputAttachmentCount = 0;
-	SubpassDescription.pInputAttachments = nullptr;
-	SubpassDescription.preserveAttachmentCount = 0;
-	SubpassDescription.pPreserveAttachments = nullptr;
-	SubpassDescription.pDepthStencilAttachment = nullptr;
-	SubpassDescription.pResolveAttachments = nullptr;
-
-	VkSubpassDependency SubpassDependency = {};
+	vk::SubpassDependency SubpassDependency;
 	SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	SubpassDependency.dstSubpass = 0;
-	SubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	SubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	SubpassDependency.srcAccessMask = 0;
-	SubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	SubpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	SubpassDependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	SubpassDependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+	RenderPassCreator.addSubpassDependency(SubpassDependency);
 
-	VkRenderPassCreateInfo RenderPassCreateInfo = {};
-	RenderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	RenderPassCreateInfo.attachmentCount = 1;
-	RenderPassCreateInfo.pAttachments = &ColorAttachment;
-	RenderPassCreateInfo.dependencyCount = 1;
-	RenderPassCreateInfo.pDependencies = &SubpassDependency;
-	RenderPassCreateInfo.subpassCount = 1;
-	RenderPassCreateInfo.pSubpasses = &SubpassDescription;
-
-	if (vkCreateRenderPass(_device(), &RenderPassCreateInfo, nullptr, &m_pDeferredRenderPass) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create render pass!");
+	m_pDeferredRenderPass = RenderPassCreator.create(_device());
 }
 
 //************************************************************************************
