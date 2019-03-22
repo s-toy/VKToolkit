@@ -24,10 +24,8 @@
 
 namespace hiveVKT
 {
-	struct SDisplayInfo
+	struct SWindowCreateInfo
 	{
-		SDisplayInfo() {  }
-
 		int WindowWidth = 0, WindowHeight = 0;
 		int WindowPosX = 0, WindowPosY = 0;
 		std::string WindowTitle = "";

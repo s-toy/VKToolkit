@@ -443,7 +443,7 @@ void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 {
 	int TextureWidth = 0, TextureHeight = 0, TextureChannels = 0;
-	unsigned char* Pixels = stbi_load("../../resource/models/chalet/Chalet.jpg", &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
+	unsigned char* Pixels = stbi_load("../../resource/models/cyborg/cyborg_diffuse.png", &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
 	if (!Pixels)
 		throw std::runtime_error("Failed to load texture image!");
 
@@ -853,10 +853,13 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 	auto CurrentTime = std::chrono::high_resolution_clock::now();
 	float Time = std::chrono::duration<float, std::chrono::seconds::period>(CurrentTime - StartTime).count();
 
+	static float k = 0.0f;
+	k += 0.0001;
+
 	SUniformBufferObject UBO = {};
-	UBO.Model = glm::rotate(glm::mat4(1.0f), Time*glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	UBO.View = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / static_cast<float>(_swapchainExtent().height), 0.1f, 10.0f);
+	//UBO.Model = glm::rotate(glm::mat4(1.0f), Time*glm::radians(90.0f), glm::v	ec3(0.0f, 0.0f, 1.0f));
+	UBO.View = glm::lookAt(glm::vec3(0.0f + k, 0.0f, 8.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / static_cast<float>(_swapchainExtent().height), 0.1f, 15.0f);
 
 	UBO.Projection[1][1] *= -1;
 
@@ -875,7 +878,7 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 	std::vector<tinyobj::material_t> MaterialSet;
 	std::string Warn, Error;
 
-	if (!tinyobj::LoadObj(&Attribute, &ShapeSet, &MaterialSet, &Warn, &Error, "../../resource/models/chalet/Chalet.obj"))
+	if (!tinyobj::LoadObj(&Attribute, &ShapeSet, &MaterialSet, &Warn, &Error, "../../resource/models/cyborg/cyborg.obj"))
 		throw std::runtime_error(Warn + Error);
 
 	std::unordered_map<SVertex, uint32_t> UniqueVertices = {};

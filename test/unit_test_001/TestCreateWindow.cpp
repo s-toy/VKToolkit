@@ -20,7 +20,7 @@ protected:
 		glfwDestroyWindow(m_pWindow);
 	}
 
-	SDisplayInfo m_DisplayInfo;
+	SWindowCreateInfo m_DisplayInfo;
 	GLFWwindow* m_pWindow = nullptr;
 };
 
