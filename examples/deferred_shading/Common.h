@@ -59,39 +59,6 @@ namespace DeferredShading
 		}
 	};
 
-	struct SInstanceData
-	{
-		glm::vec3 Position;
-
-		static vk::VertexInputBindingDescription getBindingDescription()
-		{
-			vk::VertexInputBindingDescription VertexInputBindingDescription = {};
-			VertexInputBindingDescription.binding = PER_INSTANCE_DATA_BINDING;
-			VertexInputBindingDescription.stride = sizeof(SInstanceData);
-			VertexInputBindingDescription.inputRate = vk::VertexInputRate::eInstance;;
-
-			return VertexInputBindingDescription;
-		}
-
-		static std::array<vk::VertexInputAttributeDescription, 1> getAttributeDescription()
-		{
-			std::array<vk::VertexInputAttributeDescription, 1> VertexInputAttributeDescriptions = {};
-			VertexInputAttributeDescriptions[0].binding = PER_INSTANCE_DATA_BINDING;
-			VertexInputAttributeDescriptions[0].location = 3;
-			VertexInputAttributeDescriptions[0].format = vk::Format::eR32G32B32A32Sfloat;
-			VertexInputAttributeDescriptions[0].offset = offsetof(SInstanceData, Position);
-
-			return VertexInputAttributeDescriptions;
-		}
-	};
-
-	const std::vector<SInstanceData> gInstanceData4Model = {
-		{glm::vec3(-4.5f,0.0f,0.0f)},
-		{glm::vec3(-1.5f,0.0f,0.0f)},
-		{glm::vec3(1.5f,0.0f,0.0f)},
-		{glm::vec3(4.5f,0.0f,0.0f)}
-	};
-
 	struct SQuadVertex
 	{
 		glm::vec3 Position;

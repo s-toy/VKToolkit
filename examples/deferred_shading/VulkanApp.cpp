@@ -36,7 +36,6 @@ bool DeferredShading::CDeferredShadingApp::_initV()
 	__createDeferredFramebuffers();
 
 	__loadModel();
-	__createInstanceDataBuffer();
 	__createVertexBuffers();
 	__createIndexBuffers();
 
@@ -171,9 +170,6 @@ void DeferredShading::CDeferredShadingApp::__cleanup()
 	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory_Quad, nullptr);
 	vkDestroyBuffer(_device(), m_pIndexBuffer_Quad, nullptr);
 	vkFreeMemory(_device(), m_pIndexBufferMemory_Quad, nullptr);
-
-	vkDestroyBuffer(_device(), m_pInstanceDataBuffer, nullptr);
-	vkFreeMemory(_device(), m_pInstanceDataBufferDeviceMemory, nullptr);
 
 	vkDestroyImage(_device(), m_pOffScreenPositionImage, nullptr);
 	vkDestroyImageView(_device(), m_pOffScreenPositionImageView, nullptr);
@@ -434,13 +430,8 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 
 	auto BindingDescription = SVertex::getBindingDescription();
 	auto AttributeDescription = SVertex::getAttributeDescription();
-	auto BindingDescription4Instance = SInstanceData::getBindingDescription();
-	auto AttributeDescription4Instance = SInstanceData::getAttributeDescription();
 	PipelineCreator.addVertexBinding(BindingDescription);
-	PipelineCreator.addVertexBinding(BindingDescription4Instance);
 	for (auto Attribute : AttributeDescription)
-		PipelineCreator.addVertexAttribute(Attribute);
-	for (auto Attribute : AttributeDescription4Instance)
 		PipelineCreator.addVertexAttribute(Attribute);
 
 	PipelineCreator.fetchRasterizationState().setCullMode(vk::CullModeFlagBits::eBack);
@@ -1231,13 +1222,11 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenCommandBuffers()
 		vkCmdBeginRenderPass(m_OffScreenCommandBufferSet[i], &RenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(m_OffScreenCommandBufferSet[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pOffScreenPipeline);
 		VkBuffer VertexBuffers[] = { m_pVertexBuffer_Model };
-		VkBuffer InstanceBuffers[] = { m_pInstanceDataBuffer };
 		VkDeviceSize Offsets[] = { 0 };
 		vkCmdBindVertexBuffers(m_OffScreenCommandBufferSet[i], 0, 1, VertexBuffers, Offsets);
-		vkCmdBindVertexBuffers(m_OffScreenCommandBufferSet[i], 1, 1, InstanceBuffers, Offsets);
 		vkCmdBindIndexBuffer(m_OffScreenCommandBufferSet[i], m_pIndexBuffer_Model, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdBindDescriptorSets(m_OffScreenCommandBufferSet[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pOffScreenPipelineLayout, 0, 1, &m_OffScreenDescriptorSet[i], 0, nullptr);
-		vkCmdDrawIndexed(m_OffScreenCommandBufferSet[i], static_cast<uint32_t>(m_ModelIndexData.size()), 4, 0, 0, 0);
+		vkCmdDrawIndexed(m_OffScreenCommandBufferSet[i], static_cast<uint32_t>(m_ModelIndexData.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(m_OffScreenCommandBufferSet[i]);
 
 		if (vkEndCommandBuffer(m_OffScreenCommandBufferSet[i]) != VK_SUCCESS)
@@ -1419,30 +1408,6 @@ void DeferredShading::CDeferredShadingApp::__loadModel()
 			m_ModelIndexData.push_back(UniqueVertices[Vertex]);
 		}
 	}
-}
-
-//************************************************************************************
-//Function:
-void DeferredShading::CDeferredShadingApp::__createInstanceDataBuffer()
-{
-	VkDeviceSize BufferSize = sizeof(gInstanceData4Model[0])* gInstanceData4Model.size();
-
-	VkBuffer pStagingBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory pStagingBufferDeviceMemory = VK_NULL_HANDLE;
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
-
-	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
-	memcpy(Data, gInstanceData4Model.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pInstanceDataBuffer, m_pInstanceDataBufferDeviceMemory);
-
-	__copyBuffer(pStagingBuffer, m_pInstanceDataBuffer, BufferSize);
-
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
 }
 
 //************************************************************************************
