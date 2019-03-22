@@ -31,9 +31,7 @@ namespace DeferredShading
 		void __createDeferredFramebuffers();
 
 		void __loadModel();
-		//Model instance data, Quad's vertex data and Quad's index data are defined in Common.h
 
-		void __createInstanceDataBuffer();
 		void __createVertexBuffers();
 		void __createIndexBuffers();
 
@@ -105,10 +103,6 @@ namespace DeferredShading
 		//model vertex data
 		std::vector<SVertex> m_ModelVertexData;
 		std::vector<uint32_t> m_ModelIndexData;
-
-		//instance data buffer
-		VkBuffer m_pInstanceDataBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory m_pInstanceDataBufferDeviceMemory = VK_NULL_HANDLE;
 
 		//vertex buffers and index buffers
 		VkBuffer m_pVertexBuffer_Model = VK_NULL_HANDLE;
