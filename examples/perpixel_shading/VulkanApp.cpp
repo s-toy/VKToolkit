@@ -126,21 +126,8 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 	vkDestroyBuffer(_device(), m_pVertexBuffer, nullptr);
 	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory, nullptr);
 
-	vkDestroySampler(_device(), m_pTextureSampler, nullptr);
-	vkDestroyImageView(_device(), m_pTextureImageView, nullptr);
-	vkDestroyImage(_device(), m_pTextureImage, nullptr);
-	vkFreeMemory(_device(), m_pTextureImageDeviceMemory, nullptr);
-
 	for (auto i = 0; i < m_FramebufferSet.size(); ++i)
 		vkDestroyFramebuffer(_device(), m_FramebufferSet[i], nullptr);
-
-	vkDestroyImageView(_device(), m_pDepthImageView, nullptr);
-	vkDestroyImage(_device(), m_pDepthImage, nullptr);
-	vkFreeMemory(_device(), m_pDepthImageDeviceMemory, nullptr);
-
-	vkDestroyImageView(_device(), m_pMsaaImageView, nullptr);
-	vkDestroyImage(_device(), m_pMsaaImage, nullptr);
-	vkFreeMemory(_device(), m_pMsaaImageDeviceMemory, nullptr);
 
 	vkDestroyCommandPool(_device(), m_pCommandPool, nullptr);
 
@@ -151,6 +138,11 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 
 	for (auto i = 0; i < m_SwapChainImageViewSet.size(); ++i)
 		vkDestroyImageView(_device(), m_SwapChainImageViewSet[i], nullptr);
+
+	m_MsaaAttachment.destroy(_device());
+	m_DepthAttachment.destroy(_device());
+	m_Texture.destroy(_device());
+	vkDestroySampler(_device(), m_pTextureSampler, nullptr);
 
 	CVkApplicationBase::_destroyV();
 }
@@ -290,11 +282,23 @@ void VulkanApp::CPerpixelShadingApp::__createCommandPool()
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 {
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, m_SampleCount, (VkFormat)_swapchainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pMsaaImage, m_pMsaaImageDeviceMemory);
+	vk::ImageCreateInfo ImageCreateInfo = {};
+	ImageCreateInfo.imageType = vk::ImageType::e2D;
+	ImageCreateInfo.extent = vk::Extent3D{ _swapchainExtent().width, _swapchainExtent().height, 1 };
+	ImageCreateInfo.mipLevels = 1;
+	ImageCreateInfo.arrayLayers = 1;
+	ImageCreateInfo.format = _swapchainImageFormat();
+	ImageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+	ImageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+	ImageCreateInfo.usage = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment;
+	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	m_pMsaaImageView = __createImageView(m_pMsaaImage, (VkFormat)_swapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-	__transitionImageLayout(m_pMsaaImage, (VkFormat)_swapchainImageFormat(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+	m_MsaaAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _PhysicalDeviceMemoryProperties(), false);
+	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
+	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
+	m_MsaaAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eColorAttachmentOptimal, TranslateRange);
+	__endSingleTimeCommands(CommandBuffer);
 }
 
 //************************************************************************************
@@ -302,115 +306,23 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 {
 	VkFormat DepthImageFormat = __findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, m_SampleCount, DepthImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pDepthImage, m_pDepthImageDeviceMemory);
-	m_pDepthImageView = __createImageView(m_pDepthImage, DepthImageFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-	__transitionImageLayout(m_pDepthImage, DepthImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
-}
 
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory)
-{
-	VkImageCreateInfo ImageCreateInfo = {};
-	ImageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	ImageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-	ImageCreateInfo.extent.width = vImageWidth;
-	ImageCreateInfo.extent.height = vImageHeight;
-	ImageCreateInfo.extent.depth = 1;
-	ImageCreateInfo.mipLevels = vMipmapLevel;
+	vk::ImageCreateInfo ImageCreateInfo = {};
+	ImageCreateInfo.imageType = vk::ImageType::e2D;
+	ImageCreateInfo.extent = vk::Extent3D{ _swapchainExtent().width, _swapchainExtent().height, 1 };
+	ImageCreateInfo.mipLevels = 1;
 	ImageCreateInfo.arrayLayers = 1;
-	ImageCreateInfo.format = vImageFormat;
-	ImageCreateInfo.tiling = vImageTiling;
-	ImageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	ImageCreateInfo.usage = vImageUsages;
-	ImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	ImageCreateInfo.samples = vSampleCount;
+	ImageCreateInfo.format = static_cast<vk::Format>(DepthImageFormat);
+	ImageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+	ImageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+	ImageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	if (vkCreateImage(_device(), &ImageCreateInfo, nullptr, &vImage) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create image!");
-
-	VkMemoryRequirements MemoryRequirements = {};
-	vkGetImageMemoryRequirements(_device(), vImage, &MemoryRequirements);
-
-	VkMemoryAllocateInfo MemoryAllocateInfo = {};
-	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
-	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperties);
-
-	if (vkAllocateMemory(_device(), &MemoryAllocateInfo, nullptr, &vImageDeviceMemory) != VK_SUCCESS)
-		throw std::runtime_error("Failed to allocate memory for image!");
-
-	vkBindImageMemory(_device(), vImage, vImageDeviceMemory, 0);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel)
-{
-	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
-
-	VkImageMemoryBarrier ImageMemoryBarrier = {};
-	ImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	ImageMemoryBarrier.oldLayout = vOldImageLayout;
-	ImageMemoryBarrier.newLayout = vNewImageLayout;
-	ImageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	ImageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	ImageMemoryBarrier.image = vImage;
-
-	if (vNewImageLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		ImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-		if (vImageFormat == VK_FORMAT_D32_SFLOAT_S8_UINT || vImageFormat == VK_FORMAT_D24_UNORM_S8_UINT)
-			ImageMemoryBarrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-	}
-	else
-		ImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-	ImageMemoryBarrier.subresourceRange.levelCount = vMipmapLevel;
-	ImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-	ImageMemoryBarrier.subresourceRange.layerCount = 1;
-	ImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-
-	VkPipelineStageFlags SourceStage;
-	VkPipelineStageFlags DestinationStage;
-
-	if (vOldImageLayout == VK_IMAGE_LAYOUT_UNDEFINED && vNewImageLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		ImageMemoryBarrier.srcAccessMask = 0;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-		SourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-	}
-	else if (vOldImageLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && vNewImageLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
-		ImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-		SourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	}
-	else if (vOldImageLayout == VK_IMAGE_LAYOUT_UNDEFINED && vNewImageLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		ImageMemoryBarrier.srcAccessMask = 0;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-		SourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	}
-	else if (vOldImageLayout == VK_IMAGE_LAYOUT_UNDEFINED && vNewImageLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-	{
-		ImageMemoryBarrier.srcAccessMask = 0;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		SourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	}
-	else
-		throw std::invalid_argument("unsupported layout transition!");
-
-	vkCmdPipelineBarrier(CommandBuffer, SourceStage, DestinationStage, 0, 0, nullptr, 0, nullptr, 1, &ImageMemoryBarrier);
-
+	m_DepthAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, _PhysicalDeviceMemoryProperties(), false);
+	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
+	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eDepth,0,1,0,1 };
+	m_DepthAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal, TranslateRange);
 	__endSingleTimeCommands(CommandBuffer);
 }
 
@@ -422,7 +334,7 @@ void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		std::array<VkImageView, 3> Attachments = { m_pMsaaImageView,m_pDepthImageView,m_SwapChainImageViewSet[i] };
+		std::array<VkImageView, 3> Attachments = { m_MsaaAttachment.getImageView(),m_DepthAttachment.getImageView(),m_SwapChainImageViewSet[i] };
 
 		VkFramebufferCreateInfo FramebufferCreateInfo = {};
 		FramebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -462,15 +374,28 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 
 	stbi_image_free(Pixels);
 
-	__createImage(static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight), m_MipmapLevel, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pTextureImage, m_pTextureImageDeviceMemory);
-	__transitionImageLayout(m_pTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_MipmapLevel);
-	__copyBuffer2Image(pStagingBuffer, m_pTextureImage, static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight));
-	__generateMipmaps(m_pTextureImage, VK_FORMAT_R8G8B8A8_UNORM, TextureWidth, TextureHeight, m_MipmapLevel);
+	vk::ImageCreateInfo ImageCreateInfo = {};
+	ImageCreateInfo.imageType = vk::ImageType::e2D;
+	ImageCreateInfo.extent = vk::Extent3D{ static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight), 1 };
+	ImageCreateInfo.mipLevels = m_MipmapLevel;
+	ImageCreateInfo.arrayLayers = 1;
+	ImageCreateInfo.format = vk::Format::eR8G8B8A8Unorm;
+	ImageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+	ImageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+	ImageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+	ImageCreateInfo.samples = vk::SampleCountFlagBits::e1;
+
+	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _PhysicalDeviceMemoryProperties(), false);
+	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
+	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_MipmapLevel,0,1 };
+	m_Texture.translateImageLayout(CommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);
+	m_Texture.copyFromBuffer(CommandBuffer, pStagingBuffer, 0, { static_cast<uint32_t>(TextureWidth),static_cast<uint32_t>(TextureHeight),1u }, 0);
+	__endSingleTimeCommands(CommandBuffer);
+	__generateMipmaps(m_Texture, TextureWidth, TextureHeight, m_MipmapLevel, vk::Format::eR8G8B8A8Unorm);
 
 	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
 	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
-
-	m_pTextureImageView = __createImageView(m_pTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_MipmapLevel);
 
 	VkSamplerCreateInfo SamplerCreateInfo = {};
 	SamplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -496,37 +421,21 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel)
+void VulkanApp::CPerpixelShadingApp::__generateMipmaps(hiveVKT::CVKGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat)
 {
 	VkFormatProperties FormatProperties;
-	vkGetPhysicalDeviceFormatProperties(_physicalDevice(), vImageFormat, &FormatProperties);
+	vkGetPhysicalDeviceFormatProperties(_physicalDevice(), static_cast<VkFormat>(vTextureFormat), &FormatProperties);
 	if (!(FormatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		throw std::runtime_error("Texture image format does not support linear blitting!");
 
+	int32_t MipmapWidth = vTextureWidth;
+	int32_t MipmapHeight = vTextureHeight;
+
 	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
-
-	VkImageMemoryBarrier ImageMemoryBarrier = {};
-	ImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	ImageMemoryBarrier.image = vImage;
-	ImageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	ImageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	ImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	ImageMemoryBarrier.subresourceRange.levelCount = 1;
-	ImageMemoryBarrier.subresourceRange.layerCount = 1;
-	ImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-
-	int32_t MipmapWidth = vImageWidth;
-	int32_t MipmapHeight = vImageHeight;
 
 	for (uint32_t i = 1; i < vMipmapLevel; ++i)
 	{
-		ImageMemoryBarrier.subresourceRange.baseMipLevel = i - 1;
-		ImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		ImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		ImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-		vkCmdPipelineBarrier(CommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &ImageMemoryBarrier);
+		vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eTransferSrcOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
 
 		VkImageBlit ImageBlit = {};
 		ImageBlit.srcOffsets[0] = { 0,0,0 };
@@ -542,26 +451,15 @@ void VulkanApp::CPerpixelShadingApp::__generateMipmaps(VkImage vImage, VkFormat 
 		ImageBlit.dstSubresource.baseArrayLayer = 0;
 		ImageBlit.dstSubresource.layerCount = 1;
 
-		vkCmdBlitImage(CommandBuffer, vImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &ImageBlit, VK_FILTER_LINEAR);
+		vkCmdBlitImage(CommandBuffer, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &ImageBlit, VK_FILTER_LINEAR);
 
-		ImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		ImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		ImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-		ImageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-		vkCmdPipelineBarrier(CommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &ImageMemoryBarrier);
+		vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
 
 		if (MipmapWidth > 1) MipmapWidth /= 2;
 		if (MipmapHeight > 1) MipmapHeight /= 2;
 	}
 
-	ImageMemoryBarrier.subresourceRange.baseMipLevel = vMipmapLevel - 1;
-	ImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	ImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	ImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-	ImageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-	vkCmdPipelineBarrier(CommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &ImageMemoryBarrier);
+	vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, vMipmapLevel - 1);
 
 	__endSingleTimeCommands(CommandBuffer);
 }
@@ -591,28 +489,6 @@ void VulkanApp::CPerpixelShadingApp::__createBuffer(VkDeviceSize vBufferSize, Vk
 		throw std::runtime_error("Failed to allocate memory for vertex buffer!");
 
 	vkBindBufferMemory(_device(), voBuffer, voBufferDeviceMemory, 0);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__copyBuffer2Image(VkBuffer vBuffer, VkImage vImage, uint32_t vImageWidth, uint32_t vImageHeight)
-{
-	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
-
-	VkBufferImageCopy CopyRegion = {};
-	CopyRegion.bufferOffset = 0;
-	CopyRegion.bufferRowLength = 0;
-	CopyRegion.bufferImageHeight = 0;
-	CopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	CopyRegion.imageSubresource.mipLevel = 0;
-	CopyRegion.imageSubresource.layerCount = 1;
-	CopyRegion.imageSubresource.baseArrayLayer = 0;
-	CopyRegion.imageExtent = { vImageWidth,vImageHeight,1 };
-	CopyRegion.imageOffset = { 0,0,0 };
-
-	vkCmdCopyBufferToImage(CommandBuffer, vBuffer, vImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &CopyRegion);
-
-	__endSingleTimeCommands(CommandBuffer);
 }
 
 //************************************************************************************
@@ -722,7 +598,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 		DescriptorBufferInfo.range = sizeof(SUniformBufferObject);
 
 		VkDescriptorImageInfo DescriptorImageInfo = {};
-		DescriptorImageInfo.imageView = m_pTextureImageView;
+		DescriptorImageInfo.imageView = m_Texture.getImageView();
 		DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		DescriptorImageInfo.sampler = m_pTextureSampler;
 
@@ -1031,14 +907,4 @@ void VulkanApp::CPerpixelShadingApp::__endSingleTimeCommands(VkCommandBuffer vCo
 	vkQueueWaitIdle(m_pQueue);
 
 	vkFreeCommandBuffers(_device(), m_pCommandPool, 1, &vCommandBuffer);
-}
-
-//************************************************************************************
-//Function:
-VKAPI_ATTR VkBool32 VKAPI_CALL VulkanApp::CPerpixelShadingApp::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
-	if (vMessageSeverityFlags >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-		std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
-
-	return VK_FALSE;
 }
