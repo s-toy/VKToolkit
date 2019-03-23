@@ -93,7 +93,7 @@ bool hiveVKT::CVkApplicationBase::__initWindow()
 	_ASSERTE(!m_pWindow);
 
 	CWindowCreator WindowCreator;
-	m_pWindow = WindowCreator.create(m_DisplayInfo);
+	m_pWindow = WindowCreator.create(m_WindowCreateInfo);
 
 	return m_pWindow ? true : false;
 }
@@ -164,7 +164,7 @@ void hiveVKT::CVkApplicationBase::__createDevice()
 void hiveVKT::CVkApplicationBase::__createSwapChain()
 {
 	CVkSwapChainCreator SwapchainCreator;
-	m_VkSwapchain = SwapchainCreator.create(m_VkSurface, m_VkDevice, m_VkPhysicalDevice, m_DisplayInfo.WindowWidth, m_DisplayInfo.WindowHeight);
+	m_VkSwapchain = SwapchainCreator.create(m_VkSurface, m_VkDevice, m_VkPhysicalDevice, m_WindowCreateInfo.WindowWidth, m_WindowCreateInfo.WindowHeight);
 
 	m_SwapChainSupportDetails = SwapchainCreator.queryPhysicalDeviceSwapChainSupport(m_VkSurface, m_VkPhysicalDevice);
 	m_SwapChainImageFormat = SwapchainCreator.getSwapChainImageFormat();

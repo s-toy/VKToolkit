@@ -24,11 +24,11 @@ namespace hiveVKT
 
 		void run();
 
-		void setWindowSize(int vWidth, int vHeight) { m_DisplayInfo.WindowWidth = vWidth; m_DisplayInfo.WindowHeight = vHeight; }
-		void setWindowPos(int vPosX, int vPosY) { m_DisplayInfo.WindowPosX = vPosX; m_DisplayInfo.WindowPosY = vPosY; }
-		void setWindowFullScreen(bool vFullScreen) { m_DisplayInfo.IsWindowFullScreen = vFullScreen; }
-		void setWindowResizable(bool vResizable) { m_DisplayInfo.IsWindowResizable = vResizable; }
-		void setWindowTitle(const std::string& vTitle) { m_DisplayInfo.WindowTitle = vTitle; }
+		void setWindowSize(int vWidth, int vHeight) { m_WindowCreateInfo.WindowWidth = vWidth; m_WindowCreateInfo.WindowHeight = vHeight; }
+		void setWindowPos(int vPosX, int vPosY) { m_WindowCreateInfo.WindowPosX = vPosX; m_WindowCreateInfo.WindowPosY = vPosY; }
+		void setWindowFullScreen(bool vFullScreen) { m_WindowCreateInfo.IsWindowFullScreen = vFullScreen; }
+		void setWindowResizable(bool vResizable) { m_WindowCreateInfo.IsWindowResizable = vResizable; }
+		void setWindowTitle(const std::string& vTitle) { m_WindowCreateInfo.WindowTitle = vTitle; }
 
 		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
 
@@ -59,7 +59,7 @@ namespace hiveVKT
 		CVkDebugMessenger* m_pDebugMessenger = nullptr;
 		GLFWwindow* m_pWindow = nullptr;
 
-		SDisplayInfo m_DisplayInfo = {};
+		SWindowCreateInfo m_WindowCreateInfo = {};
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
 		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 

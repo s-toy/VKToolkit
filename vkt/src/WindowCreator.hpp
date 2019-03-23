@@ -11,25 +11,31 @@ namespace hiveVKT
 	class CWindowCreator
 	{
 	public:
-		GLFWwindow* create(const SDisplayInfo& vDisplayInfo)
+		GLFWwindow* create(int vWidth, int vHeight, int vPosX = 0, int vPosY = 0, const std::string& vTitle = "", bool vFullScreen = false, bool vResizable = false)
 		{
-			_HIVE_EARLY_RETURN(!vDisplayInfo.isValid(), "Input parameters for creating window must be valid!", nullptr);
+			SWindowCreateInfo WindowCreateInfo{ vWidth, vHeight, vPosX, vPosY, vTitle, vFullScreen, vResizable };
+			return this->create(WindowCreateInfo);
+		}
+
+		GLFWwindow* create(const SWindowCreateInfo& vCreateInfo)
+		{
+			_HIVE_EARLY_RETURN(!vCreateInfo.isValid(), "Input parameters for creating window must be valid!", nullptr);
 
 			_HIVE_EARLY_RETURN(!glfwInit(), "Failed to create window due to failure of glfwInit()!", nullptr);
 
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-			glfwWindowHint(GLFW_RESIZABLE, vDisplayInfo.IsWindowResizable);
+			glfwWindowHint(GLFW_RESIZABLE, vCreateInfo.IsWindowResizable);
 
 		#ifdef _ENABLE_DEBUG_UTILS
 			glfwSetErrorCallback(__glfwErrorCallback);	//HACK:
 		#endif
 
-			auto pWindow = vDisplayInfo.IsWindowFullScreen ? __createFullScreenWindow(vDisplayInfo) : 
-				glfwCreateWindow(vDisplayInfo.WindowWidth, vDisplayInfo.WindowHeight, vDisplayInfo.WindowTitle.c_str(), nullptr, nullptr);
+			auto pWindow = vCreateInfo.IsWindowFullScreen ? __createFullScreenWindow(vCreateInfo) :
+				glfwCreateWindow(vCreateInfo.WindowWidth, vCreateInfo.WindowHeight, vCreateInfo.WindowTitle.c_str(), nullptr, nullptr);
 
 			_HIVE_EARLY_RETURN(!pWindow, "Failed to create window due to failure of glfwCreateWindow()!", nullptr);
 
-			glfwSetWindowPos(pWindow, vDisplayInfo.WindowPosX, vDisplayInfo.WindowPosY);
+			glfwSetWindowPos(pWindow, vCreateInfo.WindowPosX, vCreateInfo.WindowPosY);
 
 			return pWindow;
 		}
@@ -44,18 +50,18 @@ namespace hiveVKT
 
 		static bool __queryScreenSize(int& voScreenWidth, int& voScreenHeight)
 		{
-		#ifdef _WINDOWS
+#ifdef _WINDOWS
 			voScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 			voScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-		#else
+#else
 			_OUTPUT_WARNING("Failed to query screen size due to the platform is not supported!");
 			return false;
-		#endif // _WINDOWS
+#endif // _WINDOWS
 
 			return true;
 		}
 
-		static GLFWwindow* __createFullScreenWindow(const SDisplayInfo& vDisplayInfo)
+		static GLFWwindow* __createFullScreenWindow(const SWindowCreateInfo& vDisplayInfo)
 		{
 			GLFWmonitor *pMonitor = glfwGetPrimaryMonitor();
 			_ASSERTE(pMonitor);
