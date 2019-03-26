@@ -61,7 +61,7 @@
       <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VKGenericImage.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
