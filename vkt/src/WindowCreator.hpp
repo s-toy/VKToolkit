@@ -50,13 +50,13 @@ namespace hiveVKT
 
 		static bool __queryScreenSize(int& voScreenWidth, int& voScreenHeight)
 		{
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			voScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 			voScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-#else
+		#else
 			_OUTPUT_WARNING("Failed to query screen size due to the platform is not supported!");
 			return false;
-#endif // _WINDOWS
+		#endif // _WINDOWS
 
 			return true;
 		}

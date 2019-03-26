@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="vulkan">
-      <UniqueIdentifier>{d6ea9946-1668-414b-b525-4c7918bb1feb}</UniqueIdentifier>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{fef2dc67-17d0-4f79-9246-a7856bc3a919}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\framework">
+      <UniqueIdentifier>{7e5b5c03-387f-4191-bdc8-2c4d3b158f0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\toolkit">
+      <UniqueIdentifier>{3989973b-b8cb-4c63-a7f9-0f59b71d799f}</UniqueIdentifier>
     </Filter>
     <Filter Include="general">
       <UniqueIdentifier>{d3b32ff9-5148-4285-b785-193200fd023e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vulkan\framework">
-      <UniqueIdentifier>{7e5b5c03-387f-4191-bdc8-2c4d3b158f0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vulkan\toolkit">
-      <UniqueIdentifier>{3989973b-b8cb-4c63-a7f9-0f59b71d799f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -22,45 +22,48 @@
       <Filter>general</Filter>
     </ClInclude>
     <ClInclude Include="src\VkApplicationBase.hpp">
-      <Filter>vulkan\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDebugMessenger.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\framework</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDeviceCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkInstanceCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkShaderModuleCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDerfferedApplication.hpp">
-      <Filter>vulkan\framework</Filter>
+      <Filter>graphics\framework</Filter>
     </ClInclude>
     <ClInclude Include="src\VKTExport.hpp">
       <Filter>general</Filter>
     </ClInclude>
     <ClInclude Include="src\WindowCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkUtility.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkRenderPassCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
     <ClInclude Include="src\VkSwapChainCreator.hpp">
-      <Filter>vulkan\toolkit</Filter>
+      <Filter>graphics\toolkit</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkDebugMessenger.hpp">
+      <Filter>graphics\toolkit</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.hpp">
+      <Filter>graphics\toolkit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp">
-      <Filter>vulkan\framework</Filter>
+      <Filter>graphics\framework</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

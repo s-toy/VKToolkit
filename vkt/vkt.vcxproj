@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Camera.hpp" />
     <ClInclude Include="src\Common.hpp" />
     <ClInclude Include="src\Utility.hpp" />
     <ClInclude Include="src\VkApplicationBase.hpp" />

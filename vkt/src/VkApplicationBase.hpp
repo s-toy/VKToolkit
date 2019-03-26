@@ -13,7 +13,7 @@ namespace hiveVKT
 	struct SQueueFamilyIndices
 	{
 		std::optional<uint32_t> QueueFamily;
-		bool IsComplete() { return QueueFamily.has_value(); }
+		bool IsComplete() const { return QueueFamily.has_value(); }
 	};
 
 	class VKT_DECLSPEC CVkApplicationBase
