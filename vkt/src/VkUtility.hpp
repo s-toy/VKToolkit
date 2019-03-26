@@ -14,4 +14,18 @@ namespace hiveVKT
 
 		return RequiredInstanceLayerSet.empty();
 	}
+
+	static uint32_t findMemoryTypeIndex(const vk::PhysicalDeviceMemoryProperties vPhysicalDeviceMemoryProperties, uint32_t vMemoryTypeFilter, vk::MemoryPropertyFlags vMemoryPropertyFilter)
+	{
+		for (uint32_t i = 0; i < vPhysicalDeviceMemoryProperties.memoryTypeCount; ++i, vMemoryTypeFilter >>= 1)
+		{
+			if (vMemoryTypeFilter & 1)
+			{
+				if ((vPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & vMemoryPropertyFilter) == vMemoryPropertyFilter)
+					return i;
+			}
+		}
+
+		return VK_MAX_MEMORY_TYPES + 1;
+	}
 }

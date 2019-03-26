@@ -144,6 +144,8 @@ void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 	_ASSERTE(!PhysicalDeviceSet.empty());
 	m_VkPhysicalDevice = PhysicalDeviceSet[0];	//TODO: check whether the physical device is suitable.
 
+	m_VKPhysicalDeviceMemoryProperties = m_VkPhysicalDevice.getMemoryProperties();
+
 	__findRequiredQueueFamilies(m_VkPhysicalDevice);
 }
 

@@ -2,6 +2,7 @@
 #include "Common.h"
 #include <GLFW/glfw3.h>
 #include "VkApplicationBase.hpp"
+#include "VKGenericImage.hpp"
 
 namespace VulkanApp
 {
@@ -21,13 +22,10 @@ namespace VulkanApp
 		void __createCommandPool();
 		void __createMsaaResource();
 		void __createDepthResources();
-		void __createImage(uint32_t vImageWidth, uint32_t vImageHeight, uint32_t vMipmapLevel, VkSampleCountFlagBits vSampleCount, VkFormat vImageFormat, VkImageTiling vImageTiling, VkImageUsageFlags vImageUsages, VkMemoryPropertyFlags vMemoryProperties, VkImage& vImage, VkDeviceMemory& vImageDeviceMemory);
-		void __transitionImageLayout(VkImage vImage, VkFormat vImageFormat, VkImageLayout vOldImageLayout, VkImageLayout vNewImageLayout, uint32_t vMipmapLevel);
 		void __createFramebuffers();
 		void __createTextureSamplerResources();
-		void __generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel);
+		void __generateMipmaps(hiveVKT::CVKGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat);
 		void __createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory);
-		void __copyBuffer2Image(VkBuffer vBuffer, VkImage vImage, uint32_t vImageWidth, uint32_t vImageHeight);
 		void __createVertexBuffer();
 		void __createIndexBuffer();
 		void __createUniformBuffers();
@@ -47,8 +45,6 @@ namespace VulkanApp
 		VkCommandBuffer __beginSingleTimeCommands();
 		void __endSingleTimeCommands(VkCommandBuffer vCommandBuffer);
 
-		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
-
 		GLFWwindow* m_pGLFWWindow = nullptr;
 
 		VkQueue m_pQueue = VK_NULL_HANDLE;
@@ -57,15 +53,9 @@ namespace VulkanApp
 		VkPipelineLayout m_pPipelineLayout = VK_NULL_HANDLE;
 		VkPipeline m_pGraphicsPipeline = VK_NULL_HANDLE;
 		VkCommandPool m_pCommandPool = VK_NULL_HANDLE;
-		VkImage m_pMsaaImage = VK_NULL_HANDLE;
-		VkDeviceMemory m_pMsaaImageDeviceMemory = VK_NULL_HANDLE;
-		VkImageView m_pMsaaImageView = VK_NULL_HANDLE;
-		VkImage m_pDepthImage = VK_NULL_HANDLE;
-		VkDeviceMemory m_pDepthImageDeviceMemory = VK_NULL_HANDLE;
-		VkImageView m_pDepthImageView = VK_NULL_HANDLE;
-		VkImage m_pTextureImage = VK_NULL_HANDLE;
-		VkDeviceMemory m_pTextureImageDeviceMemory = VK_NULL_HANDLE;
-		VkImageView m_pTextureImageView = VK_NULL_HANDLE;
+		hiveVKT::CVKGenericImage m_MsaaAttachment;
+		hiveVKT::CVKGenericImage m_DepthAttachment;
+		hiveVKT::CVKGenericImage m_Texture;
 		VkSampler m_pTextureSampler = VK_NULL_HANDLE;
 		VkBuffer m_pVertexBuffer = VK_NULL_HANDLE;
 		VkDeviceMemory m_pVertexBufferDeviceMemory = VK_NULL_HANDLE;

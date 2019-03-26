@@ -51,6 +51,7 @@ namespace hiveVKT
 		vk::Format _swapchainImageFormat()		const { return m_SwapChainImageFormat; }
 		vk::Extent2D _swapchainExtent()			const { return m_SwapChainExtent; }
 
+		vk::PhysicalDeviceMemoryProperties _PhysicalDeviceMemoryProperties() const { return m_VKPhysicalDeviceMemoryProperties; }
 		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
 		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_SwapChainSupportDetails; }
 
@@ -67,6 +68,7 @@ namespace hiveVKT
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;
 		vk::PhysicalDeviceFeatures m_VkPhysicalDeviceFeatures;
+		vk::PhysicalDeviceMemoryProperties m_VKPhysicalDeviceMemoryProperties;
 		vk::Device m_VkDevice;
 		vk::SwapchainKHR m_VkSwapchain;
 		vk::Format m_SwapChainImageFormat;

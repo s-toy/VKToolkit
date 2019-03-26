@@ -26,6 +26,7 @@
     <ClInclude Include="src\VkDebugMessenger.hpp" />
     <ClInclude Include="src\VkDerfferedApplication.hpp" />
     <ClInclude Include="src\VkDeviceCreator.hpp" />
+    <ClInclude Include="src\VKGenericImage.hpp" />
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
     <ClInclude Include="src\VkInstanceCreator.hpp" />
     <ClInclude Include="src\VkRenderPassCreator.hpp" />

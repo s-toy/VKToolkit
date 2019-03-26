@@ -60,6 +60,9 @@
     <ClInclude Include="src\Camera.hpp">
       <Filter>graphics\toolkit</Filter>
     </ClInclude>
+    <ClInclude Include="src\VKGenericImage.hpp">
+      <Filter>vulkan\toolkit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp">
