@@ -241,8 +241,8 @@ void VulkanApp::CPerpixelShadingApp::__createPipelineLayout()
 void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 {
 	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
-	auto VertexShaderModule = ShaderModuleCreator.createUnique(_device(), "vert.spv");
-	auto FragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "frag.spv");
+	auto VertexShaderModule = ShaderModuleCreator.createUnique(_device(), "perpixel_shading_vs.spv");
+	auto FragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "perpixel_shading_fs.spv");
 
 	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(_swapchainExtent().width, _swapchainExtent().height);
 
@@ -251,7 +251,7 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 
 	PipelineCreator.addVertexBinding({ 0, sizeof(SVertex) , vk::VertexInputRate::eVertex });
 	PipelineCreator.addVertexAttribute({ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(SVertex, SVertex::Position) });
-	PipelineCreator.addVertexAttribute({ 1, 0, vk::Format::eR32G32B32Sfloat , offsetof(SVertex, SVertex::Color) });
+	PipelineCreator.addVertexAttribute({ 1, 0, vk::Format::eR32G32B32Sfloat , offsetof(SVertex, SVertex::Normal) });
 	PipelineCreator.addVertexAttribute({ 2, 0, vk::Format::eR32G32Sfloat , offsetof(SVertex, SVertex::TexCoord) });
 
 	PipelineCreator.fetchRasterizationState().setFrontFace(vk::FrontFace::eCounterClockwise);
@@ -294,7 +294,7 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	m_MsaaAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _PhysicalDeviceMemoryProperties(), false);
+	m_MsaaAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _physicalDeviceMemoryProperties(), false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
 	m_MsaaAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eColorAttachmentOptimal, TranslateRange);
@@ -319,7 +319,7 @@ void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	m_DepthAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, _PhysicalDeviceMemoryProperties(), false);
+	m_DepthAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, _physicalDeviceMemoryProperties(), false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eDepth,0,1,0,1 };
 	m_DepthAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal, TranslateRange);
@@ -386,7 +386,7 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
-	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _PhysicalDeviceMemoryProperties(), false);
+	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _physicalDeviceMemoryProperties(), false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_MipmapLevel,0,1 };
 	m_Texture.translateImageLayout(CommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);
@@ -421,7 +421,7 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__generateMipmaps(hiveVKT::CVKGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat)
+void VulkanApp::CPerpixelShadingApp::__generateMipmaps(hiveVKT::CVkGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat)
 {
 	VkFormatProperties FormatProperties;
 	vkGetPhysicalDeviceFormatProperties(_physicalDevice(), static_cast<VkFormat>(vTextureFormat), &FormatProperties);
@@ -729,12 +729,9 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 	auto CurrentTime = std::chrono::high_resolution_clock::now();
 	float Time = std::chrono::duration<float, std::chrono::seconds::period>(CurrentTime - StartTime).count();
 
-	static float k = 0.0f;
-	k += 0.0001;
-
 	SUniformBufferObject UBO = {};
-	//UBO.Model = glm::rotate(glm::mat4(1.0f), Time*glm::radians(90.0f), glm::v	ec3(0.0f, 0.0f, 1.0f));
-	UBO.View = glm::lookAt(glm::vec3(0.0f + k, 0.0f, 8.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	UBO.Model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+	UBO.View = glm::lookAt(glm::vec3(0.0f, 0.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / static_cast<float>(_swapchainExtent().height), 0.1f, 15.0f);
 
 	UBO.Projection[1][1] *= -1;
@@ -776,7 +773,11 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 				1.0f - Attribute.texcoords[2 * Index.texcoord_index + 1]
 			};
 
-			Vertex.Color = { 1.0f, 1.0f, 1.0f };
+			Vertex.Normal = {
+				Attribute.normals[3 * Index.normal_index + 0],
+				Attribute.normals[3 * Index.normal_index + 1],
+				Attribute.normals[3 * Index.normal_index + 2]
+			};
 
 			if (UniqueVertices.count(Vertex) == 0)
 			{

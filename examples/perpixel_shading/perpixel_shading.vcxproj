@@ -86,8 +86,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>$(ProjectDir)\compile_shader.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -102,6 +101,9 @@
       <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
       <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)\compile_shader.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -120,6 +122,9 @@
       <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
       <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)\compile_shader.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -141,8 +146,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>$(ProjectDir)\compile_shader.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -156,8 +160,8 @@
     <ClInclude Include="VulkanApp.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="FragmentShader.frag" />
-    <None Include="VertexShader.vert" />
+    <None Include="perpixel_shading_fs.glsl" />
+    <None Include="perpixel_shading_vs.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\vkt\vkt.vcxproj">

@@ -60,7 +60,7 @@
     <ClInclude Include="src\Camera.hpp">
       <Filter>graphics\toolkit</Filter>
     </ClInclude>
-    <ClInclude Include="src\VKGenericImage.hpp">
+    <ClInclude Include="src\VkGenericImage.hpp">
       <Filter>graphics\toolkit</Filter>
     </ClInclude>
   </ItemGroup>

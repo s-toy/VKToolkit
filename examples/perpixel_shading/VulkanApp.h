@@ -2,7 +2,7 @@
 #include "Common.h"
 #include <GLFW/glfw3.h>
 #include "VkApplicationBase.hpp"
-#include "VKGenericImage.hpp"
+#include "VkGenericImage.hpp"
 
 namespace VulkanApp
 {
@@ -24,7 +24,7 @@ namespace VulkanApp
 		void __createDepthResources();
 		void __createFramebuffers();
 		void __createTextureSamplerResources();
-		void __generateMipmaps(hiveVKT::CVKGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat);
+		void __generateMipmaps(hiveVKT::CVkGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat);
 		void __createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory);
 		void __createVertexBuffer();
 		void __createIndexBuffer();
@@ -53,9 +53,9 @@ namespace VulkanApp
 		VkPipelineLayout m_pPipelineLayout = VK_NULL_HANDLE;
 		VkPipeline m_pGraphicsPipeline = VK_NULL_HANDLE;
 		VkCommandPool m_pCommandPool = VK_NULL_HANDLE;
-		hiveVKT::CVKGenericImage m_MsaaAttachment;
-		hiveVKT::CVKGenericImage m_DepthAttachment;
-		hiveVKT::CVKGenericImage m_Texture;
+		hiveVKT::CVkGenericImage m_MsaaAttachment;
+		hiveVKT::CVkGenericImage m_DepthAttachment;
+		hiveVKT::CVkGenericImage m_Texture;
 		VkSampler m_pTextureSampler = VK_NULL_HANDLE;
 		VkBuffer m_pVertexBuffer = VK_NULL_HANDLE;
 		VkDeviceMemory m_pVertexBufferDeviceMemory = VK_NULL_HANDLE;

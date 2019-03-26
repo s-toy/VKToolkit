@@ -20,12 +20,12 @@ namespace VulkanApp
 	struct SVertex
 	{
 		glm::vec3 Position;
-		glm::vec3 Color;
+		glm::vec3 Normal;
 		glm::vec2 TexCoord;
 
 		bool operator ==(const SVertex& vOtherVertex)const
 		{
-			return (Position == vOtherVertex.Position) && (Color == vOtherVertex.Color) && (TexCoord == vOtherVertex.TexCoord);
+			return (Position == vOtherVertex.Position) && (Normal == vOtherVertex.Normal) && (TexCoord == vOtherVertex.TexCoord);
 		}
 	};
 
@@ -43,7 +43,7 @@ namespace std
 	{
 		size_t operator()(VulkanApp::SVertex const& vVertex)const
 		{
-			return ((hash<glm::vec3>()(vVertex.Position) ^ (hash<glm::vec3>()(vVertex.Color) << 1)) >> 1) ^ (hash<glm::vec2>()(vVertex.TexCoord) << 1);
+			return ((hash<glm::vec3>()(vVertex.Position) ^ (hash<glm::vec3>()(vVertex.Normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vVertex.TexCoord) << 1);
 		}
 	};
 }

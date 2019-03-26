@@ -5,10 +5,10 @@
 
 namespace hiveVKT
 {
-	class CVKGenericImage
+	class CVkGenericImage
 	{
 	public:
-		CVKGenericImage() = default;
+		CVkGenericImage() = default;
 
 		void create(vk::Device vDevice, const vk::ImageCreateInfo& vImageCreateInfo, vk::ImageViewType vImageViewType, vk::ImageAspectFlags vImageAspectMasks, const vk::PhysicalDeviceMemoryProperties& vPhysicalDeviceMemoryProperties, bool vHostVisible)
 		{
@@ -142,7 +142,7 @@ namespace hiveVKT
 		vk::ImageView getImageView()const { return m_pImageView; }
 
 	protected:
-		_DISALLOW_COPY_AND_ASSIGN(CVKGenericImage);
+		_DISALLOW_COPY_AND_ASSIGN(CVkGenericImage);
 
 	private:
 		vk::Image        m_pImage;
