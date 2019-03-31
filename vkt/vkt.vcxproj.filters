@@ -63,9 +63,24 @@
     <ClInclude Include="src\VkGenericImage.hpp">
       <Filter>graphics\toolkit</Filter>
     </ClInclude>
+    <ClInclude Include="src\VkTexture2D.hpp">
+      <Filter>graphics\toolkit</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp">
+      <Filter>graphics\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.hpp">
+      <Filter>graphics\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>graphics\framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp">
+      <Filter>graphics\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
       <Filter>graphics\framework</Filter>
     </ClCompile>
   </ItemGroup>

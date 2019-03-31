@@ -4,6 +4,7 @@
 #include "VkDebugMessenger.hpp"
 #include "WindowCreator.hpp"
 #include "Utility.hpp"
+#include "VkPhysicalDeviceInfoHelper.hpp"
 
 using namespace hiveVKT;
 
@@ -144,7 +145,7 @@ void hiveVKT::CVkApplicationBase::__pickPhysicalDevice()
 	_ASSERTE(!PhysicalDeviceSet.empty());
 	m_VkPhysicalDevice = PhysicalDeviceSet[0];	//TODO: check whether the physical device is suitable.
 
-	m_VkPhysicalDeviceMemoryProperties = m_VkPhysicalDevice.getMemoryProperties();
+	CVkPhysicalDeviceInfoHelper::getInstance()->init(m_VkPhysicalDevice);
 
 	__findRequiredQueueFamilies(m_VkPhysicalDevice);
 }
