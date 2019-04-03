@@ -4,6 +4,7 @@
 #include "VkDebugMessenger.hpp"
 #include "WindowCreator.hpp"
 #include "Utility.hpp"
+#include "InputManager.hpp"
 
 using namespace hiveVKT;
 
@@ -44,6 +45,8 @@ bool hiveVKT::CVkApplicationBase::_initV()
 {
 	if (!__initWindow()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing window!"); return false; }
 	if (!__initVulkan()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing vulkan!"); return false; }
+
+	CInputManager::getInstance()->init(m_pWindow);
 
 	return true;
 }

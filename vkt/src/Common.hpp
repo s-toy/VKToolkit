@@ -1,4 +1,6 @@
 #pragma once
+#pragma warning (disable: 4251)
+
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
 
@@ -21,6 +23,12 @@
 #define _DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName &) = delete; \
     TypeName &operator =(const TypeName &) = delete;
+
+#define _CALLBACK_0(__selector__,__target__, ...) std::bind(&__selector__,__target__, ##__VA_ARGS__)
+#define _CALLBACK_1(__selector__,__target__, ...) std::bind(&__selector__,__target__, std::placeholders::_1, ##__VA_ARGS__)
+#define _CALLBACK_2(__selector__,__target__, ...) std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+#define _CALLBACK_3(__selector__,__target__, ...) std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, ##__VA_ARGS__)
+#define _CALLBACK_4(__selector__,__target__, ...) std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, ##__VA_ARGS__)
 
 namespace hiveVKT
 {

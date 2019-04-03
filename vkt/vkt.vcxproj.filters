@@ -7,11 +7,14 @@
     <Filter Include="graphics\framework">
       <UniqueIdentifier>{7e5b5c03-387f-4191-bdc8-2c4d3b158f0c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="graphics\toolkit">
-      <UniqueIdentifier>{3989973b-b8cb-4c63-a7f9-0f59b71d799f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="general">
       <UniqueIdentifier>{d3b32ff9-5148-4285-b785-193200fd023e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\vk">
+      <UniqueIdentifier>{3989973b-b8cb-4c63-a7f9-0f59b71d799f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\base">
+      <UniqueIdentifier>{32807a7c-9d32-4235-b725-a842a1901a70}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -25,16 +28,16 @@
       <Filter>graphics\framework</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDeviceCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkInstanceCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkShaderModuleCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDerfferedApplication.hpp">
       <Filter>graphics\framework</Filter>
@@ -42,31 +45,40 @@
     <ClInclude Include="src\VKTExport.hpp">
       <Filter>general</Filter>
     </ClInclude>
-    <ClInclude Include="src\WindowCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
-    </ClInclude>
     <ClInclude Include="src\VkUtility.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkRenderPassCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkSwapChainCreator.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDebugMessenger.hpp">
-      <Filter>graphics\toolkit</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Camera.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\VkGenericImage.hpp">
-      <Filter>graphics\toolkit</Filter>
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowCreator.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputManager.hpp">
+      <Filter>graphics\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\VkApplicationBase.cpp">
       <Filter>graphics\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>graphics\base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>graphics\base</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
