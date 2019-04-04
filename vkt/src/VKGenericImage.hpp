@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <vulkan/vulkan.hpp>
 #include "VkUtility.hpp"
 #include "Common.hpp"
@@ -10,31 +10,31 @@ namespace hiveVKT
 	public:
 		CVkGenericImage() = default;
 
-		void create(vk::Device vDevice, const vk::ImageCreateInfo& vImageCreateInfo, vk::ImageViewType vImageViewType, vk::ImageAspectFlags vImageAspectMasks, const vk::PhysicalDeviceMemoryProperties& vPhysicalDeviceMemoryProperties, bool vHostVisible)
+		void create(vk::Device vDevice, const vk::ImageCreateInfo& vImageCreateInfo, vk::ImageViewType vImageViewType, vk::ImageAspectFlags vImageAspectMasks, bool vHostVisible)
 		{
-			//TODO: ÏÖ½×¶ÎÖ»½ÓÊÜImageCreateInfo.arrayLayers = 1µÄÇé¿ö
-			_ASSERT(vImageCreateInfo.arrayLayers == 1);
+			if (m_IsImageCreated)
+				return;
+
+			_ASSERT(vImageCreateInfo.arrayLayers == 1 && vDevice);
 
 			m_CurrentImageLayoutSet.resize(vImageCreateInfo.mipLevels, vImageCreateInfo.initialLayout);
 			m_ImageCreateInfo = vImageCreateInfo;
-			m_pImage = vDevice.createImage(vImageCreateInfo, nullptr);
+			m_pImage = vDevice.createImage(vImageCreateInfo);
 
 			auto MemoryRequirements = vDevice.getImageMemoryRequirements(m_pImage);
-
-			m_Size = MemoryRequirements.size;
 
 			vk::MemoryPropertyFlags MemoryProperties = {};
 			if (vHostVisible)
 				MemoryProperties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 
-			auto MemoryTypeIndex = findMemoryTypeIndex(vPhysicalDeviceMemoryProperties, MemoryRequirements.memoryTypeBits, MemoryProperties);
+			auto MemoryTypeIndex = findMemoryTypeIndex(MemoryRequirements.memoryTypeBits, MemoryProperties);
 			_ASSERT(MemoryTypeIndex != VK_MAX_MEMORY_TYPES + 1);
 
 			vk::MemoryAllocateInfo MemoryAllocateInfo = {};
 			MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 			MemoryAllocateInfo.memoryTypeIndex = MemoryTypeIndex;
 
-			m_pDeviceMemory = vDevice.allocateMemory(MemoryAllocateInfo, nullptr);
+			m_pDeviceMemory = vDevice.allocateMemory(MemoryAllocateInfo);
 
 			vDevice.bindImageMemory(m_pImage, m_pDeviceMemory, 0);
 
@@ -45,11 +45,14 @@ namespace hiveVKT
 			ImageViewCreateInfo.components = { vk::ComponentSwizzle::eR,vk::ComponentSwizzle::eG,vk::ComponentSwizzle::eB,vk::ComponentSwizzle::eA };
 			ImageViewCreateInfo.subresourceRange = vk::ImageSubresourceRange{ vImageAspectMasks,0,vImageCreateInfo.mipLevels,0,vImageCreateInfo.arrayLayers };
 
-			m_pImageView = vDevice.createImageView(ImageViewCreateInfo, nullptr);
+			m_pImageView = vDevice.createImageView(ImageViewCreateInfo);
+
+			m_IsImageCreated = true;
 		}
 
 		void translateImageLayoutAtParticularMipmapLevel(vk::CommandBuffer vCommandBuffer, vk::ImageLayout vNewImageLayout, vk::ImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel)
 		{
+			_ASSERT(vCommandBuffer);
 			_ASSERT(vMipmapLevel < m_ImageCreateInfo.mipLevels);
 
 			if (vNewImageLayout == m_CurrentImageLayoutSet[vMipmapLevel])
@@ -71,8 +74,7 @@ namespace hiveVKT
 			vk::PipelineStageFlags srcPipelineStageMask{};
 			vk::PipelineStageFlags dstPipelineStageMask{};
 
-			//TODO: srcAccessMask,dstAccessMask,srcPipelineStageMask,dstPipelineStageMaskµÄÖµÐèÒªOldImageLayoutºÍvNewImageLayoutµÄÖµÀ´¾ö¶¨
-			//      ÏÖ½×¶Î²¢Ã»ÓÐÐ´Íê£¬²¢ÇÒ¿ÉÄÜ²»ÊÇ×îÓÅµÄ
+			//TODO: srcAccessMask,dstAccessMask,srcPipelineStageMask,dstPipelineStageMaskçš„å€¼ç”±OldImageLayoutå’ŒvNewImageLayoutçš„å€¼å†³å®š
 			switch (OldImageLayout)
 			{
 			case vk::ImageLayout::eUndefined:                     srcPipelineStageMask = vk::PipelineStageFlagBits::eHost; break;
@@ -117,6 +119,8 @@ namespace hiveVKT
 
 		void copyFromBuffer(vk::CommandBuffer vCommandBuffer, vk::Buffer vSrcBuffer, uint32_t vMipLevel, vk::Extent3D vImageExtent, vk::DeviceSize vBufferOffset)
 		{
+			_ASSERT(vCommandBuffer && vSrcBuffer);
+
 			vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_ImageCreateInfo.mipLevels,0,m_ImageCreateInfo.arrayLayers };
 			translateImageLayout(vCommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);
 
@@ -138,19 +142,19 @@ namespace hiveVKT
 			vDevice.freeMemory(m_pDeviceMemory);
 		}
 
-		vk::Image     getImage()const { return m_pImage; }
-		vk::ImageView getImageView()const { return m_pImageView; }
+		const vk::Image&     getImage()const { return m_pImage; }
+		const vk::ImageView& getImageView()const { return m_pImageView; }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkGenericImage);
 
-	private:
 		vk::Image        m_pImage;
 		vk::ImageView    m_pImageView;
 		vk::DeviceMemory m_pDeviceMemory;
 
-		vk::DeviceSize  m_Size;
-		std::vector<vk::ImageLayout> m_CurrentImageLayoutSet;//ÓÐ´ýÑéÖ¤£ºÃ¿Ò»ÕÅmipmap¶¼ÓÐ¸÷×ÔµÄlayout?
+		bool m_IsImageCreated = false;
+
+		std::vector<vk::ImageLayout> m_CurrentImageLayoutSet;
 
 		vk::ImageCreateInfo m_ImageCreateInfo;
 	};

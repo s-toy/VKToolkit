@@ -294,7 +294,7 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	m_MsaaAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _physicalDeviceMemoryProperties(), false);
+	m_MsaaAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
 	m_MsaaAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eColorAttachmentOptimal, TranslateRange);
@@ -319,7 +319,7 @@ void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
-	m_DepthAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, _physicalDeviceMemoryProperties(), false);
+	m_DepthAttachment.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eDepth,0,1,0,1 };
 	m_DepthAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal, TranslateRange);
@@ -386,7 +386,7 @@ void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
 	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	ImageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
-	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, _physicalDeviceMemoryProperties(), false);
+	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
 	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
 	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_MipmapLevel,0,1 };
 	m_Texture.translateImageLayout(CommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);

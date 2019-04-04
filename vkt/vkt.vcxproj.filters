@@ -1,84 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="graphics">
-      <UniqueIdentifier>{fef2dc67-17d0-4f79-9246-a7856bc3a919}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="graphics\framework">
-      <UniqueIdentifier>{7e5b5c03-387f-4191-bdc8-2c4d3b158f0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general">
-      <UniqueIdentifier>{d3b32ff9-5148-4285-b785-193200fd023e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="graphics\vk">
-      <UniqueIdentifier>{3989973b-b8cb-4c63-a7f9-0f59b71d799f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="graphics\base">
-      <UniqueIdentifier>{32807a7c-9d32-4235-b725-a842a1901a70}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\VkApplicationBase.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Common.hpp">
-      <Filter>general</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility.hpp">
-      <Filter>general</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkApplicationBase.hpp">
-      <Filter>graphics\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDeviceCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkInstanceCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkShaderModuleCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDerfferedApplication.hpp">
-      <Filter>graphics\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VKTExport.hpp">
-      <Filter>general</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkUtility.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkRenderPassCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkSwapChainCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDebugMessenger.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkGenericImage.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Camera.hpp">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\WindowCreator.hpp">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\InputManager.hpp">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\VkApplicationBase.cpp">
-      <Filter>graphics\framework</Filter>
-    </ClCompile>
-    <ClCompile Include="src\InputManager.cpp">
-      <Filter>graphics\base</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
-      <Filter>graphics\base</Filter>
-    </ClCompile>
+    <ClInclude Include="src\Camera.hpp" />
+    <ClInclude Include="src\Common.hpp" />
+    <ClInclude Include="src\InputManager.hpp" />
+    <ClInclude Include="src\Mesh.hpp" />
+    <ClInclude Include="src\Model.h" />
+    <ClInclude Include="src\Utility.hpp" />
+    <ClInclude Include="src\VkApplicationBase.hpp" />
+    <ClInclude Include="src\VkDebugMessenger.hpp" />
+    <ClInclude Include="src\VkDerfferedApplication.hpp" />
+    <ClInclude Include="src\VkDeviceCreator.hpp" />
+    <ClInclude Include="src\VkGenericImage.hpp" />
+    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
+    <ClInclude Include="src\VkInstanceCreator.hpp" />
+    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp" />
+    <ClInclude Include="src\VkRenderPassCreator.hpp" />
+    <ClInclude Include="src\VkShaderModuleCreator.hpp" />
+    <ClInclude Include="src\VkSwapChainCreator.hpp" />
+    <ClInclude Include="src\VKTExport.hpp" />
+    <ClInclude Include="src\VkTexture2D.hpp" />
+    <ClInclude Include="src\VkUtility.hpp" />
+    <ClInclude Include="src\WindowCreator.hpp" />
   </ItemGroup>
 </Project>
