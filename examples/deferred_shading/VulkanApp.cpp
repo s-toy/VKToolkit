@@ -12,6 +12,7 @@
 #include "VkRenderPassCreator.hpp"
 #include "VkGraphicsPipelineCreator.hpp"
 #include "VkShaderModuleCreator.hpp"
+#include "Camera.hpp"
 
 //************************************************************************************
 //Function:
@@ -1343,10 +1344,8 @@ void DeferredShading::CDeferredShadingApp::__updateUniformBuffer(uint32_t vImage
 	SUniformBufferObject_OffScreen UBO = {};
 
 	UBO.Model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-	UBO.View = glm::lookAt(ViewPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	UBO.Projection = glm::perspective(glm::radians(45.0f), _swapchainExtent().width / static_cast<float>(_swapchainExtent().height), 0.1f, 15.0f);
-
-	UBO.Projection[1][1] *= -1;
+	UBO.View = this->fetchCamera()->getViewMatrix();
+	UBO.Projection = this->fetchCamera()->getProjectionMatrix();
 
 	void* Data = nullptr;
 	vkMapMemory(_device(), m_UniformBufferDeviceMemorySet_OffScreen[vImageIndex], 0, sizeof(UBO), 0, &Data);

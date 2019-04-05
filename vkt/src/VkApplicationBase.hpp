@@ -9,6 +9,7 @@
 namespace hiveVKT
 {
 	class CVkDebugMessenger;
+	class CCamera;
 
 	struct SQueueFamilyIndices
 	{
@@ -31,6 +32,8 @@ namespace hiveVKT
 		void setWindowTitle(const std::string& vTitle) { m_WindowCreateInfo.WindowTitle = vTitle; }
 
 		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
+
+		CCamera* fetchCamera() { return m_pCamera; }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
@@ -57,6 +60,8 @@ namespace hiveVKT
 	private:
 		CVkDebugMessenger* m_pDebugMessenger = nullptr;
 		GLFWwindow* m_pWindow = nullptr;
+
+		CCamera* m_pCamera = nullptr;
 
 		SWindowCreateInfo m_WindowCreateInfo = {};
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};

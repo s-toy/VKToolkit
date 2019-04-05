@@ -1,32 +1,99 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\InputManager.cpp" />
-    <ClCompile Include="src\Model.cpp" />
-    <ClCompile Include="src\VkApplicationBase.cpp" />
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>graphics\base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>graphics\base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>graphics\base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VkApplicationBase.cpp">
+      <Filter>graphics\vk\framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Camera.hpp" />
-    <ClInclude Include="src\Common.hpp" />
-    <ClInclude Include="src\InputManager.hpp" />
-    <ClInclude Include="src\Mesh.hpp" />
-    <ClInclude Include="src\Model.h" />
-    <ClInclude Include="src\Utility.hpp" />
-    <ClInclude Include="src\VkApplicationBase.hpp" />
-    <ClInclude Include="src\VkDebugMessenger.hpp" />
-    <ClInclude Include="src\VkDerfferedApplication.hpp" />
-    <ClInclude Include="src\VkDeviceCreator.hpp" />
-    <ClInclude Include="src\VkGenericImage.hpp" />
-    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
-    <ClInclude Include="src\VkInstanceCreator.hpp" />
-    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp" />
-    <ClInclude Include="src\VkRenderPassCreator.hpp" />
-    <ClInclude Include="src\VkShaderModuleCreator.hpp" />
-    <ClInclude Include="src\VkSwapChainCreator.hpp" />
-    <ClInclude Include="src\VKTExport.hpp" />
-    <ClInclude Include="src\VkTexture2D.hpp" />
-    <ClInclude Include="src\VkUtility.hpp" />
-    <ClInclude Include="src\WindowCreator.hpp" />
+    <ClInclude Include="src\Camera.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputManager.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkDebugMessenger.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkDeviceCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkGenericImage.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkInstanceCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkRenderPassCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkShaderModuleCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkSwapChainCreator.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VKTExport.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkTexture2D.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkUtility.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common.hpp">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility.hpp">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowCreator.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkApplicationBase.hpp">
+      <Filter>graphics\vk\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkDerfferedApplication.hpp">
+      <Filter>graphics\vk\framework</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{661593e5-e775-4481-9127-7f7b5aabd8d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\vk">
+      <UniqueIdentifier>{21905146-e8e8-4725-8171-1c9a50e53e3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\base">
+      <UniqueIdentifier>{2eb8954a-35a4-48f5-bed6-7506c7e38dbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general">
+      <UniqueIdentifier>{6015bd38-8c1b-4a93-8481-79356df622ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\vk\framework">
+      <UniqueIdentifier>{de83cc17-732c-4b19-a9a0-df60c4f78d05}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

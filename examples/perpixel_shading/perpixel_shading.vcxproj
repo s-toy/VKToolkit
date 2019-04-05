@@ -78,11 +78,11 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(GLFW)\include;$(GLM);$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
@@ -95,11 +95,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(GLFW)\include;$(GLM);$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)\compile_shader.bat</Command>
@@ -113,14 +113,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(GLFW)\include;$(GLM);$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)\compile_shader.bat</Command>
@@ -135,14 +135,14 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(GLFW)\include;$(GLM);$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)\include;$(SolutionDir)\vkt\src;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(GLFW)\lib\$(PlatformTarget);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;glfw3-vc140.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>

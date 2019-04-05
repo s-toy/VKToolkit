@@ -1,16 +1,19 @@
 #include "Camera.hpp"
-#include <iostream>
+#include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/gtc/type_ptr.hpp>
 #include "InputManager.hpp"
 #include "Common.hpp"
 
 using namespace hiveVKT;
 
-const float MOUSE_SENSITIVTY = 0.08f;
-const float SCROLL_SENSITIVTY = 0.2f;
+const float MOUSE_SENSITIVTY = 2.0f;
+const float SCROLL_SENSITIVTY = 2.0f;
 
-CCamera::CCamera(glm::dvec3 vCameraPos, float vYaw, float vPitch, glm::dvec3 vWorldUp) :m_CameraPos(vCameraPos), m_Yaw(vYaw), m_Pitch(vPitch), m_WorldUp(vWorldUp)
+CCamera::CCamera(glm::dvec3 vCameraPos, double vAspect, double vYaw, double vPitch, glm::dvec3 vWorldUp) :m_CameraPos(vCameraPos), m_Aspect(vAspect), m_Yaw(vYaw), m_Pitch(vPitch), m_WorldUp(vWorldUp)
 {
 	__updateCameraVectors();
+	CInputManager::getInstance()->registerCursorCallbackFunc(_CALLBACK_2(CCamera::__cursorCallback, this));
+	CInputManager::getInstance()->registerScrollCallbackFunc(_CALLBACK_2(CCamera::__mouseScrollCallback, this));
 }
 
 CCamera::~CCamera()
@@ -19,34 +22,21 @@ CCamera::~CCamera()
 
 //************************************************************************************
 //Function:
-void CCamera::init()
-{
-	CInputManager::getInstance()->registerCursorCallbackFunc(_CALLBACK_2(CCamera::__cursorCallback, this));
-	CInputManager::getInstance()->registerScrollCallbackFunc(_CALLBACK_2(CCamera::__mouseScrollCallback, this));
-	CInputManager::getInstance()->registerMouseButtonCallbackFunc(_CALLBACK_3(CCamera::__mouseButtonCallback, this));
-}
-
-//************************************************************************************
-//Function:
 void CCamera::__cursorCallback(double vPosX, double vPosY)
 {
-	if (m_IsEnableCursor)
-	{
-		std::array<double, 2> CursorOffset = CInputManager::getInstance()->getCursorOffset();
-		CursorOffset[0] *= m_Sensitivity;
-		CursorOffset[1] *= m_Sensitivity;
-		m_Yaw += glm::radians(CursorOffset[0]);
-		m_Pitch += glm::radians(CursorOffset[1]);
-		if (m_Pitch > glm::radians(89.0))
-			m_Pitch = glm::radians(89.0);
-		else if (m_Pitch < glm::radians(-89.0))
-			m_Pitch = glm::radians(-89.0);
-		m_CameraFront.x = cos(m_Pitch) * cos(m_Yaw);
-		m_CameraFront.y = sin(m_Pitch);
-		m_CameraFront.z = cos(m_Pitch) * sin(m_Yaw);
-		m_CameraFront = glm::normalize(m_CameraFront);
-		m_CameraRight = normalize(cross(m_CameraUp, -m_CameraFront));
-	}
+	if (!CInputManager::getInstance()->getMouseButtonStatus()[GLFW_MOUSE_BUTTON_LEFT]) return;
+
+	std::array<double, 2> CursorOffset = CInputManager::getInstance()->getCursorOffset();
+	CursorOffset[0] *= MOUSE_SENSITIVTY;
+	CursorOffset[1] *= MOUSE_SENSITIVTY;
+
+	m_Yaw += glm::radians(CursorOffset[0]);
+	m_Pitch += glm::radians(CursorOffset[1]);
+
+	if (m_Pitch > glm::radians(89.0)) m_Pitch = glm::radians(89.0);
+	else if (m_Pitch < glm::radians(-89.0)) m_Pitch = glm::radians(-89.0);
+
+	__updateCameraVectors();
 }
 
 //************************************************************************************
@@ -61,14 +51,6 @@ void CCamera::__mouseScrollCallback(double vOffsetX, double vOffsetY)
 
 //************************************************************************************
 //Function:
-void CCamera::__mouseButtonCallback(int vButton, int vAction, int vMods)
-{
-	if (vButton == GLFW_MOUSE_BUTTON_RIGHT && vAction == GLFW_PRESS)
-		std::cout << m_CameraPos.x << " " << m_CameraPos.y << " " << m_CameraPos.z << std::endl;
-}
-
-//************************************************************************************
-//Function:
 glm::mat4 CCamera::getViewMatrix() const
 {
 	return glm::lookAt(m_CameraPos, m_CameraPos + m_CameraFront, m_CameraUp);
@@ -78,7 +60,9 @@ glm::mat4 CCamera::getViewMatrix() const
 //Function:
 glm::mat4 CCamera::getProjectionMatrix() const
 {
-	return glm::perspective(glm::radians(m_Fovy), 1.0, m_Near, m_Far); //TODO: aspect
+	auto ProjectionMatrix = glm::perspective(glm::radians(m_Fovy), m_Aspect, m_Near, m_Far);
+	ProjectionMatrix[1][1] *= -1; //NOTE: 在裁剪坐标系中，Vulkan与OpenGL y方向相反
+	return ProjectionMatrix;
 }
 
 //************************************************************************************
@@ -92,7 +76,7 @@ void CCamera::update()
 //Function:
 void CCamera::__updateCameraVectors()
 {
-	glm::vec3 Front;
+	glm::dvec3 Front;
 	Front.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
 	Front.y = sin(glm::radians(m_Pitch));
 	Front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));

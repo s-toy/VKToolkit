@@ -1,6 +1,4 @@
 #pragma once
-#pragma warning (disable: 4251)
-
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
 

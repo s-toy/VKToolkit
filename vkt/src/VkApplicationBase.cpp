@@ -5,6 +5,7 @@
 #include "WindowCreator.hpp"
 #include "Utility.hpp"
 #include "InputManager.hpp"
+#include "Camera.hpp"
 #include "VkPhysicalDeviceInfoHelper.hpp"
 
 using namespace hiveVKT;
@@ -48,6 +49,7 @@ bool hiveVKT::CVkApplicationBase::_initV()
 	if (!__initVulkan()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing vulkan!"); return false; }
 
 	CInputManager::getInstance()->init(m_pWindow);
+	m_pCamera = new CCamera(glm::vec3(0.0f, 0.0f, 7.0f), (double)m_WindowCreateInfo.WindowWidth / m_WindowCreateInfo.WindowHeight);
 
 	return true;
 }
@@ -58,6 +60,8 @@ bool hiveVKT::CVkApplicationBase::_renderV()
 {
 	_handleEventV();
 	glfwPollEvents();
+
+	m_pCamera->update();
 
 	return true;
 }
@@ -78,6 +82,8 @@ bool hiveVKT::CVkApplicationBase::_isRenderLoopDoneV()
 //Function:
 void hiveVKT::CVkApplicationBase::_destroyV()
 {
+	_SAFE_DELETE(m_pCamera);
+
 	m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
 	m_VkDevice.destroy();
 
