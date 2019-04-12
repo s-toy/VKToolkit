@@ -255,7 +255,8 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 	std::vector<vk::DescriptorSet> DescriptorSets;
 	DescriptorSets = vDevice.allocateDescriptorSets(DescriptorSetAllocateInfo);
 
-	std::vector<vk::WriteDescriptorSet> WriteDescriptorSetInfos;
+	std::vector<vk::DescriptorImageInfo> DescriptorImageInfos(vTextureIndexSet.size());
+	std::vector<vk::WriteDescriptorSet> WriteDescriptorSetInfos(vTextureIndexSet.size());
 
 	for (auto i = 0; i < vTextureIndexSet.size(); ++i)
 	{
@@ -263,6 +264,7 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 		DescriptorImageInfo.imageView = m_TextureSet[vTextureIndexSet[i]]->Texture.getImageView();
 		DescriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		DescriptorImageInfo.sampler = m_TextureSet[vTextureIndexSet[i]]->Texture.getSampler();
+		DescriptorImageInfos[i] = DescriptorImageInfo;
 
 		vk::WriteDescriptorSet WriteDescriptorSet = {};
 		WriteDescriptorSet.dstSet = DescriptorSets[0];
@@ -270,9 +272,8 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 		WriteDescriptorSet.dstArrayElement = 0;
 		WriteDescriptorSet.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 		WriteDescriptorSet.descriptorCount = 1;
-		WriteDescriptorSet.pImageInfo = &DescriptorImageInfo;
-
-		WriteDescriptorSetInfos.emplace_back(WriteDescriptorSet);
+		WriteDescriptorSet.pImageInfo = &DescriptorImageInfos[i];
+		WriteDescriptorSetInfos[i] = WriteDescriptorSet;
 	}
 
 	vDevice.updateDescriptorSets(WriteDescriptorSetInfos, nullptr);
