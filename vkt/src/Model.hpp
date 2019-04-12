@@ -41,7 +41,7 @@ namespace hiveVKT
 		std::string   TextureName;
 	};
 
-	class VKT_DECLSPEC CModel
+	class CModel
 	{
 	public:
 		CModel() = default;

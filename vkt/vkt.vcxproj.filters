@@ -7,11 +7,11 @@
     <ClCompile Include="src\InputManager.cpp">
       <Filter>graphics\base</Filter>
     </ClCompile>
-    <ClCompile Include="src\Model.cpp">
-      <Filter>graphics\base</Filter>
-    </ClCompile>
     <ClCompile Include="src\VkApplicationBase.cpp">
       <Filter>graphics\vk\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>graphics\vk\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -19,12 +19,6 @@
       <Filter>graphics\base</Filter>
     </ClInclude>
     <ClInclude Include="src\InputManager.hpp">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Model.h">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Mesh.hpp">
       <Filter>graphics\base</Filter>
     </ClInclude>
     <ClInclude Include="src\VkDebugMessenger.hpp">
@@ -54,9 +48,6 @@
     <ClInclude Include="src\VkSwapChainCreator.hpp">
       <Filter>graphics\vk</Filter>
     </ClInclude>
-    <ClInclude Include="src\VKTExport.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
     <ClInclude Include="src\VkTexture2D.hpp">
       <Filter>graphics\vk</Filter>
     </ClInclude>
@@ -78,6 +69,12 @@
     <ClInclude Include="src\VkDerfferedApplication.hpp">
       <Filter>graphics\vk\framework</Filter>
     </ClInclude>
+    <ClInclude Include="src\Mesh.hpp">
+      <Filter>graphics\vk\model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.hpp">
+      <Filter>graphics\vk\model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="graphics">
@@ -94,6 +91,9 @@
     </Filter>
     <Filter Include="graphics\vk\framework">
       <UniqueIdentifier>{de83cc17-732c-4b19-a9a0-df60c4f78d05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\vk\model">
+      <UniqueIdentifier>{0d0ae8e9-6269-45ff-9f79-23177fe7f59c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

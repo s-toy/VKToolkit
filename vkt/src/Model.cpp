@@ -1,6 +1,6 @@
-#include "Model.h"
+#include "Model.hpp"
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../examples/external/stb_image.h"
+#include "../../external/stb_image.h"
 
 //************************************************************************************
 //Function:

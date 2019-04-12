@@ -1,10 +1,9 @@
 #pragma once
 #include <GLM/glm.hpp>
-#include "VKTExport.hpp"
 
 namespace hiveVKT
 {
-	class VKT_DECLSPEC CCamera
+	class CCamera
 	{
 	public:
 		CCamera(glm::dvec3 vCameraPos = glm::dvec3(0.0, 0.0, 0.0), double vAspect = 1.0, double vYaw = -90.0, double vPitch = 0.0, glm::dvec3 vWorldUp = glm::dvec3(0.0, 1.0, 0.0));

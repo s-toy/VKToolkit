@@ -3,7 +3,6 @@
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include "Common.hpp"
-#include "VKTExport.hpp"
 #include "VkSwapChainCreator.hpp"
 
 namespace hiveVKT
@@ -17,7 +16,7 @@ namespace hiveVKT
 		bool IsComplete() const { return QueueFamily.has_value(); }
 	};
 
-	class VKT_DECLSPEC CVkApplicationBase
+	class CVkApplicationBase
 	{
 	public:
 		CVkApplicationBase() = default;

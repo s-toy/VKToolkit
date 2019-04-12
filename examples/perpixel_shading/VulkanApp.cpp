@@ -10,7 +10,7 @@
 #include "VkDeviceCreator.hpp"
 #include "VkRenderPassCreator.hpp"
 #include "Camera.hpp"
-#include "Model.h"
+#include "Model.hpp"
 
 using namespace hiveVKT;
 
@@ -585,6 +585,7 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 
 	SUniformBufferObject UBO = {};
 	UBO.Model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+	UBO.Model = glm::scale(UBO.Model, glm::vec3(0.3f, 0.3f, 0.3f));
 	UBO.View = this->fetchCamera()->getViewMatrix();
 	UBO.Projection = this->fetchCamera()->getProjectionMatrix();
 

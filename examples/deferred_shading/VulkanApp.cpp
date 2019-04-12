@@ -4,9 +4,9 @@
 #include <chrono>
 #include <unordered_map>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../external/stb_image.h"
+#include "../../external/stb_image.h"
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "../external/tiny_obj_loader.h"
+#include "../../external/tiny_obj_loader.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkRenderPassCreator.hpp"

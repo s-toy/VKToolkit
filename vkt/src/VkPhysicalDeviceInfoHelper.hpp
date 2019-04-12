@@ -1,11 +1,10 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include <common/Singleton.h>
-#include "VKTExport.hpp"
 
 namespace hiveVKT
 {
-	class VKT_DECLSPEC CVkPhysicalDeviceInfoHelper :public hiveDesignPattern::CSingleton<CVkPhysicalDeviceInfoHelper>
+	class CVkPhysicalDeviceInfoHelper :public hiveDesignPattern::CSingleton<CVkPhysicalDeviceInfoHelper>
 	{
 	public:
 		void init(vk::PhysicalDevice vPhysicalDevice)

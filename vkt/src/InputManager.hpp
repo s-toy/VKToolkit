@@ -3,12 +3,11 @@
 #include <functional>
 #include <array>
 #include "common/Singleton.h"
-#include "VKTExport.hpp"
 #include "Common.hpp"
 
 namespace hiveVKT
 {
-	class VKT_DECLSPEC CInputManager : public hiveDesignPattern::CSingleton<CInputManager>
+	class CInputManager : public hiveDesignPattern::CSingleton<CInputManager>
 	{
 	public:
 		~CInputManager();

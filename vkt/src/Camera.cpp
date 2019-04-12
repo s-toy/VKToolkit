@@ -6,7 +6,7 @@
 
 using namespace hiveVKT;
 
-const float MOUSE_SENSITIVTY = 2.0f;
+const float MOUSE_SENSITIVTY = 0.05f;
 const float SCROLL_SENSITIVTY = 2.0f;
 
 CCamera::CCamera(glm::dvec3 vCameraPos, double vAspect, double vYaw, double vPitch, glm::dvec3 vWorldUp) :m_CameraPos(vCameraPos), m_Aspect(vAspect), m_Yaw(vYaw), m_Pitch(vPitch), m_WorldUp(vWorldUp)
@@ -27,14 +27,9 @@ void CCamera::__cursorCallback(double vPosX, double vPosY)
 	if (!CInputManager::getInstance()->getMouseButtonStatus()[GLFW_MOUSE_BUTTON_LEFT]) return;
 
 	std::array<double, 2> CursorOffset = CInputManager::getInstance()->getCursorOffset();
-	CursorOffset[0] *= MOUSE_SENSITIVTY;
-	CursorOffset[1] *= MOUSE_SENSITIVTY;
 
-	m_Yaw += glm::radians(CursorOffset[0]);
-	m_Pitch += glm::radians(CursorOffset[1]);
-
-	if (m_Pitch > glm::radians(89.0)) m_Pitch = glm::radians(89.0);
-	else if (m_Pitch < glm::radians(-89.0)) m_Pitch = glm::radians(-89.0);
+	m_Yaw += CursorOffset[0] * MOUSE_SENSITIVTY;
+	m_Pitch += CursorOffset[1] * MOUSE_SENSITIVTY;
 
 	__updateCameraVectors();
 }

@@ -103,8 +103,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(VULKAN)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
@@ -120,8 +120,8 @@
       <AdditionalIncludeDirectories>$(VULKAN)\include;$(HIVE_ROOT)/include;$(SolutionDir)\vkt\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(VULKAN)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,8 +137,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(VULKAN)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -155,8 +155,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(VULKAN)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141.lib;hiveUtility-vc141.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
