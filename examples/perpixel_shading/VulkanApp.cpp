@@ -28,14 +28,14 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 	__loadModel();
 	__retrieveSwapChainImagesAndCreateImageViews();
 	__createRenderPass();
-	
+
 	__createPipelineLayout();
 	__createGraphicsPipeline();
-	
+
 	__createMsaaResource();
 	__createDepthResources();
 	__createFramebuffers();
-	
+
 	__createUniformBuffers();
 	__createDescriptorPool();
 	__createDescriptorSet();
@@ -604,7 +604,8 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_TEXCOORD);
 
 	hiveVKT::STextureDescriptorBindingInfo TextureDescriptorBindingInfo;
-	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_DIFF,0 });
+	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_DIFF, 0 });
+	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_SPEC, 1 });
 
 	m_pModel = new hiveVKT::CModel();
 	m_pModel->loadModel("../../resource/models/nanosuit/nanosuit.obj", VertexLayout, TextureDescriptorBindingInfo, _device(), m_pCommandPool, m_pQueue);

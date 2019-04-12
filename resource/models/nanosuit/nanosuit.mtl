@@ -38,6 +38,7 @@ illum 2
 map_Bump glass_ddn.png
 map_Ka glass_refl.png
 map_Kd glass_dif.png
+map_Ks glass_dif.png
 
 newmtl Hand
 Ns 96.078431
