@@ -23,10 +23,10 @@ void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVer
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout)
+void hiveVKT::CModel::draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout, const std::vector<vk::DescriptorSet>& vOtherDescriptorSet2BeBound)
 {
 	for (auto Mesh : m_MeshSet)
-		Mesh->draw(vCommandBuffer, vPipelineLayout);
+		Mesh->draw(vCommandBuffer, vPipelineLayout, vOtherDescriptorSet2BeBound);
 }
 
 //************************************************************************************
@@ -260,9 +260,9 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 	for (auto i = 0; i < vTextureIndexSet.size(); ++i)
 	{
 		vk::DescriptorImageInfo DescriptorImageInfo = {};
-		DescriptorImageInfo.imageView = m_TextureSet[i]->Texture.getImageView();
+		DescriptorImageInfo.imageView = m_TextureSet[vTextureIndexSet[i]]->Texture.getImageView();
 		DescriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		DescriptorImageInfo.sampler = m_TextureSet[i]->Texture.getSampler();
+		DescriptorImageInfo.sampler = m_TextureSet[vTextureIndexSet[i]]->Texture.getSampler();
 
 		vk::WriteDescriptorSet WriteDescriptorSet = {};
 		WriteDescriptorSet.dstSet = DescriptorSets[0];

@@ -19,16 +19,19 @@ namespace hiveVKT
 			__generateBufferResource(vDevice, vCommandPool, vQueue, vIndexData, vk::BufferUsageFlagBits::eIndexBuffer, m_pIndexBuffer, m_pIndexBufferDeviceMemory);
 		}
 
-		void draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout)
+		void draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout, const std::vector<vk::DescriptorSet>& vOtherDescriptorSet2BeBound)
 		{
 			_ASSERT(vCommandBuffer && vPipelineLayout);
 
 			vk::Buffer VertexBuffers[] = { m_pVertexBuffer };
 			vk::DeviceSize Offsets[] = { 0 };
 
+			std::vector<vk::DescriptorSet> DescriptorSet2BeBound(vOtherDescriptorSet2BeBound);
+			DescriptorSet2BeBound.emplace_back(m_pTextureDescriptorSet);
+
 			vCommandBuffer.bindVertexBuffers(0, 1, VertexBuffers, Offsets);
 			vCommandBuffer.bindIndexBuffer(m_pIndexBuffer, 0, vk::IndexType::eUint32);
-			vCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, vPipelineLayout, 0, m_pTextureDescriptorSet, nullptr);
+			vCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, vPipelineLayout, 0, DescriptorSet2BeBound, nullptr);
 			vCommandBuffer.drawIndexed(static_cast<uint32_t>(m_IndexData.size()), 1, 0, 0, 0);
 		}
 

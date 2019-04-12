@@ -22,11 +22,6 @@ namespace VulkanApp
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoord;
-
-		bool operator ==(const SVertex& vOtherVertex)const
-		{
-			return (Position == vOtherVertex.Position) && (Normal == vOtherVertex.Normal) && (TexCoord == vOtherVertex.TexCoord);
-		}
 	};
 
 	struct SUniformBufferObject
@@ -34,16 +29,5 @@ namespace VulkanApp
 		glm::mat4 Model;
 		glm::mat4 View;
 		glm::mat4 Projection;
-	};
-}
-
-namespace std
-{
-	template<> struct hash<VulkanApp::SVertex>
-	{
-		size_t operator()(VulkanApp::SVertex const& vVertex)const
-		{
-			return ((hash<glm::vec3>()(vVertex.Position) ^ (hash<glm::vec3>()(vVertex.Normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vVertex.TexCoord) << 1);
-		}
 	};
 }

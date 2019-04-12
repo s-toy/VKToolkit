@@ -4,6 +4,11 @@
 #include "VkApplicationBase.hpp"
 #include "VkGenericImage.hpp"
 
+namespace hiveVKT
+{
+	class CModel;
+}
+
 namespace VulkanApp
 {
 	class CPerpixelShadingApp : public hiveVKT::CVkApplicationBase
@@ -23,11 +28,8 @@ namespace VulkanApp
 		void __createMsaaResource();
 		void __createDepthResources();
 		void __createFramebuffers();
-		void __createTextureSamplerResources();
 		void __generateMipmaps(hiveVKT::CVkGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat);
 		void __createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory);
-		void __createVertexBuffer();
-		void __createIndexBuffer();
 		void __createUniformBuffers();
 		void __createDescriptorPool();
 		void __createDescriptorSet();
@@ -53,15 +55,10 @@ namespace VulkanApp
 		VkPipelineLayout m_pPipelineLayout = VK_NULL_HANDLE;
 		VkPipeline m_pGraphicsPipeline = VK_NULL_HANDLE;
 		VkCommandPool m_pCommandPool = VK_NULL_HANDLE;
+		VkDescriptorPool m_pDescriptorPool = VK_NULL_HANDLE;
 		hiveVKT::CVkGenericImage m_MsaaAttachment;
 		hiveVKT::CVkGenericImage m_DepthAttachment;
-		hiveVKT::CVkGenericImage m_Texture;
-		VkSampler m_pTextureSampler = VK_NULL_HANDLE;
-		VkBuffer m_pVertexBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory m_pVertexBufferDeviceMemory = VK_NULL_HANDLE;
-		VkBuffer m_pIndexBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory m_pIndexBufferMemory = VK_NULL_HANDLE;
-		VkDescriptorPool m_pDescriptorPool = VK_NULL_HANDLE;
+		hiveVKT::CModel* m_pModel = nullptr;
 
 		VkSampleCountFlagBits m_SampleCount = VK_SAMPLE_COUNT_1_BIT;
 
@@ -75,9 +72,6 @@ namespace VulkanApp
 		std::vector<VkSemaphore> m_ImageAvailableSemaphoreSet;
 		std::vector<VkSemaphore> m_RenderFinishedSemaphoreSet;
 		std::vector<VkFence> m_InFlightFenceSet;
-
-		std::vector<SVertex> m_VertexData;
-		std::vector<uint32_t> m_IndexData;
 
 		size_t m_CurrentFrame = 0;
 

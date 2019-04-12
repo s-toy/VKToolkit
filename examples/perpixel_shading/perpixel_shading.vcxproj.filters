@@ -12,9 +12,6 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{8455a56b-8466-4d58-bc12-03c0ab6d0433}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third Party">
-      <UniqueIdentifier>{f7cc021e-c589-4dee-8309-16c0af212a9a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -28,12 +25,6 @@
     </ClInclude>
     <ClInclude Include="VulkanApp.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\stb_image.h">
-      <Filter>Third Party</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\tiny_obj_loader.h">
-      <Filter>Third Party</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

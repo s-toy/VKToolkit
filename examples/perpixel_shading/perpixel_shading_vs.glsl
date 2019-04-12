@@ -9,7 +9,7 @@ layout(location = 0) out vec3 _outPositionW;
 layout(location = 1) out vec3 _outNormalW;
 layout(location = 2) out vec2 _outTexCoord;
 
-layout(binding = 0) uniform UBO{
+layout(set = 0, binding = 0) uniform UBO{
 	mat4 Model;
 	mat4 View;
 	mat4 Projection;

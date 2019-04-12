@@ -3,10 +3,6 @@
 #include <iostream>
 #include <chrono>
 #include <unordered_map>
-#define STB_IMAGE_IMPLEMENTATION
-#include "../external/stb_image.h"
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "../external/tiny_obj_loader.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkGraphicsPipelineCreator.hpp"
@@ -14,6 +10,7 @@
 #include "VkDeviceCreator.hpp"
 #include "VkRenderPassCreator.hpp"
 #include "Camera.hpp"
+#include "Model.h"
 
 using namespace hiveVKT;
 
@@ -26,19 +23,19 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 	m_SampleCount = __getMaxSampleCount();
 
 	__retrieveDeviceQueue();
+	__createCommandPool();
+	__createDescriptorSetLayout();
+	__loadModel();
 	__retrieveSwapChainImagesAndCreateImageViews();
 	__createRenderPass();
-	__createDescriptorSetLayout();
+	
 	__createPipelineLayout();
 	__createGraphicsPipeline();
-	__createCommandPool();
+	
 	__createMsaaResource();
 	__createDepthResources();
 	__createFramebuffers();
-	__loadModel();
-	__createTextureSamplerResources();
-	__createVertexBuffer();
-	__createIndexBuffer();
+	
 	__createUniformBuffers();
 	__createDescriptorPool();
 	__createDescriptorSet();
@@ -122,11 +119,6 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 		vkFreeMemory(_device(), m_UniformBufferDeviceMemorySet[i], nullptr);
 	}
 
-	vkDestroyBuffer(_device(), m_pIndexBuffer, nullptr);
-	vkFreeMemory(_device(), m_pIndexBufferMemory, nullptr);
-	vkDestroyBuffer(_device(), m_pVertexBuffer, nullptr);
-	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory, nullptr);
-
 	for (auto i = 0; i < m_FramebufferSet.size(); ++i)
 		vkDestroyFramebuffer(_device(), m_FramebufferSet[i], nullptr);
 
@@ -142,8 +134,9 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 
 	m_MsaaAttachment.destroy(_device());
 	m_DepthAttachment.destroy(_device());
-	m_Texture.destroy(_device());
-	vkDestroySampler(_device(), m_pTextureSampler, nullptr);
+
+	m_pModel->destroy(_device());
+	delete m_pModel;
 
 	CVkApplicationBase::_destroyV();
 }
@@ -204,14 +197,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSetLayout()
 	UniformBufferBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	UniformBufferBinding.pImmutableSamplers = nullptr;
 
-	VkDescriptorSetLayoutBinding SamplerBinding = {};
-	SamplerBinding.binding = 1;
-	SamplerBinding.descriptorCount = 1;
-	SamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	SamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	UniformBufferBinding.pImmutableSamplers = nullptr;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> Bindings = { UniformBufferBinding,SamplerBinding };
+	std::array<VkDescriptorSetLayoutBinding, 1> Bindings = { UniformBufferBinding };
 
 	VkDescriptorSetLayoutCreateInfo DescriptorSetLayoutCreateInfo = {};
 	DescriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -226,10 +212,16 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSetLayout()
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createPipelineLayout()
 {
+	auto ModelDescriptorSetLayout = m_pModel->getModelDescriptorSetLayout();
+
+	std::array<VkDescriptorSetLayout, 2> LayoutSet;
+	LayoutSet[0] = m_pDescriptorSetLayout;
+	LayoutSet[1] = ModelDescriptorSetLayout;
+
 	VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo = {};
 	PipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	PipelineLayoutCreateInfo.setLayoutCount = 1;
-	PipelineLayoutCreateInfo.pSetLayouts = &m_pDescriptorSetLayout;
+	PipelineLayoutCreateInfo.setLayoutCount = 2;
+	PipelineLayoutCreateInfo.pSetLayouts = LayoutSet.data();
 	PipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 	PipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
@@ -353,75 +345,6 @@ void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__createTextureSamplerResources()
-{
-	int TextureWidth = 0, TextureHeight = 0, TextureChannels = 0;
-	unsigned char* Pixels = stbi_load("../../resource/models/cyborg/cyborg_diffuse.png", &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
-	if (!Pixels)
-		throw std::runtime_error("Failed to load texture image!");
-
-	m_MipmapLevel = static_cast<uint32_t>(std::floor(std::log2(std::max(TextureWidth, TextureHeight)))) + 1;
-
-	VkDeviceSize ImageSize = TextureWidth * TextureHeight * 4;
-
-	VkBuffer pStagingBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory pStagingBufferDeviceMemory = VK_NULL_HANDLE;
-
-	__createBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
-	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
-	memcpy(Data, Pixels, static_cast<size_t>(ImageSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
-
-	stbi_image_free(Pixels);
-
-	vk::ImageCreateInfo ImageCreateInfo = {};
-	ImageCreateInfo.imageType = vk::ImageType::e2D;
-	ImageCreateInfo.extent = vk::Extent3D{ static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight), 1 };
-	ImageCreateInfo.mipLevels = m_MipmapLevel;
-	ImageCreateInfo.arrayLayers = 1;
-	ImageCreateInfo.format = vk::Format::eR8G8B8A8Unorm;
-	ImageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-	ImageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-	ImageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
-	ImageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-	ImageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-
-	m_Texture.create(_device(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
-	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
-	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_MipmapLevel,0,1 };
-	m_Texture.translateImageLayout(CommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);
-	m_Texture.copyFromBuffer(CommandBuffer, pStagingBuffer, 0, { static_cast<uint32_t>(TextureWidth),static_cast<uint32_t>(TextureHeight),1u }, 0);
-	__endSingleTimeCommands(CommandBuffer);
-	__generateMipmaps(m_Texture, TextureWidth, TextureHeight, m_MipmapLevel, vk::Format::eR8G8B8A8Unorm);
-
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
-
-	VkSamplerCreateInfo SamplerCreateInfo = {};
-	SamplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	SamplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-	SamplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-	SamplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	SamplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	SamplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	SamplerCreateInfo.anisotropyEnable = VK_TRUE;
-	SamplerCreateInfo.maxAnisotropy = 16;
-	SamplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
-	SamplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-	SamplerCreateInfo.compareEnable = VK_FALSE;
-	SamplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	SamplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	SamplerCreateInfo.mipLodBias = 0.0f;
-	SamplerCreateInfo.maxLod = static_cast<float>(m_MipmapLevel);
-	SamplerCreateInfo.minLod = 0.0f;
-
-	if (vkCreateSampler(_device(), &SamplerCreateInfo, nullptr, &m_pTextureSampler) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create texture sampler!");
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__generateMipmaps(hiveVKT::CVkGenericImage& vTexture, int32_t vTextureWidth, int32_t vTextureHeight, uint32_t vMipmapLevel, vk::Format vTextureFormat)
 {
 	VkFormatProperties FormatProperties;
@@ -494,54 +417,6 @@ void VulkanApp::CPerpixelShadingApp::__createBuffer(VkDeviceSize vBufferSize, Vk
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__createVertexBuffer()
-{
-	VkDeviceSize BufferSize = sizeof(m_VertexData[0]) * m_VertexData.size();
-
-	VkBuffer pStagingBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory pStagingBufferDeviceMemory = VK_NULL_HANDLE;
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
-
-	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
-	memcpy(Data, m_VertexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pVertexBuffer, m_pVertexBufferDeviceMemory);
-
-	__copyBuffer(pStagingBuffer, m_pVertexBuffer, BufferSize);
-
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__createIndexBuffer()
-{
-	VkDeviceSize BufferSize = sizeof(m_IndexData[0]) * m_IndexData.size();
-
-	VkBuffer pStagingBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory pStagingBufferDeviceMemory = VK_NULL_HANDLE;
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
-
-	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
-	memcpy(Data, m_IndexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
-
-	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pIndexBuffer, m_pIndexBufferMemory);
-
-	__copyBuffer(pStagingBuffer, m_pIndexBuffer, BufferSize);
-
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__createUniformBuffers()
 {
 	VkDeviceSize BufferSize = sizeof(SUniformBufferObject);
@@ -559,15 +434,13 @@ void VulkanApp::CPerpixelShadingApp::__createUniformBuffers()
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createDescriptorPool()
 {
-	std::array<VkDescriptorPoolSize, 2> DescriptorPoolSizeSet = {};
+	std::array<VkDescriptorPoolSize, 1> DescriptorPoolSizeSet = {};
 	DescriptorPoolSizeSet[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	DescriptorPoolSizeSet[0].descriptorCount = static_cast<uint32_t>(m_SwapChainImageSet.size());
-	DescriptorPoolSizeSet[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	DescriptorPoolSizeSet[1].descriptorCount = static_cast<uint32_t>(m_SwapChainImageSet.size());
 
 	VkDescriptorPoolCreateInfo DescriptorPoolCreateInfo = {};
 	DescriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	DescriptorPoolCreateInfo.poolSizeCount = 2;
+	DescriptorPoolCreateInfo.poolSizeCount = 1;
 	DescriptorPoolCreateInfo.pPoolSizes = DescriptorPoolSizeSet.data();
 	DescriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(m_SwapChainImageSet.size());
 
@@ -598,12 +471,7 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 		DescriptorBufferInfo.offset = 0;
 		DescriptorBufferInfo.range = sizeof(SUniformBufferObject);
 
-		VkDescriptorImageInfo DescriptorImageInfo = {};
-		DescriptorImageInfo.imageView = m_Texture.getImageView();
-		DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		DescriptorImageInfo.sampler = m_pTextureSampler;
-
-		std::array<VkWriteDescriptorSet, 2> WriteDescriptors = {};
+		std::array<VkWriteDescriptorSet, 1> WriteDescriptors = {};
 		WriteDescriptors[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		WriteDescriptors[0].dstSet = m_DescriptorSet[i];
 		WriteDescriptors[0].dstBinding = 0;
@@ -613,16 +481,6 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 		WriteDescriptors[0].pBufferInfo = &DescriptorBufferInfo;
 		WriteDescriptors[0].pImageInfo = nullptr;
 		WriteDescriptors[0].pTexelBufferView = nullptr;
-
-		WriteDescriptors[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		WriteDescriptors[1].dstSet = m_DescriptorSet[i];
-		WriteDescriptors[1].dstBinding = 1;
-		WriteDescriptors[1].dstArrayElement = 0;
-		WriteDescriptors[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		WriteDescriptors[1].descriptorCount = 1;
-		WriteDescriptors[1].pImageInfo = &DescriptorImageInfo;
-		WriteDescriptors[1].pTexelBufferView = nullptr;
-		WriteDescriptors[1].pBufferInfo = nullptr;
 
 		vkUpdateDescriptorSets(_device(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
 	}
@@ -668,12 +526,7 @@ void VulkanApp::CPerpixelShadingApp::__createCommandBuffers()
 
 		vkCmdBeginRenderPass(m_CommandBufferSet[i], &RenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(m_CommandBufferSet[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline);
-		VkBuffer VertexBuffers[] = { m_pVertexBuffer };
-		VkDeviceSize Offsets[] = { 0 };
-		vkCmdBindVertexBuffers(m_CommandBufferSet[i], 0, 1, VertexBuffers, Offsets);
-		vkCmdBindIndexBuffer(m_CommandBufferSet[i], m_pIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-		vkCmdBindDescriptorSets(m_CommandBufferSet[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelineLayout, 0, 1, &m_DescriptorSet[i], 0, nullptr);
-		vkCmdDrawIndexed(m_CommandBufferSet[i], static_cast<uint32_t>(m_IndexData.size()), 1, 0, 0, 0);
+		m_pModel->draw(m_CommandBufferSet[i], m_pPipelineLayout, { static_cast<vk::DescriptorSet>(m_DescriptorSet[i]) });
 		vkCmdEndRenderPass(m_CommandBufferSet[i]);
 
 		if (vkEndCommandBuffer(m_CommandBufferSet[i]) != VK_SUCCESS)
@@ -745,48 +598,16 @@ void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 //Function:
 void VulkanApp::CPerpixelShadingApp::__loadModel()
 {
-	tinyobj::attrib_t Attribute;
-	std::vector<tinyobj::shape_t> ShapeSet;
-	std::vector<tinyobj::material_t> MaterialSet;
-	std::string Warn, Error;
+	hiveVKT::SVertexLayout VertexLayout;
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_POSITION);
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_NORMAL);
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_TEXCOORD);
 
-	if (!tinyobj::LoadObj(&Attribute, &ShapeSet, &MaterialSet, &Warn, &Error, "../../resource/models/cyborg/cyborg.obj"))
-		throw std::runtime_error(Warn + Error);
+	hiveVKT::STextureDescriptorBindingInfo TextureDescriptorBindingInfo;
+	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_DIFF,0 });
 
-	std::unordered_map<SVertex, uint32_t> UniqueVertices = {};
-
-	for (const auto& Shape : ShapeSet)
-	{
-		for (const auto& Index : Shape.mesh.indices)
-		{
-			SVertex Vertex = {};
-
-			Vertex.Position = {
-				Attribute.vertices[3 * Index.vertex_index + 0],
-				Attribute.vertices[3 * Index.vertex_index + 1],
-				Attribute.vertices[3 * Index.vertex_index + 2]
-			};
-
-			Vertex.TexCoord = {
-				Attribute.texcoords[2 * Index.texcoord_index + 0],
-				1.0f - Attribute.texcoords[2 * Index.texcoord_index + 1]
-			};
-
-			Vertex.Normal = {
-				Attribute.normals[3 * Index.normal_index + 0],
-				Attribute.normals[3 * Index.normal_index + 1],
-				Attribute.normals[3 * Index.normal_index + 2]
-			};
-
-			if (UniqueVertices.count(Vertex) == 0)
-			{
-				UniqueVertices[Vertex] = static_cast<uint32_t>(m_VertexData.size());
-				m_VertexData.push_back(Vertex);
-			}
-
-			m_IndexData.push_back(UniqueVertices[Vertex]);
-		}
-	}
+	m_pModel = new hiveVKT::CModel();
+	m_pModel->loadModel("../../resource/models/nanosuit/nanosuit.obj", VertexLayout, TextureDescriptorBindingInfo, _device(), m_pCommandPool, m_pQueue);
 }
 
 //************************************************************************************

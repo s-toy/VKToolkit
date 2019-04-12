@@ -50,7 +50,7 @@ namespace hiveVKT
 
 		const vk::DescriptorSetLayout& getModelDescriptorSetLayout()const { return m_pDescriptorSetLayout; }
 
-		void draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout);
+		void draw(const vk::CommandBuffer vCommandBuffer, const vk::PipelineLayout vPipelineLayout, const std::vector<vk::DescriptorSet>& vOtherDescriptorSet2BeBound);
 
 		void destroy(vk::Device vDevice);
 

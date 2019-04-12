@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(binding = 1) uniform sampler2D uMaterialDiffuse1;
+layout(set = 1, binding = 0) uniform sampler2D uMaterialDiffuse1;
 
 vec3 uViewPos = vec3(0.0);
 
