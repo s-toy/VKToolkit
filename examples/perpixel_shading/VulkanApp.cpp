@@ -95,6 +95,8 @@ bool VulkanApp::CPerpixelShadingApp::_renderV()
 
 	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
+	std::cout << format("FPS: %f", 1.0 / getFrameInterval()) << std::endl;
+
 	return true;
 }
 

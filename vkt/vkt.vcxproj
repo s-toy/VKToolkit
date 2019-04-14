@@ -26,6 +26,7 @@
     <ClInclude Include="src\Model.hpp" />
     <ClInclude Include="src\Utility.hpp" />
     <ClInclude Include="src\VkApplicationBase.hpp" />
+    <ClInclude Include="src\VkContext.hpp" />
     <ClInclude Include="src\VkDebugMessenger.hpp" />
     <ClInclude Include="src\VkDerfferedApplication.hpp" />
     <ClInclude Include="src\VkDeviceCreator.hpp" />
@@ -45,6 +46,7 @@
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\VkApplicationBase.cpp" />
+    <ClCompile Include="src\VkContext.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

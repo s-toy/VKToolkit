@@ -1,20 +1,12 @@
 #pragma once
 #include <optional>
-#include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include "Common.hpp"
-#include "VkSwapChainCreator.hpp"
+#include "VkContext.hpp"
 
 namespace hiveVKT
 {
-	class CVkDebugMessenger;
 	class CCamera;
-
-	struct SQueueFamilyIndices
-	{
-		std::optional<uint32_t> QueueFamily;
-		bool IsComplete() const { return QueueFamily.has_value(); }
-	};
 
 	class CVkApplicationBase
 	{
@@ -30,9 +22,13 @@ namespace hiveVKT
 		void setWindowResizable(bool vResizable) { m_WindowCreateInfo.IsWindowResizable = vResizable; }
 		void setWindowTitle(const std::string& vTitle) { m_WindowCreateInfo.WindowTitle = vTitle; }
 
-		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
+		CCamera*	fetchCamera() const { return m_pCamera; }
+		GLFWwindow* fetchWindow() const { return m_pWindow; }
+		CVkContext&	fetchVkContext() { return m_VkContext; }
 
-		CCamera* fetchCamera() { return m_pCamera; }
+		double getFrameInterval() const { return m_FrameInterval; }
+
+		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkContext.fetchPhysicalDeviceFeatures(); }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
@@ -43,52 +39,29 @@ namespace hiveVKT
 		virtual void _handleEventV() {}
 		virtual void _destroyV();
 
-		GLFWwindow* _window() const { return m_pWindow; }
+		vk::Instance _instance()				const { return m_VkContext.getInstance(); }
+		vk::SurfaceKHR _surface()				const { return m_VkContext.getSurface(); }
+		vk::PhysicalDevice _physicalDevice()	const { return m_VkContext.getPhysicalDevice(); }
+		vk::Device _device()					const { return m_VkContext.getDevice(); }
+		vk::SwapchainKHR _swapchain()			const { return m_VkContext.getSwapchainKHR(); }
+		vk::Format _swapchainImageFormat()		const { return m_VkContext.getSwapchainImageFormat(); }
+		vk::Extent2D _swapchainExtent()			const { return m_VkContext.getSwapchainExtent(); }
 
-		vk::Instance _instance()				const { return m_VkInstance; }
-		vk::SurfaceKHR _surface()				const { return m_VkSurface; }
-		vk::PhysicalDevice _physicalDevice()	const { return m_VkPhysicalDevice; }
-		vk::Device _device()					const { return m_VkDevice; }
-		vk::SwapchainKHR _swapchain()			const { return m_VkSwapchain; }
-		vk::Format _swapchainImageFormat()		const { return m_SwapChainImageFormat; }
-		vk::Extent2D _swapchainExtent()			const { return m_SwapChainExtent; }
-
-		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
-		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_SwapChainSupportDetails; }
+		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_VkContext.getRequiredQueueFamilyIndices(); }
+		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_VkContext.getSwapChainSupportDetails(); }
 
 	private:
-		CVkDebugMessenger* m_pDebugMessenger = nullptr;
-		GLFWwindow* m_pWindow = nullptr;
+		CVkContext m_VkContext;
 
-		CCamera* m_pCamera = nullptr;
+		GLFWwindow* m_pWindow = nullptr;
+		CCamera*	m_pCamera = nullptr;
 
 		SWindowCreateInfo m_WindowCreateInfo = {};
-		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
-		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 
-		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
-
-		vk::Instance m_VkInstance;
-		vk::PhysicalDevice m_VkPhysicalDevice;
-		vk::PhysicalDeviceFeatures m_VkPhysicalDeviceFeatures;
-		vk::Device m_VkDevice;
-		vk::SwapchainKHR m_VkSwapchain;
-		vk::Format m_SwapChainImageFormat;
-		vk::Extent2D m_SwapChainExtent;
-
-		bool m_IsInitialized = false;
-		bool m_IsRenderLoopDone = false;
+		double	m_FrameInterval = 0.0;
+		bool	m_IsInitialized = false;
+		bool	m_IsRenderLoopDone = false;
 
 		bool __initWindow();
-		bool __initVulkan();
-
-		void __createInstance();
-		void __createDebugMessenger();
-		void __createSurface();
-		void __pickPhysicalDevice();
-		void __createDevice();
-		void __createSwapChain();
-
-		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
 	};
 }

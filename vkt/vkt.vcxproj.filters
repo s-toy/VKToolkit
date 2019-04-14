@@ -13,6 +13,9 @@
     <ClCompile Include="src\Model.cpp">
       <Filter>graphics\vk\model</Filter>
     </ClCompile>
+    <ClCompile Include="src\VkContext.cpp">
+      <Filter>graphics\vk\framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.hpp">
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="src\Model.hpp">
       <Filter>graphics\vk\model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkContext.hpp">
+      <Filter>graphics\vk\framework</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
