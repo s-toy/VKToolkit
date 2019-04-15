@@ -1,18 +1,58 @@
 #pragma once
-#include "Common.h"
+#include <vector>
+#include <optional>
+#include <array>
+#include <vulkan/vulkan.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <GLM/glm.hpp>
+#include <GLM/gtx/hash.hpp>
+
+namespace hiveVKT
+{
+#define MAX_FRAMES_IN_FLIGHT 2
+
+#if defined(DEBUG) | defined(_DEBUG)
+	const bool g_enableValidationLayers = true;
+#else
+	const bool g_enableValidationLayers = false;
+#endif
+
+	struct SVertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Normal;
+		glm::vec2 TexCoord;
+	};
+
+	struct SUniformBufferObject
+	{
+		glm::mat4 Model;
+		glm::mat4 View;
+		glm::mat4 Projection;
+	};
+}
+
 #include <GLFW/glfw3.h>
 #include "VkApplicationBase.hpp"
 #include "VkGenericImage.hpp"
+#include "Common.hpp"
 
 namespace hiveVKT
 {
 	class CModel;
 }
 
-namespace VulkanApp
+namespace hiveVKT
 {
-	class CPerpixelShadingApp : public hiveVKT::CVkApplicationBase
+	class CVkForwardApplication : public CVkApplicationBase
 	{
+	public:
+		CVkForwardApplication() = default;
+		~CVkForwardApplication() = default;
+
+		uint32_t loadModel(const std::vector<std::weak_ptr<SMesh>>& vData, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo);
+		void updateModelData(uint32_t vModelID, const std::vector<std::weak_ptr<SMesh>>& vMeshData);
+
 	private:
 		virtual bool _initV() override;
 		virtual bool _renderV() override;
@@ -37,7 +77,7 @@ namespace VulkanApp
 		void __createSyncObjects();
 		void __copyBuffer(VkBuffer vSrcBuffer, VkBuffer vDstBuffer, VkDeviceSize vBufferSize);
 		void __updateUniformBuffer(uint32_t vImageIndex);
-		void __loadModel();
+		void __processModel();
 
 		VkImageView __createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		VkFormat __findSupportedFormat(const std::vector<VkFormat>& vCandidateFormatSet, VkImageTiling vImageTiling, VkFormatFeatureFlags vFormatFeatures);
@@ -58,7 +98,8 @@ namespace VulkanApp
 		VkDescriptorPool m_pDescriptorPool = VK_NULL_HANDLE;
 		hiveVKT::CVkGenericImage m_MsaaAttachment;
 		hiveVKT::CVkGenericImage m_DepthAttachment;
-		hiveVKT::CModel* m_pModel = nullptr;
+
+		std::vector<hiveVKT::CModel*> m_ModelSet;
 
 		VkSampleCountFlagBits m_SampleCount = VK_SAMPLE_COUNT_1_BIT;
 

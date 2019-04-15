@@ -9,31 +9,7 @@ namespace hiveVKT
 {
 #define DEFAULT_MODEL_LOADING_FLAGS aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
 
-	enum class EVertexComponent
-	{
-		VERTEX_COMPONENT_POSITION = 0x0,
-		VERTEX_COMPONENT_NORMAL = 0x1,
-		VERTEX_COMPONENT_COLOR = 0x2,
-		VERTEX_COMPONENT_TEXCOORD = 0x3
-	};
-
-	struct SVertexLayout
-	{
-		std::vector<EVertexComponent> ComponentSet;
-	};
-
-	enum class ETextureType
-	{
-		TEXTURE_TYPE_DIFF = 0x0,
-		TEXTURE_TYPE_SPEC = 0x1,
-	};
-
-	struct STextureDescriptorBindingInfo
-	{
-		std::vector<std::pair<ETextureType, uint32_t>> TextureDescriptorBindingInfo; //<texture type, binding>
-	};
-
-	struct STextureInfo
+	struct SVkTextureInfo
 	{
 		CVkTexture2D Texture;
 
@@ -46,7 +22,12 @@ namespace hiveVKT
 	public:
 		CModel() = default;
 
-		void loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
+		void loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo);
+		void loadModel(const std::vector<std::weak_ptr<SMesh>>& vData, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo);
+
+		void processModel(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
+
+		void updateModelData(const std::vector<std::weak_ptr<SMesh>>& vData);
 
 		const vk::DescriptorSetLayout& getModelDescriptorSetLayout()const { return m_pDescriptorSetLayout; }
 
@@ -57,13 +38,16 @@ namespace hiveVKT
 	private:
 		_DISALLOW_COPY_AND_ASSIGN(CModel);
 
+		const aiScene* m_pScene = nullptr;
+		std::vector<std::weak_ptr<SMesh>> m_ModelData;
+
 		std::string m_Directory = "";
 
 		SVertexLayout m_VertexLayout;
 		STextureDescriptorBindingInfo m_TextureDescriptorBindingInfo;
 
 		std::vector<CMesh*> m_MeshSet;
-		std::vector<STextureInfo*> m_TextureSet;
+		std::vector<SVkTextureInfo*> m_TextureSet;
 
 		vk::DescriptorSetLayout m_pDescriptorSetLayout;
 		vk::DescriptorPool m_pDescriptorPool;

@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
 
@@ -39,5 +40,80 @@ namespace hiveVKT
 		bool IsWindowResizable = false;
 
 		bool isValid() const { return (WindowWidth > 0 && WindowHeight > 0); }	//TODO:
+	};
+
+	struct SViewPort
+	{
+		float Width = 0;
+		float Height = 0;
+	};
+
+	struct SCameraInfo
+	{
+		glm::vec3 Position = glm::vec3(0.0f);
+		glm::vec3 Up = glm::vec3(0.0f);
+		glm::vec3 Front = glm::vec3(0.0f);
+		float FOV = 0.0f;
+		float NearPlane = 0.0f;
+		float FarPlane = 0.0f;
+	};
+
+	struct SViewInfo
+	{
+		SViewPort ViewPortInfo;
+		SCameraInfo CameraInfo;
+	};
+
+	struct STextureInfo
+	{
+		unsigned int Width = 0;
+		unsigned int Height = 0;
+		unsigned int InternalFormat = 0;
+		unsigned int SourceType = 0;
+		unsigned int TextureSourceFormat = 0;
+	};
+
+	struct STexture
+	{
+		STextureInfo TexInfo;
+		std::shared_ptr<unsigned char> pTextureData = nullptr;
+	};
+
+	struct SGeometry
+	{
+		unsigned int VertexCount = 0;
+		unsigned int IndexCount = 0;
+		std::shared_ptr<float> pVertexData = nullptr;
+		std::shared_ptr<unsigned int> pIndexData = nullptr;
+	};
+
+	struct SMesh
+	{
+		SGeometry Geometry;
+		STexture Texture;
+	};
+
+	enum class EVertexComponent
+	{
+		VERTEX_COMPONENT_POSITION = 0x0,
+		VERTEX_COMPONENT_NORMAL = 0x1,
+		VERTEX_COMPONENT_COLOR = 0x2,
+		VERTEX_COMPONENT_TEXCOORD = 0x3
+	};
+
+	struct SVertexLayout
+	{
+		std::vector<EVertexComponent> ComponentSet;
+	};
+
+	enum class ETextureType
+	{
+		TEXTURE_TYPE_DIFF = 0x0,
+		TEXTURE_TYPE_SPEC = 0x1,
+	};
+
+	struct STextureDescriptorBindingInfo
+	{
+		std::vector<std::pair<ETextureType, uint32_t>> TextureDescriptorBindingInfo; //<texture type, binding>
 	};
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include <optional>
+#include <functional>
+#include <vector>
 #include <GLFW/glfw3.h>
 #include "Common.hpp"
 #include "VkContext.hpp"
@@ -26,9 +28,13 @@ namespace hiveVKT
 		GLFWwindow* fetchWindow() const { return m_pWindow; }
 		CVkContext&	fetchVkContext() { return m_VkContext; }
 
+		SViewInfo getViewInfo() const;
+
 		double getFrameInterval() const { return m_FrameInterval; }
 
 		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkContext.fetchPhysicalDeviceFeatures(); }
+
+		void registerUpdateFunction(std::function<void()> vFunc) { m_UpdateFunctionSet.emplace_back(vFunc); }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
@@ -57,6 +63,8 @@ namespace hiveVKT
 		CCamera*	m_pCamera = nullptr;
 
 		SWindowCreateInfo m_WindowCreateInfo = {};
+
+		std::vector<std::function<void()>> m_UpdateFunctionSet;
 
 		double	m_FrameInterval = 0.0;
 		bool	m_IsInitialized = false;

@@ -30,6 +30,7 @@
     <ClInclude Include="src\VkDebugMessenger.hpp" />
     <ClInclude Include="src\VkDerfferedApplication.hpp" />
     <ClInclude Include="src\VkDeviceCreator.hpp" />
+    <ClInclude Include="src\VkForwardApplication.hpp" />
     <ClInclude Include="src\VkGenericImage.hpp" />
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
     <ClInclude Include="src\VkInstanceCreator.hpp" />
@@ -47,6 +48,7 @@
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\VkApplicationBase.cpp" />
     <ClCompile Include="src\VkContext.cpp" />
+    <ClCompile Include="src\VkForwardApplication.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

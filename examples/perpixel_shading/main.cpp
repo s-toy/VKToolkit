@@ -1,7 +1,7 @@
 #include <memory>
-#include "VulkanApp.h"
+#include "VkForwardApplication.hpp"
 
-using namespace VulkanApp;
+using namespace hiveVKT;
 
 //FUNCTION: detect the memory leak in DEBUG mode
 void installMemoryLeakDetector()
@@ -22,8 +22,7 @@ int main()
 {
 	installMemoryLeakDetector();
 
-	CPerpixelShadingApp Application;
-
+	CVkForwardApplication Application;
 	Application.setWindowSize(1600, 900);
 	Application.setWindowPos(100, 100);
 	Application.setWindowTitle("perpixel shading demo");
@@ -31,6 +30,26 @@ int main()
 	auto& PhsicalDeviceFeatures = Application.fetchPhysicalDeviceFeatures();
 	PhsicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
 	PhsicalDeviceFeatures.sampleRateShading = VK_TRUE;
+
+	hiveVKT::SVertexLayout VertexLayout;
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_POSITION);
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_NORMAL);
+	VertexLayout.ComponentSet.push_back(hiveVKT::EVertexComponent::VERTEX_COMPONENT_TEXCOORD);
+
+	hiveVKT::STextureDescriptorBindingInfo TextureDescriptorBindingInfo;
+	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_DIFF, 0 });
+	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_SPEC, 1 });
+
+	auto ModelID = Application.loadModel({}, VertexLayout, TextureDescriptorBindingInfo);
+
+	auto UpdateFunc = [&]() {
+		auto ViewInfo = Application.getViewInfo();
+
+		std::vector<std::weak_ptr<SMesh>> MeshBufferSet;
+		Application.updateModelData(ModelID, MeshBufferSet);
+	};
+
+	Application.registerUpdateFunction(UpdateFunc);
 
 	Application.run();
 

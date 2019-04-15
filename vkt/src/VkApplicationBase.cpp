@@ -22,6 +22,8 @@ void hiveVKT::CVkApplicationBase::run()
 		{
 			CPUTimer.begin();
 
+			for (auto Func : m_UpdateFunctionSet) Func();
+
 			if (!_renderV()) _THROW_RUNTIME_ERROR("Render loop interrupted due to render failure!");
 			m_IsRenderLoopDone = _isRenderLoopDoneV();
 
@@ -42,6 +44,25 @@ void hiveVKT::CVkApplicationBase::run()
 	{
 		_OUTPUT_WARNING("The program is terminated due to unexpected error!"); exit(EXIT_FAILURE);
 	}
+}
+
+//************************************************************************************
+//Function:
+hiveVKT::SViewInfo hiveVKT::CVkApplicationBase::getViewInfo() const
+{
+	SCameraInfo CameraInfo;
+	CameraInfo.FarPlane = m_pCamera->getFarPlane();
+	CameraInfo.NearPlane = m_pCamera->getNearPlane();
+	CameraInfo.FOV = m_pCamera->getFovy();
+	CameraInfo.Position = m_pCamera->getPosition();
+	CameraInfo.Front = m_pCamera->getFrontVector();
+	CameraInfo.Up = m_pCamera->getUpVector();
+
+	SViewPort Viewport = { m_WindowCreateInfo.WindowWidth, m_WindowCreateInfo.WindowHeight };
+
+	SViewInfo ViewInfo = { Viewport, CameraInfo };
+
+	return ViewInfo;
 }
 
 //************************************************************************************

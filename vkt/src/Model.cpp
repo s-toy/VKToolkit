@@ -4,21 +4,41 @@
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo)
 {
 	Assimp::Importer Importer;
-	const aiScene* Scene = Importer.ReadFile(vFilePath, DEFAULT_MODEL_LOADING_FLAGS);
+	m_pScene = Importer.ReadFile(vFilePath, DEFAULT_MODEL_LOADING_FLAGS);
 
-	if (!Scene || Scene->mFlags&AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
+	if (!m_pScene || m_pScene->mFlags&AI_SCENE_FLAGS_INCOMPLETE || !m_pScene->mRootNode)
 		_ASSERT(false);
 
 	m_Directory = vFilePath.substr(0, vFilePath.find_last_of('/'));
 	m_VertexLayout = vVertexLayout;
 	m_TextureDescriptorBindingInfo = vTextureDescriptorBindingInfo;
+}
 
-	__createVulkanResource(vDevice, Scene->mNumMeshes);
+//************************************************************************************
+//Function:
+void hiveVKT::CModel::loadModel(const std::vector<std::weak_ptr<SMesh>>& vData, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo)
+{
+	m_ModelData = vData;
+	m_VertexLayout = vVertexLayout;
+	m_TextureDescriptorBindingInfo = vTextureDescriptorBindingInfo;
+}
 
-	__processNodes(Scene->mRootNode, Scene, vDevice, vCommandPool, vQueue);
+//************************************************************************************
+//Function:
+void hiveVKT::CModel::processModel(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+{
+	__createVulkanResource(vDevice, m_pScene->mNumMeshes);
+	__processNodes(m_pScene->mRootNode, m_pScene, vDevice, vCommandPool, vQueue);
+}
+
+//************************************************************************************
+//Function:
+void hiveVKT::CModel::updateModelData(const std::vector<std::weak_ptr<SMesh>>& vData)
+{
+
 }
 
 //************************************************************************************
@@ -184,7 +204,7 @@ int hiveVKT::CModel::__createNewTexture(const std::string& vTextureName, ETextur
 
 	vk::DeviceSize Size = static_cast<vk::DeviceSize>(TextureWidth * TextureHeight * 4);
 
-	STextureInfo* TextureInfo = new STextureInfo();
+	SVkTextureInfo* TextureInfo = new SVkTextureInfo();
 	TextureInfo->Texture.create(vDevice, vCommandPool, vQueue, TextureWidth, TextureHeight, vk::Format::eR8G8B8A8Unorm, 3, Size, Pixels);
 	TextureInfo->TextureName = vTextureName;
 	TextureInfo->TextureType = vTextureType;

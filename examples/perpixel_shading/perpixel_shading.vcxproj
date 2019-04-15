@@ -151,11 +151,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="VulkanApp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="VulkanApp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="perpixel_shading_fs.glsl" />

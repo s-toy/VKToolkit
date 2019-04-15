@@ -14,14 +14,18 @@ namespace hiveVKT
 		glm::mat4	getViewMatrix() const;
 		glm::mat4	getProjectionMatrix() const;
 		glm::dvec3	getPosition() const { return m_CameraPos; }
+		glm::dvec3	getUpVector() const { return m_CameraUp; }
+		glm::dvec3	getFrontVector() const { return m_CameraFront; }
 		double		getFovy() const { return m_Fovy; }
+		double		getFarPlane() const { return m_Far; }
+		double		getNearPlane() const { return m_Near; }
 
 		void setPosition(glm::dvec3 vCameraPos) { m_CameraPos = vCameraPos; }
-		void setMoveSpeed(double vMoveSpeed)	{ m_MoveSpeed = vMoveSpeed; }
-		void setFarPlane(double vFarPlane)		{ m_Far = vFarPlane; }
-		void setNearPlane(double vNearPlane)	{ m_Near = vNearPlane; }
-		void setFovy(double vFovy)				{ m_Fovy = vFovy; }
-		void setAspect(double vAspect)			{ m_Aspect = vAspect; }
+		void setMoveSpeed(double vMoveSpeed) { m_MoveSpeed = vMoveSpeed; }
+		void setFarPlane(double vFarPlane) { m_Far = vFarPlane; }
+		void setNearPlane(double vNearPlane) { m_Near = vNearPlane; }
+		void setFovy(double vFovy) { m_Fovy = vFovy; }
+		void setAspect(double vAspect) { m_Aspect = vAspect; }
 
 	private:
 		void __cursorCallback(double vPosX, double vPosY);

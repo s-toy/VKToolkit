@@ -4,58 +4,25 @@
     <ClCompile Include="src\Camera.cpp">
       <Filter>graphics\base</Filter>
     </ClCompile>
-    <ClCompile Include="src\InputManager.cpp">
-      <Filter>graphics\base</Filter>
-    </ClCompile>
     <ClCompile Include="src\VkApplicationBase.cpp">
       <Filter>graphics\vk\framework</Filter>
     </ClCompile>
     <ClCompile Include="src\Model.cpp">
       <Filter>graphics\vk\model</Filter>
     </ClCompile>
-    <ClCompile Include="src\VkContext.cpp">
+    <ClCompile Include="src\VkForwardApplication.cpp">
       <Filter>graphics\vk\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>graphics\base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VkContext.cpp">
+      <Filter>graphics\vk\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.hpp">
       <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\InputManager.hpp">
-      <Filter>graphics\base</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDebugMessenger.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkDeviceCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkGenericImage.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkInstanceCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkRenderPassCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkShaderModuleCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkSwapChainCreator.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkTexture2D.hpp">
-      <Filter>graphics\vk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VkUtility.hpp">
-      <Filter>graphics\vk</Filter>
     </ClInclude>
     <ClInclude Include="src\Common.hpp">
       <Filter>general</Filter>
@@ -78,8 +45,47 @@
     <ClInclude Include="src\Model.hpp">
       <Filter>graphics\vk\model</Filter>
     </ClInclude>
-    <ClInclude Include="src\VkContext.hpp">
+    <ClInclude Include="src\VkDebugMessenger.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkDeviceCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkGenericImage.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkGraphicsPipelineCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkInstanceCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkRenderPassCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkShaderModuleCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkSwapChainCreator.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkTexture2D.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkUtility.hpp">
+      <Filter>graphics\vk\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkForwardApplication.hpp">
       <Filter>graphics\vk\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputManager.hpp">
+      <Filter>graphics\base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VkContext.hpp">
+      <Filter>graphics\vk\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +106,9 @@
     </Filter>
     <Filter Include="graphics\vk\model">
       <UniqueIdentifier>{0d0ae8e9-6269-45ff-9f79-23177fe7f59c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\vk\utils">
+      <UniqueIdentifier>{8f42e2c5-14f4-4aeb-8838-0b8a7cdfc19b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
