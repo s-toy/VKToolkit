@@ -17,7 +17,7 @@ void hiveVKT::CVkApplicationBase::run()
 
 		_OUTPUT_EVENT("Succeed to init application.");
 
-		hiveCommon::CCpuTimer CPUTimer;
+		hiveCommon::CCPUTimer CPUTimer;
 		while (!m_IsRenderLoopDone)
 		{
 			CPUTimer.begin();
