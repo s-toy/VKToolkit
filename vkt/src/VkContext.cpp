@@ -30,6 +30,9 @@ bool CVkContext::initVulkan(GLFWwindow* vWindow, const std::vector<const char *>
 	int Width, Height;
 	glfwGetFramebufferSize(vWindow, &Width, &Height);
 	__createSwapChain(Width, Height);
+	__retrieveSwapChainImages();
+	__createImageViews();
+	__retrieveDeviceQueues();
 
 	return true;
 }
@@ -93,6 +96,37 @@ void CVkContext::__createSwapChain(int vWidth, int vHeight)
 
 //************************************************************************************
 //Function:
+void CVkContext::__retrieveSwapChainImages()
+{
+	m_SwapChainImages = m_VkDevice.getSwapchainImagesKHR(m_VkSwapchain);
+}
+
+//************************************************************************************
+//Function:
+void CVkContext::__createImageViews()
+{
+	m_SwapChainImageViews.resize(m_SwapChainImages.size());
+	for (size_t i = 0; i < m_SwapChainImages.size(); ++i)
+	{
+		vk::ImageViewCreateInfo CreateInfo = {};
+		CreateInfo.image = m_SwapChainImages[i];
+		CreateInfo.viewType = vk::ImageViewType::e2D;
+		CreateInfo.format = m_SwapChainImageFormat;
+		CreateInfo.components = vk::ComponentSwizzle::eIdentity;
+		CreateInfo.subresourceRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
+		m_SwapChainImageViews[i] = m_VkDevice.createImageView(CreateInfo);
+	}
+}
+
+//************************************************************************************
+//Function:
+void CVkContext::__retrieveDeviceQueues()
+{
+	m_VkQueue = m_VkDevice.getQueue(m_RequiredQueueFamilyIndices.QueueFamily.value(), 0);
+}
+
+//************************************************************************************
+//Function:
 SQueueFamilyIndices CVkContext::__findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice)
 {
 	auto QueueFamilyPropertySet = vPhysicalDevice.getQueueFamilyProperties();
@@ -122,6 +156,10 @@ SQueueFamilyIndices CVkContext::__findRequiredQueueFamilies(const vk::PhysicalDe
 //Function:
 void hiveVKT::CVkContext::destroyVulkan()
 {
+	for (size_t i = 0; i < m_SwapChainImageViews.size(); ++i)
+	{
+		m_VkDevice.destroyImageView(m_SwapChainImageViews);
+	}
 	m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
 	m_VkDevice.destroy();
 

@@ -53,6 +53,8 @@ namespace hiveVKT
 		vk::SwapchainKHR m_VkSwapchain;
 		vk::Format m_SwapChainImageFormat;
 		vk::Extent2D m_SwapChainExtent;
+		std::vector<vk::Image> m_SwapChainImages;
+		std::vector<vk::ImageView> m_SwapChainImageViews;
 
 		void __createInstance();
 		void __createDebugMessenger();
@@ -60,6 +62,9 @@ namespace hiveVKT
 		void __pickPhysicalDevice();
 		void __createDevice();
 		void __createSwapChain(int vWidth, int vHeight);
+		void __retrieveSwapChainImages();
+		void __createImageViews();
+		void __retrieveDeviceQueues();
 
 		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
 	};
