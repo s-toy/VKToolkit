@@ -22,9 +22,9 @@ namespace hiveVKT
 		CVkContext();
 		~CVkContext();
 
-		bool initVukan();
-		bool initVulkan(const std::vector<std::string>& vExes4Instance, const std::vector<std::string>& vLays4Instannce,
-						const std::vector<std::string>& vExes4Device,   const std::vector<std::string>& vLays4Device,
+		bool initVulkan(const std::vector<std::string>& vExts4Instance, const std::vector<std::string>& vLays4Instannce,
+						const std::vector<std::string>& vExts4Device, const std::vector<std::string>& vLays4Device,
+						GLFWwindow* vWindow = nullptr,
 						const vk::PhysicalDeviceFeatures& vEnabledFeatures = vk::PhysicalDeviceFeatures{});
 
 		//bool initVulkan(GLFWwindow* vWindow, const std::vector<const char*>& vExtensions = { "VK_KHR_swapchain" });
