@@ -22,15 +22,12 @@ namespace hiveVKT
 		CVkContext();
 		~CVkContext();
 
-		bool initVulkan(const std::vector<std::string>& vExts4Instance, const std::vector<std::string>& vLays4Instannce,
-						const std::vector<std::string>& vExts4Device, const std::vector<std::string>& vLays4Device,
+		bool initVulkan(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance,
+						const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device,
 						GLFWwindow* vWindow = nullptr,
 						const vk::PhysicalDeviceFeatures& vEnabledFeatures = vk::PhysicalDeviceFeatures{});
 
-		//bool initVulkan(GLFWwindow* vWindow, const std::vector<const char*>& vExtensions = { "VK_KHR_swapchain" });
 		void destroyVulkan();
-
-		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
 
 		vk::Instance		getInstance() const { return m_VkInstance; }
 		vk::SurfaceKHR		getSurface() const { return m_VkSurface; }
@@ -49,15 +46,12 @@ namespace hiveVKT
 	private:
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
 		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
-
 		CVkDebugMessenger* m_pDebugMessenger = nullptr;
-
 		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
 
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;
 		vk::Queue m_VkQueue;
-		vk::PhysicalDeviceFeatures m_VkPhysicalDeviceFeatures;
 		vk::Device m_VkDevice;
 		vk::SwapchainKHR m_VkSwapchain;
 		vk::Format m_SwapChainImageFormat;
@@ -65,15 +59,16 @@ namespace hiveVKT
 		std::vector<vk::Image> m_SwapChainImages;
 		std::vector<vk::ImageView> m_SwapChainImageViews;
 
-		void __createInstance();
+		bool m_EnabledPresentation = false;
+
+		void __createInstance(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance);
 		void __createDebugMessenger();
 		void __createSurface(GLFWwindow* vWindow);
 		void __pickPhysicalDevice();
-		void __createDevice();
+		void __createDevice(const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device, const vk::PhysicalDeviceFeatures& vEnabledFeatures);
 		void __createSwapChain(int vWidth, int vHeight);
-		void __retrieveSwapChainImages();
 		void __createImageViews();
-		void __retrieveDeviceQueues();
+		void __checkExtensions(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vExtensions4Device);
 
 		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
 	};
