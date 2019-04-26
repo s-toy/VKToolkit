@@ -34,15 +34,14 @@ namespace hiveVKT
 
 		void addLayer(const char* vLayer) { m_InstanceLayerSet.emplace_back(vLayer); }
 		void addExtension(const char* vExtension) { m_InstanceExtensionSet.emplace_back(vExtension); }
-		void defaultLayersAndExtensions(bool vEnable) { m_EnableDefaultLayersAndExtensions = vEnable; }
+		void setEnabledLayers(const std::vector<const char*> vEnabledLayers) { m_InstanceLayerSet = vEnabledLayers; }
+		void setEnabledExtensions(const std::vector<const char*> vEnabledExtensions) { m_InstanceExtensionSet = vEnabledExtensions; }
 
 	private:
 		vk::InstanceCreateInfo m_InstanceCreateInfo;
 		vk::ApplicationInfo m_ApplicationInfo;
-		std::vector<const char *> m_InstanceLayerSet;
-		std::vector<const char *> m_InstanceExtensionSet;
-
-		bool m_EnableDefaultLayersAndExtensions = true;
+		std::vector<const char*> m_InstanceLayerSet;
+		std::vector<const char*> m_InstanceExtensionSet;
 
 		void __init()
 		{
@@ -55,7 +54,12 @@ namespace hiveVKT
 
 		void __prepareInstanceCreateInfo()
 		{
-			__addDefaultLayersAndExtensionsIfNecessary();
+			__addDebugLayersAndExtensionsIfNecessary();
+
+#ifdef _ENABLE_DEBUG_UTILS
+			if (!__checkInstanceLayersAndExtensionsSupport())
+				throw std::runtime_error("Not all requested instance layers and extensions are available.");
+#endif
 
 			m_InstanceCreateInfo.pApplicationInfo = &m_ApplicationInfo;
 			m_InstanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_InstanceExtensionSet.size());
@@ -64,39 +68,25 @@ namespace hiveVKT
 			m_InstanceCreateInfo.ppEnabledLayerNames = m_InstanceLayerSet.data();
 		}
 
-		void __addDefaultLayersAndExtensionsIfNecessary()
+		void __addDebugLayersAndExtensionsIfNecessary()
 		{
-			if (!m_EnableDefaultLayersAndExtensions) return;
-
-			uint32_t GLFWExtensionCount = 0;
-
-			//HACK: glfw functions should not be called inside this class.
-			const char** pGLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
-			_ASSERT_EXPR(pGLFWExtensions, "glfwGetRequiredInstanceExtensions() failed, make sure that glfwInit() has been called before!");
-
-			auto Extensions = std::vector<const char*>(pGLFWExtensions, pGLFWExtensions + GLFWExtensionCount);
-			m_InstanceExtensionSet.insert(m_InstanceExtensionSet.end(), Extensions.begin(), Extensions.end());
-			_ASSERT(!m_InstanceExtensionSet.empty());
-
-		#ifdef _ENABLE_DEBUG_UTILS
+#ifdef _ENABLE_DEBUG_UTILS
 			m_InstanceLayerSet.emplace_back("VK_LAYER_LUNARG_standard_validation");
 			m_InstanceExtensionSet.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-			if (!__checkInstanceLayersSupport()) _THROW_RUNTIME_ERROR("Not all requested instance layers are available.");
-			//TODO: Is it necessary to check if the required instance extensions are available?
-		#endif
+#endif
 		}
 
-#ifdef _ENABLE_DEBUG_UTILS
-		bool __checkInstanceLayersSupport()
+		bool __checkInstanceLayersAndExtensionsSupport()const
 		{
 			auto InstanceLayerPropertiesSet = vk::enumerateInstanceLayerProperties();
+			auto InstanceExtensionPropertiesSet = vk::enumerateInstanceExtensionProperties();
 
 			std::set<std::string> RequiredInstanceLayerSet(m_InstanceLayerSet.begin(), m_InstanceLayerSet.end());
+			std::set<std::string> RequiredInstanceExtensionSet(m_InstanceExtensionSet.begin(), m_InstanceExtensionSet.end());
 			for (const auto& LayerProperty : InstanceLayerPropertiesSet) RequiredInstanceLayerSet.erase(LayerProperty.layerName);
+			for (const auto& ExtensionProperty : InstanceExtensionPropertiesSet) RequiredInstanceExtensionSet.erase(ExtensionProperty.extensionName);
 
-			return RequiredInstanceLayerSet.empty();
+			return RequiredInstanceLayerSet.empty() && RequiredInstanceExtensionSet.empty();
 		}
-#endif
 	};
 }

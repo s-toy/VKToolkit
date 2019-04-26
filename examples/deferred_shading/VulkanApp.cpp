@@ -18,6 +18,9 @@
 //Function:
 bool DeferredShading::CDeferredShadingApp::_initV()
 {
+	fetchenabledPhysicalDeviceFeatures().samplerAnisotropy = VK_TRUE;
+	fetchenabledPhysicalDeviceFeatures().sampleRateShading = VK_TRUE;
+
 	if (!hiveVKT::CVkApplicationBase::_initV()) return false;
 
 	__retrieveDeviceQueue();
