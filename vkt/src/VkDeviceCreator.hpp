@@ -20,13 +20,13 @@ namespace hiveVKT
 
 		void addLayer(const char* vLayer) { m_DeviceLayerSet.emplace_back(vLayer); }
 		void addExtension(const char* vExtension) { m_DeviceExtensionSet.emplace_back(vExtension); }
-		void setEnabledLayers(const const std::vector<const char*> vEnabledLayers) { m_DeviceLayerSet = vEnabledLayers; }
+		void setEnabledLayers(const std::vector<const char*> vEnabledLayers) { m_DeviceLayerSet = vEnabledLayers; }
 		void setEnabledExtensions(const std::vector<const char*> vEnabledExtensions) { m_DeviceExtensionSet = vEnabledExtensions; }
 
 		void addQueue(uint32_t vQueueFamilyIndex, uint32_t vQueueCount = 1, float vPriority = 0.0f)
 		{
-			m_QueuePrioritieSet.emplace_back(vQueueCount, vPriority);
-			m_DeviceQueueCreateInfoSet.emplace_back(vk::DeviceQueueCreateFlags{}, vQueueFamilyIndex, vQueueCount, m_QueuePrioritieSet.back().data());
+			m_QueuePrioritySet.emplace_back(vQueueCount, vPriority);
+			m_DeviceQueueCreateInfoSet.emplace_back(vk::DeviceQueueCreateFlags{}, vQueueFamilyIndex, vQueueCount, m_QueuePrioritySet.back().data());
 		}
 
 		void setPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures* vValue) { m_DeviceCreateInfo.pEnabledFeatures = vValue; }
@@ -36,7 +36,7 @@ namespace hiveVKT
 		std::vector<const char *>				m_DeviceLayerSet;
 		std::vector<const char *>				m_DeviceExtensionSet;
 		std::vector<vk::DeviceQueueCreateInfo>	m_DeviceQueueCreateInfoSet;
-		std::vector<std::vector<float>>			m_QueuePrioritieSet;
+		std::vector<std::vector<float>>			m_QueuePrioritySet;
 
 		void __prepareDeviceCreateInfo(const vk::PhysicalDevice& vPhysicalDevice)
 		{

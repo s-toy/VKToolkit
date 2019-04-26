@@ -37,7 +37,7 @@ namespace hiveVKT
 		vk::Format			getSwapchainImageFormat() const { return m_SwapChainImageFormat; }
 		vk::Image           getSwapChainImageAt(int vIdx) const { return m_SwapChainImages[vIdx]; }
 		vk::ImageView       getSwapChainImageViewAt(int vIdx) const { return m_SwapChainImageViews[vIdx]; }
-		int				    getSwapChainImageSize() const { return m_SwapChainImages.size(); };
+		int				    getSwapChainImageSize() const { return static_cast<int>(m_SwapChainImages.size()); };
 
 		const vk::Extent2D&				getSwapchainExtent() const { return m_SwapChainExtent; }
 		const SQueueFamilyIndices&		getRequiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
@@ -47,7 +47,8 @@ namespace hiveVKT
 		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
 		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
 		CVkDebugMessenger* m_pDebugMessenger = nullptr;
-		VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
+		
+		VkSurfaceKHR m_VkSurface;
 
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;

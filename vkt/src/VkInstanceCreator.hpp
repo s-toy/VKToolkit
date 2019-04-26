@@ -32,16 +32,16 @@ namespace hiveVKT
 		void setEngineVersion(uint32_t vVersion) { m_ApplicationInfo.engineVersion = vVersion; }
 		void setApiVersion(uint32_t vVersion) { m_ApplicationInfo.apiVersion = vVersion; }
 
-		void addLayer(const std::string& vLayer) { m_InstanceLayerSet.emplace_back(vLayer); }
-		void addExtension(const std::string& vExtension) { m_InstanceExtensionSet.emplace_back(vExtension); }
-		void setEnabledLayers(const std::vector<std::string> vEnabledLayers) { m_InstanceLayerSet = vEnabledLayers; }
-		void setEnabledExtensions(const std::vector<std::string> vEnabledExtensions) { m_InstanceExtensionSet = vEnabledExtensions; }
+		void addLayer(const char* vLayer) { m_InstanceLayerSet.emplace_back(vLayer); }
+		void addExtension(const char* vExtension) { m_InstanceExtensionSet.emplace_back(vExtension); }
+		void setEnabledLayers(const std::vector<const char*> vEnabledLayers) { m_InstanceLayerSet = vEnabledLayers; }
+		void setEnabledExtensions(const std::vector<const char*> vEnabledExtensions) { m_InstanceExtensionSet = vEnabledExtensions; }
 
 	private:
 		vk::InstanceCreateInfo m_InstanceCreateInfo;
 		vk::ApplicationInfo m_ApplicationInfo;
-		std::vector<std::string> m_InstanceLayerSet;
-		std::vector<std::string> m_InstanceExtensionSet;
+		std::vector<const char*> m_InstanceLayerSet;
+		std::vector<const char*> m_InstanceExtensionSet;
 
 		void __init()
 		{

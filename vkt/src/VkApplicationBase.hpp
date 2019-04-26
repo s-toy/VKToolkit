@@ -28,7 +28,7 @@ namespace hiveVKT
 
 		double getFrameInterval() const { return m_FrameInterval; }
 
-		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkContext.fetchPhysicalDeviceFeatures(); }
+		vk::PhysicalDeviceFeatures& fetchenabledPhysicalDeviceFeatures() { return m_EnabledPhysicalDeviceFeatures; }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
@@ -47,6 +47,8 @@ namespace hiveVKT
 		vk::Format _swapchainImageFormat()		const { return m_VkContext.getSwapchainImageFormat(); }
 		vk::Extent2D _swapchainExtent()			const { return m_VkContext.getSwapchainExtent(); }
 
+		vk::PhysicalDeviceFeatures _enabledPhysicalDeviceFeatures()const { return m_EnabledPhysicalDeviceFeatures; }
+
 		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_VkContext.getRequiredQueueFamilyIndices(); }
 		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_VkContext.getSwapChainSupportDetails(); }
 
@@ -57,6 +59,8 @@ namespace hiveVKT
 		CCamera*	m_pCamera = nullptr;
 
 		SWindowCreateInfo m_WindowCreateInfo = {};
+
+		vk::PhysicalDeviceFeatures m_EnabledPhysicalDeviceFeatures = {};
 
 		double	m_FrameInterval = 0.0;
 		bool	m_IsInitialized = false;

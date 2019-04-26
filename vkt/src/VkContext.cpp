@@ -125,14 +125,26 @@ void CVkContext::__createImageViews()
 //Function:
 void CVkContext::__checkExtensions(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vExtensions4Device)
 {
-	//TODO: set enabled extension flag
 	std::vector<std::string> RequiredExtensionSet(vExtensions4Instance.begin(), vExtensions4Instance.end());
 	RequiredExtensionSet.insert(RequiredExtensionSet.end(), vExtensions4Device.begin(), vExtensions4Device.end());
 
-	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), "abc") != RequiredExtensionSet.end())
+	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SURFACE_EXTENSION_NAME) == RequiredExtensionSet.end())
 	{
-		m_EnabledPresentation = true;
+		m_EnabledPresentation = false;
+		return;
 	}
+	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), "VK_KHR_win32_surface") == RequiredExtensionSet.end())
+	{
+		m_EnabledPresentation = false;
+		return;
+	}
+	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SWAPCHAIN_EXTENSION_NAME) == RequiredExtensionSet.end())
+	{
+		m_EnabledPresentation = false;
+		return;
+	}
+
+	m_EnabledPresentation = true;
 }
 
 //************************************************************************************
