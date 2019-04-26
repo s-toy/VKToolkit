@@ -76,7 +76,7 @@ namespace hiveVKT
 #endif
 		}
 
-		bool __checkInstanceLayersAndExtensionsSupport()const
+		bool __checkInstanceLayersAndExtensionsSupport() const
 		{
 			auto InstanceLayerPropertiesSet = vk::enumerateInstanceLayerProperties();
 			auto InstanceExtensionPropertiesSet = vk::enumerateInstanceExtensionProperties();

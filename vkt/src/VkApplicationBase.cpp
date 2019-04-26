@@ -13,30 +13,30 @@ void hiveVKT::CVkApplicationBase::run()
 {
 	try
 	{
-		if (!_initV()) _THROW_RUNTIME_ERROR("Failed to run application due to failure of initialization!");
+		__awake();
+		if (!__init()) _THROW_RUNTIME_ERROR("Failed to run application due to failure of initialization!");
 
 		_OUTPUT_EVENT("Succeed to init application.");
 
 		hiveCommon::CCPUTimer CPUTimer;
-		while (!m_IsRenderLoopDone)
+		while (!glfwWindowShouldClose(m_pWindow))
 		{
 			CPUTimer.begin();
 
-			if (!_renderV()) _THROW_RUNTIME_ERROR("Render loop interrupted due to render failure!");
-			m_IsRenderLoopDone = _isRenderLoopDoneV();
+			__udpate();
 
 			CPUTimer.end();
 			m_FrameInterval = CPUTimer.getElapseTime();
 		}
 
-		_destroyV();
+		__destroy();
 
 		_OUTPUT_EVENT("Succeed to end application.");
 	}
 	catch (const std::runtime_error& e)
 	{
 		_OUTPUT_WARNING(e.what());
-		exit(EXIT_FAILURE);			//TODO: how to handle exceptions
+		exit(EXIT_FAILURE);
 	}
 	catch (...)
 	{
@@ -46,7 +46,26 @@ void hiveVKT::CVkApplicationBase::run()
 
 //************************************************************************************
 //Function:
-bool hiveVKT::CVkApplicationBase::_initV()
+bool hiveVKT::CVkApplicationBase::__initWindow()
+{
+	_ASSERTE(!m_pWindow);
+
+	CWindowCreator WindowCreator;
+	m_pWindow = WindowCreator.create(m_WindowCreateInfo);
+
+	return m_pWindow ? true : false;
+}
+
+//************************************************************************************
+//Function:
+void hiveVKT::CVkApplicationBase::__awake()
+{
+	_awakeV();
+}
+
+//************************************************************************************
+//Function:
+bool hiveVKT::CVkApplicationBase::__init()
 {
 	if (!__initWindow()) { _OUTPUT_WARNING("Failed to initialize application due to failure of initializing window!"); return false; }
 
@@ -66,52 +85,27 @@ bool hiveVKT::CVkApplicationBase::_initV()
 	CInputManager::getInstance()->init(m_pWindow);
 	m_pCamera = new CCamera(glm::vec3(0.0f, 0.0f, 7.0f), (double)m_WindowCreateInfo.WindowWidth / m_WindowCreateInfo.WindowHeight);
 
-	return true;
+	return _initV();
 }
 
 //************************************************************************************
 //Function:
-bool hiveVKT::CVkApplicationBase::_renderV()
+void hiveVKT::CVkApplicationBase::__udpate()
 {
-	_handleEventV();
 	glfwPollEvents();
-
 	m_pCamera->update();
 
-	return true;
+	_updateV();
 }
 
 //************************************************************************************
 //Function:
-bool hiveVKT::CVkApplicationBase::_isRenderLoopDoneV()
+void hiveVKT::CVkApplicationBase::__destroy()
 {
-	_ASSERTE(m_pWindow);
+	_destroyV();
 
-	bool IsRenderLoopDone = glfwWindowShouldClose(m_pWindow);
-	if (IsRenderLoopDone) { glfwDestroyWindow(m_pWindow); glfwTerminate(); }
-
-	return IsRenderLoopDone;
-}
-
-//************************************************************************************
-//Function:
-void hiveVKT::CVkApplicationBase::_destroyV()
-{
 	_SAFE_DELETE(m_pCamera);
-
 	m_VkContext.destroyVulkan();
 
 	glfwTerminate();
-}
-
-//************************************************************************************
-//Function:
-bool hiveVKT::CVkApplicationBase::__initWindow()
-{
-	_ASSERTE(!m_pWindow);
-
-	CWindowCreator WindowCreator;
-	m_pWindow = WindowCreator.create(m_WindowCreateInfo);
-
-	return m_pWindow ? true : false;
 }

@@ -8,8 +8,9 @@ namespace DeferredShading
 	class CDeferredShadingApp :public hiveVKT::CVkApplicationBase
 	{
 	private:
+		virtual void _awakeV() override;
 		virtual bool _initV() override;
-		virtual bool _renderV() override;
+		virtual void _updateV() override;
 		virtual void _destroyV() override;
 
 		void __cleanup();

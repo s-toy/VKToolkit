@@ -128,23 +128,16 @@ void CVkContext::__checkExtensions(const std::vector<const char*>& vExtensions4I
 	std::vector<std::string> RequiredExtensionSet(vExtensions4Instance.begin(), vExtensions4Instance.end());
 	RequiredExtensionSet.insert(RequiredExtensionSet.end(), vExtensions4Device.begin(), vExtensions4Device.end());
 
-	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SURFACE_EXTENSION_NAME) == RequiredExtensionSet.end())
+	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SURFACE_EXTENSION_NAME) == RequiredExtensionSet.end() ||
+		std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), "VK_KHR_win32_surface") == RequiredExtensionSet.end() ||
+		std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SWAPCHAIN_EXTENSION_NAME) == RequiredExtensionSet.end())
 	{
 		m_EnabledPresentation = false;
-		return;
 	}
-	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), "VK_KHR_win32_surface") == RequiredExtensionSet.end())
+	else
 	{
-		m_EnabledPresentation = false;
-		return;
+		m_EnabledPresentation = true;
 	}
-	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SWAPCHAIN_EXTENSION_NAME) == RequiredExtensionSet.end())
-	{
-		m_EnabledPresentation = false;
-		return;
-	}
-
-	m_EnabledPresentation = true;
 }
 
 //************************************************************************************
@@ -192,12 +185,12 @@ void hiveVKT::CVkContext::destroyVulkan()
 	{
 		m_VkDevice.destroyImageView(m_SwapChainImageViews[i]);
 	}
-	m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
+	if (m_EnabledPresentation) m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
 	m_VkDevice.destroy();
 
 	m_pDebugMessenger->destroyDebugMessenger(m_VkInstance);
 	_SAFE_DELETE(m_pDebugMessenger);
 
-	m_VkInstance.destroySurfaceKHR(m_VkSurface);
+	if (m_EnabledPresentation) m_VkInstance.destroySurfaceKHR(m_VkSurface);
 	m_VkInstance.destroy();
 }
