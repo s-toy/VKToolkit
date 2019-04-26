@@ -22,7 +22,12 @@ namespace hiveVKT
 		CVkContext();
 		~CVkContext();
 
-		bool initVulkan(GLFWwindow* vWindow, const std::vector<const char*>& vExtensions = { "VK_KHR_swapchain" });
+		bool initVukan();
+		bool initVulkan(const std::vector<std::string>& vExes4Instance, const std::vector<std::string>& vLays4Instannce,
+						const std::vector<std::string>& vExes4Device,   const std::vector<std::string>& vLays4Device,
+						const vk::PhysicalDeviceFeatures& vEnabledFeatures = vk::PhysicalDeviceFeatures{});
+
+		//bool initVulkan(GLFWwindow* vWindow, const std::vector<const char*>& vExtensions = { "VK_KHR_swapchain" });
 		void destroyVulkan();
 
 		vk::PhysicalDeviceFeatures& fetchPhysicalDeviceFeatures() { return m_VkPhysicalDeviceFeatures; }
@@ -33,6 +38,9 @@ namespace hiveVKT
 		vk::Device			getDevice() const { return m_VkDevice; }
 		vk::SwapchainKHR	getSwapchainKHR() const { return m_VkSwapchain; }
 		vk::Format			getSwapchainImageFormat() const { return m_SwapChainImageFormat; }
+		vk::Image           getSwapChainImageAt(int vIdx) const { return m_SwapChainImages[vIdx]; }
+		vk::ImageView       getSwapChainImageViewAt(int vIdx) const { return m_SwapChainImageViews[vIdx]; }
+		int				    getSwapChainImageSize() const { return m_SwapChainImages.size(); };
 
 		const vk::Extent2D&				getSwapchainExtent() const { return m_SwapChainExtent; }
 		const SQueueFamilyIndices&		getRequiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
@@ -48,6 +56,7 @@ namespace hiveVKT
 
 		vk::Instance m_VkInstance;
 		vk::PhysicalDevice m_VkPhysicalDevice;
+		vk::Queue m_VkQueue;
 		vk::PhysicalDeviceFeatures m_VkPhysicalDeviceFeatures;
 		vk::Device m_VkDevice;
 		vk::SwapchainKHR m_VkSwapchain;
