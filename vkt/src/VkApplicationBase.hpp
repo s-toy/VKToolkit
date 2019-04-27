@@ -38,7 +38,7 @@ namespace hiveVKT
 		virtual void _updateV() {}
 		virtual void _destroyV() {}
 
-		vk::PhysicalDeviceFeatures _enabledPhysicalDeviceFeatures()const { return m_EnabledPhysicalDeviceFeatures; }
+		vk::PhysicalDeviceFeatures _enabledPhysicalDeviceFeatures() const { return m_EnabledPhysicalDeviceFeatures; }
 
 	protected:
 		CVkContext m_VkContext;
@@ -53,7 +53,6 @@ namespace hiveVKT
 
 		double	m_FrameInterval = 0.0;
 		bool	m_IsInitialized = false;
-		bool	m_IsRenderLoopDone = false;
 
 		bool __initWindow();
 
