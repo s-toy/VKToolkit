@@ -28,33 +28,22 @@ namespace hiveVKT
 
 		double getFrameInterval() const { return m_FrameInterval; }
 
-		vk::PhysicalDeviceFeatures& fetchenabledPhysicalDeviceFeatures() { return m_EnabledPhysicalDeviceFeatures; }
+		vk::PhysicalDeviceFeatures& fetchEnabledPhysicalDeviceFeatures() { return m_EnabledPhysicalDeviceFeatures; }
 
 	protected:
 		_DISALLOW_COPY_AND_ASSIGN(CVkApplicationBase);
 
-		virtual bool _initV();
-		virtual bool _renderV();
-		virtual bool _isRenderLoopDoneV();
-		virtual void _handleEventV() {}
-		virtual void _destroyV();
+		virtual void _awakeV() {}
+		virtual bool _initV() { return true; }
+		virtual void _updateV() {}
+		virtual void _destroyV() {}
 
-		vk::Instance _instance()				const { return m_VkContext.getInstance(); }
-		vk::SurfaceKHR _surface()				const { return m_VkContext.getSurface(); }
-		vk::PhysicalDevice _physicalDevice()	const { return m_VkContext.getPhysicalDevice(); }
-		vk::Device _device()					const { return m_VkContext.getDevice(); }
-		vk::SwapchainKHR _swapchain()			const { return m_VkContext.getSwapchainKHR(); }
-		vk::Format _swapchainImageFormat()		const { return m_VkContext.getSwapchainImageFormat(); }
-		vk::Extent2D _swapchainExtent()			const { return m_VkContext.getSwapchainExtent(); }
+		vk::PhysicalDeviceFeatures _enabledPhysicalDeviceFeatures() const { return m_EnabledPhysicalDeviceFeatures; }
 
-		vk::PhysicalDeviceFeatures _enabledPhysicalDeviceFeatures()const { return m_EnabledPhysicalDeviceFeatures; }
-
-		const SQueueFamilyIndices& _requiredQueueFamilyIndices() const { return m_VkContext.getRequiredQueueFamilyIndices(); }
-		const SSwapChainSupportDetails& _swapChainSupportDetails() const { return m_VkContext.getSwapChainSupportDetails(); }
-
-	private:
+	protected:
 		CVkContext m_VkContext;
 
+	private:
 		GLFWwindow* m_pWindow = nullptr;
 		CCamera*	m_pCamera = nullptr;
 
@@ -64,8 +53,12 @@ namespace hiveVKT
 
 		double	m_FrameInterval = 0.0;
 		bool	m_IsInitialized = false;
-		bool	m_IsRenderLoopDone = false;
 
 		bool __initWindow();
+
+		void __awake();
+		bool __init();
+		void __udpate();
+		void __destroy();
 	};
 }

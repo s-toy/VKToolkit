@@ -15,7 +15,7 @@ namespace VulkanApp
 	{
 	private:
 		virtual bool _initV() override;
-		virtual bool _renderV() override;
+		virtual void _updateV() override;
 		virtual void _destroyV() override;
 
 		void __retrieveDeviceQueue();

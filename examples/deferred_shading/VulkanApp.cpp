@@ -16,13 +16,16 @@
 
 //************************************************************************************
 //Function:
+void DeferredShading::CDeferredShadingApp::_awakeV()
+{
+	fetchEnabledPhysicalDeviceFeatures().samplerAnisotropy = VK_TRUE;
+	fetchEnabledPhysicalDeviceFeatures().sampleRateShading = VK_TRUE;
+}
+
+//************************************************************************************
+//Function:
 bool DeferredShading::CDeferredShadingApp::_initV()
 {
-	fetchenabledPhysicalDeviceFeatures().samplerAnisotropy = VK_TRUE;
-	fetchenabledPhysicalDeviceFeatures().sampleRateShading = VK_TRUE;
-
-	if (!hiveVKT::CVkApplicationBase::_initV()) return false;
-
 	__retrieveDeviceQueue();
 	__retrieveSwapChainImagesAndCreateImageViews();
 	__createCommandPool();
@@ -62,14 +65,12 @@ bool DeferredShading::CDeferredShadingApp::_initV()
 
 //************************************************************************************
 //Function:
-bool DeferredShading::CDeferredShadingApp::_renderV()
+void DeferredShading::CDeferredShadingApp::_updateV()
 {
-	if (!CVkApplicationBase::_renderV()) return false;
-
-	vkWaitForFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkWaitForFences(m_VkContext.getDevice(), 1, &m_InFlightFenceSet[m_CurrentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t ImageIndex = 0;
-	VkResult Result = vkAcquireNextImageKHR(_device(), _swapchain(), std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
+	VkResult Result = vkAcquireNextImageKHR(m_VkContext.getDevice(), m_VkContext.getSwapchainKHR(), std::numeric_limits<uint64_t>::max(), m_ImageAvailableSemaphoreSet[m_CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 	if (Result != VK_SUCCESS)
 		throw std::runtime_error("Failed to acquire swap chain image!");
 
@@ -97,7 +98,7 @@ bool DeferredShading::CDeferredShadingApp::_renderV()
 	VkSemaphore SignalSemaphores_Deferred[] = { m_RenderFinishedSemaphoreSet[m_CurrentFrame] };
 	SubmitInfo.signalSemaphoreCount = 1;
 	SubmitInfo.pSignalSemaphores = SignalSemaphores_Deferred;
-	vkResetFences(_device(), 1, &m_InFlightFenceSet[m_CurrentFrame]);
+	vkResetFences(m_VkContext.getDevice(), 1, &m_InFlightFenceSet[m_CurrentFrame]);
 	if (vkQueueSubmit(m_pQueue, 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("Failed to submit draw command buffer!");
 
@@ -105,7 +106,7 @@ bool DeferredShading::CDeferredShadingApp::_renderV()
 	PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	PresentInfo.waitSemaphoreCount = 1;
 	PresentInfo.pWaitSemaphores = SignalSemaphores_Deferred;
-	VkSwapchainKHR SwapChains[] = { _swapchain() };
+	VkSwapchainKHR SwapChains[] = { m_VkContext.getSwapchainKHR() };
 	PresentInfo.swapchainCount = 1;
 	PresentInfo.pSwapchains = SwapChains;
 	PresentInfo.pImageIndices = &ImageIndex;
@@ -115,19 +116,14 @@ bool DeferredShading::CDeferredShadingApp::_renderV()
 		throw std::runtime_error("Failed to present swap chain image!");
 
 	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-
-	return true;
 }
 
 //************************************************************************************
 //Function:
 void DeferredShading::CDeferredShadingApp::_destroyV()
 {
-	_device().waitIdle();
-
+	m_VkContext.getDevice().waitIdle();
 	__cleanup();
-
-	CVkApplicationBase::_destroyV();
 }
 
 //************************************************************************************
@@ -136,79 +132,79 @@ void DeferredShading::CDeferredShadingApp::__cleanup()
 {
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
-		vkDestroySemaphore(_device(), m_OffScreenRenderingFinishedSemaphoreSet[i], nullptr);
-		vkDestroySemaphore(_device(), m_ImageAvailableSemaphoreSet[i], nullptr);
-		vkDestroySemaphore(_device(), m_RenderFinishedSemaphoreSet[i], nullptr);
-		vkDestroyFence(_device(), m_InFlightFenceSet[i], nullptr);
+		vkDestroySemaphore(m_VkContext.getDevice(), m_OffScreenRenderingFinishedSemaphoreSet[i], nullptr);
+		vkDestroySemaphore(m_VkContext.getDevice(), m_ImageAvailableSemaphoreSet[i], nullptr);
+		vkDestroySemaphore(m_VkContext.getDevice(), m_RenderFinishedSemaphoreSet[i], nullptr);
+		vkDestroyFence(m_VkContext.getDevice(), m_InFlightFenceSet[i], nullptr);
 	}
 
-	vkDestroyDescriptorPool(_device(), m_pDescriptorPool, nullptr);
+	vkDestroyDescriptorPool(m_VkContext.getDevice(), m_pDescriptorPool, nullptr);
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		vkDestroyBuffer(_device(), m_UniformBufferSet_OffScreen[i], nullptr);
-		vkFreeMemory(_device(), m_UniformBufferDeviceMemorySet_OffScreen[i], nullptr);
-		vkDestroyBuffer(_device(), m_UniformBufferSet_Deferred[i], nullptr);
-		vkFreeMemory(_device(), m_UniformBufferDeviceMemorySet_Deferred[i], nullptr);
+		vkDestroyBuffer(m_VkContext.getDevice(), m_UniformBufferSet_OffScreen[i], nullptr);
+		vkFreeMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_OffScreen[i], nullptr);
+		vkDestroyBuffer(m_VkContext.getDevice(), m_UniformBufferSet_Deferred[i], nullptr);
+		vkFreeMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_Deferred[i], nullptr);
 
-		vkDestroyImageView(_device(), m_SwapChainImageViewSet[i], nullptr);
-		vkDestroyFramebuffer(_device(), m_DeferredFramebufferSet[i], nullptr);
+		vkDestroyImageView(m_VkContext.getDevice(), m_SwapChainImageViewSet[i], nullptr);
+		vkDestroyFramebuffer(m_VkContext.getDevice(), m_DeferredFramebufferSet[i], nullptr);
 	}
 
-	vkDestroySampler(_device(), m_pSampler4DeferredRendering, nullptr);
+	vkDestroySampler(m_VkContext.getDevice(), m_pSampler4DeferredRendering, nullptr);
 
-	vkDestroySampler(_device(), m_pDiffuseImageSampler, nullptr);
-	vkDestroyImageView(_device(), m_pDiffuseImageView, nullptr);
-	vkDestroyImage(_device(), m_pDiffuseImage, nullptr);
-	vkFreeMemory(_device(), m_pDiffuseImageDeviceMemory, nullptr);
-	vkDestroySampler(_device(), m_pSpecularSampler, nullptr);
-	vkDestroyImageView(_device(), m_pSpecularImageView, nullptr);
-	vkDestroyImage(_device(), m_pSpecularImage, nullptr);
-	vkFreeMemory(_device(), m_pSpecularImageDeviceMemory, nullptr);
+	vkDestroySampler(m_VkContext.getDevice(), m_pDiffuseImageSampler, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pDiffuseImageView, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pDiffuseImage, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pDiffuseImageDeviceMemory, nullptr);
+	vkDestroySampler(m_VkContext.getDevice(), m_pSpecularSampler, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pSpecularImageView, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pSpecularImage, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pSpecularImageDeviceMemory, nullptr);
 
-	vkDestroyBuffer(_device(), m_pVertexBuffer_Model, nullptr);
-	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory_Model, nullptr);
-	vkDestroyBuffer(_device(), m_pIndexBuffer_Model, nullptr);
-	vkFreeMemory(_device(), m_pIndexBufferMemory_Model, nullptr);
-	vkDestroyBuffer(_device(), m_pVertexBuffer_Quad, nullptr);
-	vkFreeMemory(_device(), m_pVertexBufferDeviceMemory_Quad, nullptr);
-	vkDestroyBuffer(_device(), m_pIndexBuffer_Quad, nullptr);
-	vkFreeMemory(_device(), m_pIndexBufferMemory_Quad, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), m_pVertexBuffer_Model, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pVertexBufferDeviceMemory_Model, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), m_pIndexBuffer_Model, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pIndexBufferMemory_Model, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), m_pVertexBuffer_Quad, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pVertexBufferDeviceMemory_Quad, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), m_pIndexBuffer_Quad, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pIndexBufferMemory_Quad, nullptr);
 
-	vkDestroyImage(_device(), m_pOffScreenPositionImage, nullptr);
-	vkDestroyImageView(_device(), m_pOffScreenPositionImageView, nullptr);
-	vkFreeMemory(_device(), m_pOffScreenPositionImageDeviceMemory, nullptr);
-	vkDestroyImage(_device(), m_pOffScreenNormalImage, nullptr);
-	vkDestroyImageView(_device(), m_pOffScreenNormalImageView, nullptr);
-	vkFreeMemory(_device(), m_pOffScreenNormalImageDeviceMemory, nullptr);
-	vkDestroyImage(_device(), m_pOffScreenColorImage, nullptr);
-	vkDestroyImageView(_device(), m_pOffScreenColorImageView, nullptr);
-	vkFreeMemory(_device(), m_pOffScreenColorImageDeviceMemory, nullptr);
-	vkDestroyImage(_device(), m_pOffScreenDepthImage, nullptr);
-	vkDestroyImageView(_device(), m_pOffScreenDepthImageView, nullptr);
-	vkFreeMemory(_device(), m_pOffScreenDepthImageDeviceMemory, nullptr);
-	vkDestroyFramebuffer(_device(), m_pOffScreenFramebuffer, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pOffScreenPositionImage, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pOffScreenPositionImageView, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pOffScreenPositionImageDeviceMemory, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pOffScreenNormalImage, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pOffScreenNormalImageView, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pOffScreenNormalImageDeviceMemory, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pOffScreenColorImage, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pOffScreenColorImageView, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pOffScreenColorImageDeviceMemory, nullptr);
+	vkDestroyImage(m_VkContext.getDevice(), m_pOffScreenDepthImage, nullptr);
+	vkDestroyImageView(m_VkContext.getDevice(), m_pOffScreenDepthImageView, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), m_pOffScreenDepthImageDeviceMemory, nullptr);
+	vkDestroyFramebuffer(m_VkContext.getDevice(), m_pOffScreenFramebuffer, nullptr);
 
-	vkDestroyPipeline(_device(), m_pDeferredPipeline, nullptr);
-	vkDestroyPipelineLayout(_device(), m_pDeferredPipelineLayout, nullptr);
-	vkDestroyDescriptorSetLayout(_device(), m_pDeferredDescriptorSetLayout, nullptr);
-	vkDestroyRenderPass(_device(), m_pDeferredRenderPass, nullptr);
+	vkDestroyPipeline(m_VkContext.getDevice(), m_pDeferredPipeline, nullptr);
+	vkDestroyPipelineLayout(m_VkContext.getDevice(), m_pDeferredPipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(m_VkContext.getDevice(), m_pDeferredDescriptorSetLayout, nullptr);
+	vkDestroyRenderPass(m_VkContext.getDevice(), m_pDeferredRenderPass, nullptr);
 
-	vkDestroyPipeline(_device(), m_pOffScreenPipeline, nullptr);
-	vkDestroyPipelineLayout(_device(), m_pOffScreenPipelineLayout, nullptr);
-	vkDestroyDescriptorSetLayout(_device(), m_pOffScreenDescriptorSetLayout, nullptr);
-	vkDestroyRenderPass(_device(), m_pOffScreenRenderPass, nullptr);
+	vkDestroyPipeline(m_VkContext.getDevice(), m_pOffScreenPipeline, nullptr);
+	vkDestroyPipelineLayout(m_VkContext.getDevice(), m_pOffScreenPipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(m_VkContext.getDevice(), m_pOffScreenDescriptorSetLayout, nullptr);
+	vkDestroyRenderPass(m_VkContext.getDevice(), m_pOffScreenRenderPass, nullptr);
 
-	vkDestroyCommandPool(_device(), m_pCommandPool, nullptr);
+	vkDestroyCommandPool(m_VkContext.getDevice(), m_pCommandPool, nullptr);
 }
 
 //************************************************************************************
 //Function:
 void DeferredShading::CDeferredShadingApp::__retrieveDeviceQueue()
 {
-	hiveVKT::SQueueFamilyIndices QueueFamilyIndices = _requiredQueueFamilyIndices();
+	hiveVKT::SQueueFamilyIndices QueueFamilyIndices = m_VkContext.getRequiredQueueFamilyIndices();
 
-	vkGetDeviceQueue(_device(), QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
+	vkGetDeviceQueue(m_VkContext.getDevice(), QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
 }
 
 //************************************************************************************
@@ -216,15 +212,15 @@ void DeferredShading::CDeferredShadingApp::__retrieveDeviceQueue()
 void DeferredShading::CDeferredShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
 {
 	uint32_t SwapChainImageCount = 0;
-	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, nullptr);
+	vkGetSwapchainImagesKHR(m_VkContext.getDevice(), m_VkContext.getSwapchainKHR(), &SwapChainImageCount, nullptr);
 	m_SwapChainImageSet.resize(SwapChainImageCount);
-	vkGetSwapchainImagesKHR(_device(), _swapchain(), &SwapChainImageCount, m_SwapChainImageSet.data());
+	vkGetSwapchainImagesKHR(m_VkContext.getDevice(), m_VkContext.getSwapchainKHR(), &SwapChainImageCount, m_SwapChainImageSet.data());
 
 	m_SwapChainImageViewSet.resize(SwapChainImageCount);
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
 	{
-		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], (VkFormat)_swapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
+		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], (VkFormat)m_VkContext.getSwapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	}
 }
 
@@ -232,13 +228,13 @@ void DeferredShading::CDeferredShadingApp::__retrieveSwapChainImagesAndCreateIma
 //Function:
 void DeferredShading::CDeferredShadingApp::__createCommandPool()
 {
-	hiveVKT::SQueueFamilyIndices QueueFamilyIndices = _requiredQueueFamilyIndices();
+	hiveVKT::SQueueFamilyIndices QueueFamilyIndices = m_VkContext.getRequiredQueueFamilyIndices();
 
 	VkCommandPoolCreateInfo CommandPoolCreateInfo = {};
 	CommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	CommandPoolCreateInfo.queueFamilyIndex = QueueFamilyIndices.QueueFamily.value();
 
-	if (vkCreateCommandPool(_device(), &CommandPoolCreateInfo, nullptr, &m_pCommandPool) != VK_SUCCESS)
+	if (vkCreateCommandPool(m_VkContext.getDevice(), &CommandPoolCreateInfo, nullptr, &m_pCommandPool) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create command pool!");
 }
 
@@ -285,7 +281,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenRenderPass()
 
 	RenderPassCreator.addSubpassDependency(SubpassDependency);
 
-	m_pOffScreenRenderPass = RenderPassCreator.create(_device());
+	m_pOffScreenRenderPass = RenderPassCreator.create(m_VkContext.getDevice());
 }
 
 //************************************************************************************
@@ -323,7 +319,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenDescriptorSetLayout(
 	DescriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(Bindings.size());
 	DescriptorSetLayoutCreateInfo.pBindings = Bindings.data();
 
-	if (vkCreateDescriptorSetLayout(_device(), &DescriptorSetLayoutCreateInfo, nullptr, &m_pOffScreenDescriptorSetLayout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(m_VkContext.getDevice(), &DescriptorSetLayoutCreateInfo, nullptr, &m_pOffScreenDescriptorSetLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor set layout!");
 }
 
@@ -338,7 +334,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenPipelineLayout()
 	PipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 	PipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-	if (vkCreatePipelineLayout(_device(), &PipelineLayoutCreateInfo, nullptr, &m_pOffScreenPipelineLayout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(m_VkContext.getDevice(), &PipelineLayoutCreateInfo, nullptr, &m_pOffScreenPipelineLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create pipeline layout!");
 }
 
@@ -347,7 +343,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenPipelineLayout()
 void DeferredShading::CDeferredShadingApp::__createDeferredRenderPass()
 {
 	hiveVKT::CVkRenderPassCreator RenderPassCreator;
-	RenderPassCreator.addAttachment(_swapchainImageFormat(), vk::ImageLayout::ePresentSrcKHR);
+	RenderPassCreator.addAttachment(m_VkContext.getSwapchainImageFormat(), vk::ImageLayout::ePresentSrcKHR);
 	const std::vector<vk::AttachmentReference> ColorAttachmentReferences = { {0, vk::ImageLayout::eColorAttachmentOptimal} };
 	RenderPassCreator.addSubpass(ColorAttachmentReferences, {}, {}, {}, {});
 
@@ -358,7 +354,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredRenderPass()
 	SubpassDependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
 	RenderPassCreator.addSubpassDependency(SubpassDependency);
 
-	m_pDeferredRenderPass = RenderPassCreator.create(_device());
+	m_pDeferredRenderPass = RenderPassCreator.create(m_VkContext.getDevice());
 }
 
 //************************************************************************************
@@ -400,7 +396,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredDescriptorSetLayout()
 	DescriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(Bindings.size());
 	DescriptorSetLayoutCreateInfo.pBindings = Bindings.data();
 
-	if (vkCreateDescriptorSetLayout(_device(), &DescriptorSetLayoutCreateInfo, nullptr, &m_pDeferredDescriptorSetLayout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(m_VkContext.getDevice(), &DescriptorSetLayoutCreateInfo, nullptr, &m_pDeferredDescriptorSetLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor set layout!");
 }
 
@@ -415,7 +411,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredPipelineLayout()
 	PipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 	PipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-	if (vkCreatePipelineLayout(_device(), &PipelineLayoutCreateInfo, nullptr, &m_pDeferredPipelineLayout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(m_VkContext.getDevice(), &PipelineLayoutCreateInfo, nullptr, &m_pDeferredPipelineLayout) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create pipeline layout!");
 }
 
@@ -423,12 +419,12 @@ void DeferredShading::CDeferredShadingApp::__createDeferredPipelineLayout()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 {
-	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(_swapchainExtent().width, _swapchainExtent().height);
+	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height);
 
 	//off-screen
 	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
-	auto OffScreenVertexShaderModule = ShaderModuleCreator.createUnique(_device(), "OffScreen_vert.spv");
-	auto OffScreenFragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "OffScreen_frag.spv");
+	auto OffScreenVertexShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "OffScreen_vert.spv");
+	auto OffScreenFragmentShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "OffScreen_frag.spv");
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, OffScreenVertexShaderModule.get());
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, OffScreenFragmentShaderModule.get());
 
@@ -459,12 +455,12 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	for (auto i = 0; i < 3; ++i)
 		PipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
 
-	m_pOffScreenPipeline = PipelineCreator.create(_device(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass);
+	m_pOffScreenPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass);
 
 	//deferred
 	PipelineCreator.clearShaderStage();
-	auto DeferredVertexShaderModule = ShaderModuleCreator.createUnique(_device(), "Deferred_vert.spv");
-	auto DeferredFragmentShaderModule = ShaderModuleCreator.createUnique(_device(), "Deferred_frag.spv");
+	auto DeferredVertexShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "Deferred_vert.spv");
+	auto DeferredFragmentShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "Deferred_frag.spv");
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, DeferredVertexShaderModule.get());
 	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, DeferredFragmentShaderModule.get());
 
@@ -478,28 +474,28 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	PipelineCreator.clearColorBlendAttachment();
 	PipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
 
-	m_pDeferredPipeline = PipelineCreator.create(_device(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass);
+	m_pDeferredPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass);
 }
 
 //************************************************************************************
 //Function:
 void DeferredShading::CDeferredShadingApp::__createOffScreenRenderTargets()
 {
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenPositionImage, m_pOffScreenPositionImageDeviceMemory);
+	__createImage(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenPositionImage, m_pOffScreenPositionImageDeviceMemory);
 	m_pOffScreenPositionImageView = __createImageView(m_pOffScreenPositionImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenPositionImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenNormalImage, m_pOffScreenNormalImageDeviceMemory);
+	__createImage(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenNormalImage, m_pOffScreenNormalImageDeviceMemory);
 	m_pOffScreenNormalImageView = __createImageView(m_pOffScreenNormalImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenNormalImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenColorImage, m_pOffScreenColorImageDeviceMemory);
+	__createImage(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenColorImage, m_pOffScreenColorImageDeviceMemory);
 	m_pOffScreenColorImageView = __createImageView(m_pOffScreenColorImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	__transitionImageLayout(m_pOffScreenColorImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 
 
 	VkFormat DepthFormat = __findSupportedFormat(gDepthFormatSet, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	__createImage(_swapchainExtent().width, _swapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, DepthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenDepthImage, m_pOffScreenDepthImageDeviceMemory);
+	__createImage(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, DepthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pOffScreenDepthImage, m_pOffScreenDepthImageDeviceMemory);
 	m_pOffScreenDepthImageView = __createImageView(m_pOffScreenDepthImage, DepthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 	__transitionImageLayout(m_pOffScreenDepthImage, DepthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
 }
@@ -516,10 +512,10 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenFramebuffer()
 	FramebufferCreateInfo.pAttachments = Attachments.data();
 	FramebufferCreateInfo.renderPass = m_pOffScreenRenderPass;
 	FramebufferCreateInfo.layers = 1;
-	FramebufferCreateInfo.width = _swapchainExtent().width;
-	FramebufferCreateInfo.height = _swapchainExtent().height;
+	FramebufferCreateInfo.width = m_VkContext.getSwapchainExtent().width;
+	FramebufferCreateInfo.height = m_VkContext.getSwapchainExtent().height;
 
-	if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_pOffScreenFramebuffer) != VK_SUCCESS)
+	if (vkCreateFramebuffer(m_VkContext.getDevice(), &FramebufferCreateInfo, nullptr, &m_pOffScreenFramebuffer) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create frame buffer!");
 }
 
@@ -537,10 +533,10 @@ void DeferredShading::CDeferredShadingApp::__createDeferredFramebuffers()
 		FramebufferCreateInfo.pAttachments = &m_SwapChainImageViewSet[i];
 		FramebufferCreateInfo.renderPass = m_pDeferredRenderPass;
 		FramebufferCreateInfo.layers = 1;
-		FramebufferCreateInfo.width = _swapchainExtent().width;
-		FramebufferCreateInfo.height = _swapchainExtent().height;
+		FramebufferCreateInfo.width = m_VkContext.getSwapchainExtent().width;
+		FramebufferCreateInfo.height = m_VkContext.getSwapchainExtent().height;
 
-		if (vkCreateFramebuffer(_device(), &FramebufferCreateInfo, nullptr, &m_DeferredFramebufferSet[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(m_VkContext.getDevice(), &FramebufferCreateInfo, nullptr, &m_DeferredFramebufferSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create frame buffer!");
 	}
 }
@@ -558,32 +554,32 @@ void DeferredShading::CDeferredShadingApp::__createVertexBuffers()
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
 	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, m_ModelVertexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pVertexBuffer_Model, m_pVertexBufferDeviceMemory_Model);
 
 	__copyBuffer(pStagingBuffer, m_pVertexBuffer_Model, BufferSize);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 
 	//create quad vertex buffer
 	BufferSize = sizeof(gQuadVertexData[0]) * gQuadVertexData.size();
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, gQuadVertexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pVertexBuffer_Quad, m_pVertexBufferDeviceMemory_Quad);
 
 	__copyBuffer(pStagingBuffer, m_pVertexBuffer_Quad, BufferSize);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 }
 
 //************************************************************************************
@@ -599,32 +595,32 @@ void DeferredShading::CDeferredShadingApp::__createIndexBuffers()
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
 	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, m_ModelIndexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pIndexBuffer_Model, m_pIndexBufferMemory_Model);
 
 	__copyBuffer(pStagingBuffer, m_pIndexBuffer_Model, BufferSize);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 
 	//create quad index buffer
 	BufferSize = sizeof(gQuadIndexData[0]) * gQuadIndexData.size();
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, BufferSize, 0, &Data);
 	memcpy(Data, gQuadIndexData.data(), static_cast<size_t>(BufferSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	__createBuffer(BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_pIndexBuffer_Quad, m_pIndexBufferMemory_Quad);
 
 	__copyBuffer(pStagingBuffer, m_pIndexBuffer_Quad, BufferSize);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 }
 
 //************************************************************************************
@@ -646,21 +642,21 @@ void DeferredShading::CDeferredShadingApp::__createImage(uint32_t vImageWidth, u
 	ImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	ImageCreateInfo.samples = vSampleCount;
 
-	if (vkCreateImage(_device(), &ImageCreateInfo, nullptr, &vImage) != VK_SUCCESS)
+	if (vkCreateImage(m_VkContext.getDevice(), &ImageCreateInfo, nullptr, &vImage) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create image!");
 
 	VkMemoryRequirements MemoryRequirements = {};
-	vkGetImageMemoryRequirements(_device(), vImage, &MemoryRequirements);
+	vkGetImageMemoryRequirements(m_VkContext.getDevice(), vImage, &MemoryRequirements);
 
 	VkMemoryAllocateInfo MemoryAllocateInfo = {};
 	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperties);
 
-	if (vkAllocateMemory(_device(), &MemoryAllocateInfo, nullptr, &vImageDeviceMemory) != VK_SUCCESS)
+	if (vkAllocateMemory(m_VkContext.getDevice(), &MemoryAllocateInfo, nullptr, &vImageDeviceMemory) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate memory for image!");
 
-	vkBindImageMemory(_device(), vImage, vImageDeviceMemory, 0);
+	vkBindImageMemory(m_VkContext.getDevice(), vImage, vImageDeviceMemory, 0);
 }
 
 //************************************************************************************
@@ -753,9 +749,9 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 
 	__createBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 	void* Data = nullptr;
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
 	memcpy(Data, Pixels, static_cast<size_t>(ImageSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	stbi_image_free(Pixels);
 
@@ -764,8 +760,8 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 	__copyBuffer2Image(pStagingBuffer, m_pDiffuseImage, static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight));
 	__generateMipmaps(m_pDiffuseImage, VK_FORMAT_R8G8B8A8_UNORM, TextureWidth, TextureHeight, MipmapLevel);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 
 	m_pDiffuseImageView = __createImageView(m_pDiffuseImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, MipmapLevel);
 
@@ -787,7 +783,7 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 	SamplerCreateInfo.maxLod = static_cast<float>(MipmapLevel);
 	SamplerCreateInfo.minLod = 0.0f;
 
-	if (vkCreateSampler(_device(), &SamplerCreateInfo, nullptr, &m_pDiffuseImageSampler) != VK_SUCCESS)
+	if (vkCreateSampler(m_VkContext.getDevice(), &SamplerCreateInfo, nullptr, &m_pDiffuseImageSampler) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create texture sampler!");
 
 	//specular
@@ -801,9 +797,9 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 
 	__createBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, pStagingBuffer, pStagingBufferDeviceMemory);
 
-	vkMapMemory(_device(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, 0, ImageSize, 0, &Data);
 	memcpy(Data, Pixels, static_cast<size_t>(ImageSize));
-	vkUnmapMemory(_device(), pStagingBufferDeviceMemory);
+	vkUnmapMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory);
 
 	stbi_image_free(Pixels);
 
@@ -812,8 +808,8 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 	__copyBuffer2Image(pStagingBuffer, m_pSpecularImage, static_cast<uint32_t>(TextureWidth), static_cast<uint32_t>(TextureHeight));
 	__generateMipmaps(m_pSpecularImage, VK_FORMAT_R8G8B8A8_UNORM, TextureWidth, TextureHeight, MipmapLevel);
 
-	vkDestroyBuffer(_device(), pStagingBuffer, nullptr);
-	vkFreeMemory(_device(), pStagingBufferDeviceMemory, nullptr);
+	vkDestroyBuffer(m_VkContext.getDevice(), pStagingBuffer, nullptr);
+	vkFreeMemory(m_VkContext.getDevice(), pStagingBufferDeviceMemory, nullptr);
 
 	m_pSpecularImageView = __createImageView(m_pSpecularImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, MipmapLevel);
 
@@ -835,7 +831,7 @@ void DeferredShading::CDeferredShadingApp::__createTextureSamplerResources4OffSc
 	SamplerCreateInfo.maxLod = static_cast<float>(MipmapLevel);
 	SamplerCreateInfo.minLod = 0.0f;
 
-	if (vkCreateSampler(_device(), &SamplerCreateInfo, nullptr, &m_pSpecularSampler) != VK_SUCCESS)
+	if (vkCreateSampler(m_VkContext.getDevice(), &SamplerCreateInfo, nullptr, &m_pSpecularSampler) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create texture sampler!");
 }
 
@@ -861,7 +857,7 @@ void DeferredShading::CDeferredShadingApp::__createTextureSampler4DeferredRender
 	SamplerCreateInfo.maxLod = 1;
 	SamplerCreateInfo.minLod = 0.0f;
 
-	if (vkCreateSampler(_device(), &SamplerCreateInfo, nullptr, &m_pSampler4DeferredRendering) != VK_SUCCESS)
+	if (vkCreateSampler(m_VkContext.getDevice(), &SamplerCreateInfo, nullptr, &m_pSampler4DeferredRendering) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create texture sampler!");
 }
 
@@ -870,7 +866,7 @@ void DeferredShading::CDeferredShadingApp::__createTextureSampler4DeferredRender
 void DeferredShading::CDeferredShadingApp::__generateMipmaps(VkImage vImage, VkFormat vImageFormat, int32_t vImageWidth, int32_t vImageHeight, uint32_t vMipmapLevel)
 {
 	VkFormatProperties FormatProperties;
-	vkGetPhysicalDeviceFormatProperties(_physicalDevice(), vImageFormat, &FormatProperties);
+	vkGetPhysicalDeviceFormatProperties(m_VkContext.getPhysicalDevice(), vImageFormat, &FormatProperties);
 	if (!(FormatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		throw std::runtime_error("Texture image format does not support linear blitting!");
 
@@ -947,21 +943,21 @@ void DeferredShading::CDeferredShadingApp::__createBuffer(VkDeviceSize vBufferSi
 	BufferCreateInfo.usage = vBufferUsage;
 	BufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(_device(), &BufferCreateInfo, nullptr, &voBuffer) != VK_SUCCESS)
+	if (vkCreateBuffer(m_VkContext.getDevice(), &BufferCreateInfo, nullptr, &voBuffer) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create vertex buffer!");
 
 	VkMemoryRequirements MemoryRequirements = {};
-	vkGetBufferMemoryRequirements(_device(), voBuffer, &MemoryRequirements);
+	vkGetBufferMemoryRequirements(m_VkContext.getDevice(), voBuffer, &MemoryRequirements);
 
 	VkMemoryAllocateInfo MemoryAllocateInfo = {};
 	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperty);
 
-	if (vkAllocateMemory(_device(), &MemoryAllocateInfo, nullptr, &voBufferDeviceMemory) != VK_SUCCESS)
+	if (vkAllocateMemory(m_VkContext.getDevice(), &MemoryAllocateInfo, nullptr, &voBufferDeviceMemory) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate memory for vertex buffer!");
 
-	vkBindBufferMemory(_device(), voBuffer, voBufferDeviceMemory, 0);
+	vkBindBufferMemory(m_VkContext.getDevice(), voBuffer, voBufferDeviceMemory, 0);
 }
 
 //************************************************************************************
@@ -1026,7 +1022,7 @@ void DeferredShading::CDeferredShadingApp::__createDescriptorPool()
 	DescriptorPoolCreateInfo.pPoolSizes = DescriptorPoolSizeSet.data();
 	DescriptorPoolCreateInfo.maxSets = NumSet;
 
-	if (vkCreateDescriptorPool(_device(), &DescriptorPoolCreateInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(m_VkContext.getDevice(), &DescriptorPoolCreateInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor pool!");
 }
 
@@ -1043,7 +1039,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenDescriptorSet()
 	DescriptorSetAllocateInfo.pSetLayouts = DescriptorSetLayoutSet.data();
 
 	m_OffScreenDescriptorSet.resize(m_SwapChainImageSet.size());
-	if (vkAllocateDescriptorSets(_device(), &DescriptorSetAllocateInfo, m_OffScreenDescriptorSet.data()) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(m_VkContext.getDevice(), &DescriptorSetAllocateInfo, m_OffScreenDescriptorSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate descriptor set!");
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
@@ -1095,7 +1091,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenDescriptorSet()
 		WriteDescriptors[2].pTexelBufferView = nullptr;
 		WriteDescriptors[2].pBufferInfo = nullptr;
 
-		vkUpdateDescriptorSets(_device(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
+		vkUpdateDescriptorSets(m_VkContext.getDevice(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
 	}
 }
 
@@ -1112,7 +1108,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredDescriptorSet()
 	DescriptorSetAllocateInfo.pSetLayouts = DescriptorSetLayoutSet.data();
 
 	m_DeferredDescriptorSet.resize(m_SwapChainImageSet.size());
-	if (vkAllocateDescriptorSets(_device(), &DescriptorSetAllocateInfo, m_DeferredDescriptorSet.data()) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(m_VkContext.getDevice(), &DescriptorSetAllocateInfo, m_DeferredDescriptorSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate descriptor set!");
 
 	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
@@ -1179,7 +1175,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredDescriptorSet()
 		WriteDescriptors[3].pTexelBufferView = nullptr;
 		WriteDescriptors[3].pBufferInfo = nullptr;
 
-		vkUpdateDescriptorSets(_device(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
+		vkUpdateDescriptorSets(m_VkContext.getDevice(), static_cast<uint32_t>(WriteDescriptors.size()), WriteDescriptors.data(), 0, nullptr);
 	}
 }
 
@@ -1195,7 +1191,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenCommandBuffers()
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(m_OffScreenCommandBufferSet.size());
 
-	if (vkAllocateCommandBuffers(_device(), &CommandBufferAllocateInfo, m_OffScreenCommandBufferSet.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(m_VkContext.getDevice(), &CommandBufferAllocateInfo, m_OffScreenCommandBufferSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate command buffers!");
 
 	for (auto i = 0; i < m_OffScreenCommandBufferSet.size(); ++i)
@@ -1210,7 +1206,7 @@ void DeferredShading::CDeferredShadingApp::__createOffScreenCommandBuffers()
 		RenderPassBeginInfo.renderPass = m_pOffScreenRenderPass;
 		RenderPassBeginInfo.framebuffer = m_pOffScreenFramebuffer;
 		RenderPassBeginInfo.renderArea.offset = { 0, 0 };
-		RenderPassBeginInfo.renderArea.extent = _swapchainExtent();
+		RenderPassBeginInfo.renderArea.extent = m_VkContext.getSwapchainExtent();
 
 		std::array<VkClearValue, 4> ClearValueSet = {};
 		ClearValueSet[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1250,7 +1246,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredCommandBuffers()
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(m_DeferredCommandBufferSet.size());
 
-	if (vkAllocateCommandBuffers(_device(), &CommandBufferAllocateInfo, m_DeferredCommandBufferSet.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(m_VkContext.getDevice(), &CommandBufferAllocateInfo, m_DeferredCommandBufferSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate command buffers!");
 
 	for (auto i = 0; i < m_DeferredCommandBufferSet.size(); ++i)
@@ -1265,7 +1261,7 @@ void DeferredShading::CDeferredShadingApp::__createDeferredCommandBuffers()
 		RenderPassBeginInfo.renderPass = m_pDeferredRenderPass;
 		RenderPassBeginInfo.framebuffer = m_DeferredFramebufferSet[i];
 		RenderPassBeginInfo.renderArea.offset = { 0, 0 };
-		RenderPassBeginInfo.renderArea.extent = _swapchainExtent();
+		RenderPassBeginInfo.renderArea.extent = m_VkContext.getSwapchainExtent();
 
 		std::array<VkClearValue, 1> ClearValueSet = {};
 		ClearValueSet[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1308,16 +1304,16 @@ void DeferredShading::CDeferredShadingApp::__createSyncObjects()
 
 	for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (vkCreateSemaphore(_device(), &SemaphoreCreateInfo, nullptr, &m_OffScreenRenderingFinishedSemaphoreSet[i]) != VK_SUCCESS)
+		if (vkCreateSemaphore(m_VkContext.getDevice(), &SemaphoreCreateInfo, nullptr, &m_OffScreenRenderingFinishedSemaphoreSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create semaphores!");
 
-		if (vkCreateSemaphore(_device(), &SemaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphoreSet[i]) != VK_SUCCESS)
+		if (vkCreateSemaphore(m_VkContext.getDevice(), &SemaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphoreSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create semaphores!");
 
-		if (vkCreateSemaphore(_device(), &SemaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphoreSet[i]) != VK_SUCCESS)
+		if (vkCreateSemaphore(m_VkContext.getDevice(), &SemaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphoreSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create semaphores!");
 
-		if (vkCreateFence(_device(), &FenceCreateInfo, nullptr, &m_InFlightFenceSet[i]) != VK_SUCCESS)
+		if (vkCreateFence(m_VkContext.getDevice(), &FenceCreateInfo, nullptr, &m_InFlightFenceSet[i]) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create fences!");
 	}
 }
@@ -1351,17 +1347,17 @@ void DeferredShading::CDeferredShadingApp::__updateUniformBuffer(uint32_t vImage
 	UBO.Projection = this->fetchCamera()->getProjectionMatrix();
 
 	void* Data = nullptr;
-	vkMapMemory(_device(), m_UniformBufferDeviceMemorySet_OffScreen[vImageIndex], 0, sizeof(UBO), 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_OffScreen[vImageIndex], 0, sizeof(UBO), 0, &Data);
 	memcpy(Data, &UBO, sizeof(UBO));
-	vkUnmapMemory(_device(), m_UniformBufferDeviceMemorySet_OffScreen[vImageIndex]);
+	vkUnmapMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_OffScreen[vImageIndex]);
 
 	//deferred
 	SUniformBufferObject_Deferred UBO_Deferred = {};
 	UBO_Deferred.ViewPosition = ViewPosition;
 
-	vkMapMemory(_device(), m_UniformBufferDeviceMemorySet_Deferred[vImageIndex], 0, sizeof(UBO_Deferred), 0, &Data);
+	vkMapMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_Deferred[vImageIndex], 0, sizeof(UBO_Deferred), 0, &Data);
 	memcpy(Data, &UBO_Deferred, sizeof(UBO_Deferred));
-	vkUnmapMemory(_device(), m_UniformBufferDeviceMemorySet_Deferred[vImageIndex]);
+	vkUnmapMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet_Deferred[vImageIndex]);
 }
 
 //************************************************************************************
@@ -1432,7 +1428,7 @@ VkImageView DeferredShading::CDeferredShadingApp::__createImageView(const VkImag
 	ImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 
 	VkImageView ImageView;
-	if (vkCreateImageView(_device(), &ImageViewCreateInfo, nullptr, &ImageView) != VK_SUCCESS)
+	if (vkCreateImageView(m_VkContext.getDevice(), &ImageViewCreateInfo, nullptr, &ImageView) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create image view!");
 
 	return ImageView;
@@ -1445,7 +1441,7 @@ VkFormat DeferredShading::CDeferredShadingApp::__findSupportedFormat(const std::
 	for (auto Format : vCandidateFormatSet)
 	{
 		VkFormatProperties FormatProperties;
-		vkGetPhysicalDeviceFormatProperties(_physicalDevice(), Format, &FormatProperties);
+		vkGetPhysicalDeviceFormatProperties(m_VkContext.getPhysicalDevice(), Format, &FormatProperties);
 
 		if (vImageTiling == VK_IMAGE_TILING_LINEAR && ((FormatProperties.linearTilingFeatures&vFormatFeatures) == vFormatFeatures))
 			return Format;
@@ -1462,7 +1458,7 @@ VkFormat DeferredShading::CDeferredShadingApp::__findSupportedFormat(const std::
 uint32_t DeferredShading::CDeferredShadingApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
 {
 	VkPhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = {};
-	vkGetPhysicalDeviceMemoryProperties(_physicalDevice(), &PhysicalDeviceMemoryProperties);
+	vkGetPhysicalDeviceMemoryProperties(m_VkContext.getPhysicalDevice(), &PhysicalDeviceMemoryProperties);
 
 	for (uint32_t i = 0; i < PhysicalDeviceMemoryProperties.memoryTypeCount; ++i)
 	{
@@ -1484,7 +1480,7 @@ VkCommandBuffer DeferredShading::CDeferredShadingApp::__beginSingleTimeCommands(
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
 	VkCommandBuffer CommandBuffer = VK_NULL_HANDLE;
-	vkAllocateCommandBuffers(_device(), &CommandBufferAllocateInfo, &CommandBuffer);
+	vkAllocateCommandBuffers(m_VkContext.getDevice(), &CommandBufferAllocateInfo, &CommandBuffer);
 
 	VkCommandBufferBeginInfo CommandBufferBeginInfo = {};
 	CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1514,5 +1510,5 @@ void DeferredShading::CDeferredShadingApp::__endSingleTimeCommands(VkCommandBuff
 	vkQueueSubmit(m_pQueue, 1, &SubmitInfo, nullptr);
 	vkQueueWaitIdle(m_pQueue);
 
-	vkFreeCommandBuffers(_device(), m_pCommandPool, 1, &vCommandBuffer);
+	vkFreeCommandBuffers(m_VkContext.getDevice(), m_pCommandPool, 1, &vCommandBuffer);
 }
