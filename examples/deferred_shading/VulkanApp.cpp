@@ -419,14 +419,17 @@ void DeferredShading::CDeferredShadingApp::__createDeferredPipelineLayout()
 //Function:
 void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 {
-	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height);
+	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator;
 
 	//off-screen
 	hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
 	auto OffScreenVertexShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "OffScreen_vert.spv");
 	auto OffScreenFragmentShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "OffScreen_frag.spv");
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, OffScreenVertexShaderModule.get());
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, OffScreenFragmentShaderModule.get());
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, OffScreenVertexShaderModule.get(),"main"));
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, OffScreenFragmentShaderModule.get(), "main"));
+
+	PipelineCreator.addViewport(vk::Viewport(0, 0, m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 0, 1.0));
+	PipelineCreator.addScissor(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height)));
 
 	auto BindingDescription = SVertex::getBindingDescription();
 	auto AttributeDescription = SVertex::getAttributeDescription();
@@ -435,34 +438,26 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 		PipelineCreator.addVertexAttribute(Attribute);
 
 	PipelineCreator.fetchRasterizationState().setCullMode(vk::CullModeFlagBits::eBack);
-	PipelineCreator.fetchRasterizationState().setFrontFace(vk::FrontFace::eCounterClockwise);
 
 	PipelineCreator.fetchMultisampleState().setSampleShadingEnable(true);
 	PipelineCreator.fetchMultisampleState().setRasterizationSamples(vk::SampleCountFlagBits::e1);
 	PipelineCreator.fetchMultisampleState().setMinSampleShading(.2f);
 
-	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(VK_TRUE);
+	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(true);
+	PipelineCreator.fetchDepthStencilState().setDepthWriteEnable(true);
+	PipelineCreator.fetchDepthStencilState().setDepthCompareOp(vk::CompareOp::eLessOrEqual);
 
-	vk::PipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
-	ColorBlendAttachmentState.blendEnable = false;
-	ColorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-	ColorBlendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
-	ColorBlendAttachmentState.alphaBlendOp = vk::BlendOp::eAdd;
-	ColorBlendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
-	ColorBlendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eZero;
-	ColorBlendAttachmentState.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-	ColorBlendAttachmentState.dstAlphaBlendFactor = vk::BlendFactor::eZero;
 	for (auto i = 0; i < 3; ++i)
-		PipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
+		PipelineCreator.addColorBlendAttachment(DefaultPipelineColorBlendAttachmentState);
 
-	m_pOffScreenPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass);
+	m_pOffScreenPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pOffScreenPipelineLayout, nullptr, m_pOffScreenRenderPass, 0);
 
 	//deferred
 	PipelineCreator.clearShaderStage();
 	auto DeferredVertexShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "Deferred_vert.spv");
 	auto DeferredFragmentShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "Deferred_frag.spv");
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, DeferredVertexShaderModule.get());
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, DeferredFragmentShaderModule.get());
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, DeferredVertexShaderModule.get(), "main"));
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, DeferredFragmentShaderModule.get(), "main"));
 
 	PipelineCreator.clearVertexInputInfo();
 	auto BindingDescription_Deferred = SQuadVertex::getBindingDescription();
@@ -471,10 +466,12 @@ void DeferredShading::CDeferredShadingApp::__createGraphicsPipelines()
 	for (auto Attribute : AttributeDescription_Deferred)
 		PipelineCreator.addVertexAttribute(Attribute);
 
-	PipelineCreator.clearColorBlendAttachment();
-	PipelineCreator.addColorBlendAttachment(ColorBlendAttachmentState);
+	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(false);
 
-	m_pDeferredPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass);
+	PipelineCreator.clearColorBlendAttachment();
+	PipelineCreator.addColorBlendAttachment(DefaultPipelineColorBlendAttachmentState);
+
+	m_pDeferredPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pDeferredPipelineLayout, nullptr, m_pDeferredRenderPass, 0);
 }
 
 //************************************************************************************

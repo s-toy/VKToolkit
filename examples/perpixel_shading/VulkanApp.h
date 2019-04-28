@@ -14,6 +14,7 @@ namespace VulkanApp
 	class CPerpixelShadingApp : public hiveVKT::CVkApplicationBase
 	{
 	private:
+		virtual void _awakeV()override;
 		virtual bool _initV() override;
 		virtual void _updateV() override;
 		virtual void _destroyV() override;
