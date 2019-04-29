@@ -246,7 +246,7 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, VertexShaderModule.get(), "main"));
 	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, FragmentShaderModule.get(), "main"));
 
-	PipelineCreator.addViewport(vk::Viewport(0, 0, m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 0, 0));
+	PipelineCreator.addViewport(vk::Viewport(0, 0, m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 0, 1.0));
 	PipelineCreator.addScissor(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height)));
 
 	PipelineCreator.addVertexBinding({ 0, sizeof(SVertex) , vk::VertexInputRate::eVertex });
@@ -260,7 +260,8 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	PipelineCreator.fetchMultisampleState().setSampleShadingEnable(true);
 	PipelineCreator.fetchMultisampleState().setMinSampleShading(0.2f);
 
-	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(VK_TRUE);
+	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(true);
+	PipelineCreator.fetchDepthStencilState().setDepthWriteEnable(true);
 	PipelineCreator.fetchDepthStencilState().setDepthCompareOp(vk::CompareOp::eLess);
 
 	m_pGraphicsPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pPipelineLayout, nullptr, m_pRenderPass, 0);
