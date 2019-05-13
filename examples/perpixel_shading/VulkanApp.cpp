@@ -16,6 +16,14 @@ using namespace hiveVKT;
 
 //************************************************************************************
 //Function:
+void VulkanApp::CPerpixelShadingApp::_awakeV()
+{
+	fetchEnabledPhysicalDeviceFeatures().samplerAnisotropy = VK_TRUE;
+	fetchEnabledPhysicalDeviceFeatures().sampleRateShading = VK_TRUE;
+}
+
+//************************************************************************************
+//Function:
 bool VulkanApp::CPerpixelShadingApp::_initV()
 {
 	m_SampleCount = __getMaxSampleCount();
@@ -233,24 +241,30 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 	auto VertexShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "perpixel_shading_vs.spv");
 	auto FragmentShaderModule = ShaderModuleCreator.createUnique(m_VkContext.getDevice(), "perpixel_shading_fs.spv");
 
-	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height);
+	hiveVKT::CVkGraphicsPipelineCreator PipelineCreator;
 
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eVertex, VertexShaderModule.get());
-	PipelineCreator.addShaderStage(vk::ShaderStageFlagBits::eFragment, FragmentShaderModule.get());
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, VertexShaderModule.get(), "main"));
+	PipelineCreator.addShaderStage(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, FragmentShaderModule.get(), "main"));
+
+	PipelineCreator.addViewport(vk::Viewport(0, 0, m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height, 0, 1.0));
+	PipelineCreator.addScissor(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(m_VkContext.getSwapchainExtent().width, m_VkContext.getSwapchainExtent().height)));
 
 	PipelineCreator.addVertexBinding({ 0, sizeof(SVertex) , vk::VertexInputRate::eVertex });
 	PipelineCreator.addVertexAttribute({ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(SVertex, SVertex::Position) });
 	PipelineCreator.addVertexAttribute({ 1, 0, vk::Format::eR32G32B32Sfloat , offsetof(SVertex, SVertex::Normal) });
 	PipelineCreator.addVertexAttribute({ 2, 0, vk::Format::eR32G32Sfloat , offsetof(SVertex, SVertex::TexCoord) });
 
-	PipelineCreator.fetchRasterizationState().setFrontFace(vk::FrontFace::eCounterClockwise);
+	PipelineCreator.addColorBlendAttachment(DefaultPipelineColorBlendAttachmentState);
 
-	PipelineCreator.setMultisampleState({ {}, vk::SampleCountFlagBits(m_SampleCount), VK_TRUE, .2f, nullptr, VK_FALSE, VK_FALSE });
+	PipelineCreator.fetchMultisampleState().setRasterizationSamples(vk::SampleCountFlagBits(m_SampleCount));
+	PipelineCreator.fetchMultisampleState().setSampleShadingEnable(true);
+	PipelineCreator.fetchMultisampleState().setMinSampleShading(0.2f);
 
-	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(VK_TRUE);
+	PipelineCreator.fetchDepthStencilState().setDepthTestEnable(true);
+	PipelineCreator.fetchDepthStencilState().setDepthWriteEnable(true);
 	PipelineCreator.fetchDepthStencilState().setDepthCompareOp(vk::CompareOp::eLess);
 
-	m_pGraphicsPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pPipelineLayout, nullptr, m_pRenderPass);
+	m_pGraphicsPipeline = PipelineCreator.create(m_VkContext.getDevice(), m_pPipelineLayout, nullptr, m_pRenderPass, 0);
 }
 
 //************************************************************************************

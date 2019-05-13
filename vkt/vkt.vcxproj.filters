@@ -81,6 +81,9 @@
     <ClInclude Include="src\VkContext.hpp">
       <Filter>graphics\vk\framework</Filter>
     </ClInclude>
+    <ClInclude Include="src\VkGraphicsPipelineDefaultState.hpp">
+      <Filter>graphics\vk</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="graphics">

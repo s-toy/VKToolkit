@@ -32,6 +32,7 @@
     <ClInclude Include="src\VkDeviceCreator.hpp" />
     <ClInclude Include="src\VkGenericImage.hpp" />
     <ClInclude Include="src\VkGraphicsPipelineCreator.hpp" />
+    <ClInclude Include="src\VkGraphicsPipelineDefaultState.hpp" />
     <ClInclude Include="src\VkInstanceCreator.hpp" />
     <ClInclude Include="src\VkPhysicalDeviceInfoHelper.hpp" />
     <ClInclude Include="src\VkRenderPassCreator.hpp" />
