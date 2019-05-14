@@ -18,7 +18,7 @@ void hiveVKT::CVkApplicationBase::run()
 
 		_OUTPUT_EVENT("Succeed to init application.");
 
-		hiveCommon::CCPUTimer CPUTimer;
+		hiveCommon::CCpuTimer CPUTimer;
 		while (!glfwWindowShouldClose(m_pWindow))
 		{
 			CPUTimer.begin();
