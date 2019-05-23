@@ -257,8 +257,6 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 	};
 
 	hiveVKT::executeImmediately(m_VkContext.getDevice(), m_VkContext.getCommandPool(), m_VkContext.getQueue(), TransImgLayout);
-
-
 }
 
 //************************************************************************************
