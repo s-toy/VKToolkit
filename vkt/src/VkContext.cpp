@@ -28,6 +28,7 @@ bool CVkContext::initVulkan(const std::vector<const char*>& vExtensions4Instance
 	__pickPhysicalDevice();
 	__findRequiredQueueFamilies(m_VkPhysicalDevice);
 	__createDevice(vExtensions4Device, vLayers4Device, vEnabledFeatures);
+	__createCommandPool();
 
 	if (m_EnabledPresentation)
 	{
@@ -142,6 +143,17 @@ void CVkContext::__checkExtensions(const std::vector<const char*>& vExtensions4I
 
 //************************************************************************************
 //Function:
+void hiveVKT::CVkContext::__createCommandPool()
+{
+	vk::CommandPoolCreateInfo CommandPoolCreateInfo;
+	CommandPoolCreateInfo.flags = vk::CommandPoolCreateFlags();
+	CommandPoolCreateInfo.queueFamilyIndex = m_RequiredQueueFamilyIndices.QueueFamily.value();
+
+	m_VkCommandPool = m_VkDevice.createCommandPool(CommandPoolCreateInfo);
+}
+
+//************************************************************************************
+//Function:
 SQueueFamilyIndices CVkContext::__findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice)
 {
 	auto QueueFamilyPropertySet = vPhysicalDevice.getQueueFamilyProperties();
@@ -181,6 +193,8 @@ SQueueFamilyIndices CVkContext::__findRequiredQueueFamilies(const vk::PhysicalDe
 //Function:
 void hiveVKT::CVkContext::destroyVulkan()
 {
+	m_VkDevice.destroyCommandPool(m_VkCommandPool);
+
 	for (size_t i = 0; i < m_SwapChainImageViews.size(); ++i)
 	{
 		m_VkDevice.destroyImageView(m_SwapChainImageViews[i]);
