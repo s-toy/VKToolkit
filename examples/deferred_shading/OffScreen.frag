@@ -9,8 +9,8 @@ layout(location = 0) out vec4 out_Position;
 layout(location = 1) out vec4 out_Normal;
 layout(location = 2) out vec4 out_Color;
 
-layout(binding = 1) uniform sampler2D Sampler_Diff;
-layout(binding = 2) uniform sampler2D Sampler_Spec;
+layout(set = 1, binding = 0) uniform sampler2D Sampler_Diff;
+layout(set = 1, binding = 1) uniform sampler2D Sampler_Spec;
 
 void main()
 {

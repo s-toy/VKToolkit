@@ -37,7 +37,9 @@ namespace hiveVKT
 		vk::Format			getSwapchainImageFormat() const { return m_SwapChainImageFormat; }
 		vk::Image           getSwapChainImageAt(int vIdx) const { return m_SwapChainImages[vIdx]; }
 		vk::ImageView       getSwapChainImageViewAt(int vIdx) const { return m_SwapChainImageViews[vIdx]; }
-		int				    getSwapChainImageSize() const { return static_cast<int>(m_SwapChainImages.size()); };
+		vk::Queue			getQueue() const { return m_VkQueue; }
+		vk::CommandPool		getCommandPool() const { return m_VkCommandPool; }
+		int				    getSwapChainImageSize() const { return static_cast<int>(m_SwapChainImages.size()); }
 
 		const vk::Extent2D&				getSwapchainExtent() const { return m_SwapChainExtent; }
 		const SQueueFamilyIndices&		getRequiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
@@ -57,6 +59,7 @@ namespace hiveVKT
 		vk::SwapchainKHR m_VkSwapchain;
 		vk::Format m_SwapChainImageFormat;
 		vk::Extent2D m_SwapChainExtent;
+		vk::CommandPool m_VkCommandPool;
 		std::vector<vk::Image> m_SwapChainImages;
 		std::vector<vk::ImageView> m_SwapChainImageViews;
 
@@ -70,6 +73,7 @@ namespace hiveVKT
 		void __createSwapChain(int vWidth, int vHeight);
 		void __createImageViews();
 		void __checkExtensions(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vExtensions4Device);
+		void __createCommandPool();
 
 		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
 	};

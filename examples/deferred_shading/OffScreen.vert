@@ -9,7 +9,7 @@ layout(location = 0) out vec3 out_FragPosition;
 layout(location = 1) out vec2 out_TexCoord;
 layout(location = 2) out vec3 out_Normal;
 
-layout(binding = 0) uniform UBO{
+layout(set = 0, binding = 0) uniform UBO{
 	mat4 Model;
 	mat4 View;
 	mat4 Projection;

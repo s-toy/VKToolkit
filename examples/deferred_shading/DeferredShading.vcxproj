@@ -19,8 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\stb_image.h" />
-    <ClInclude Include="..\external\tiny_obj_loader.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="VulkanApp.h" />
   </ItemGroup>
