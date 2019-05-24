@@ -11,13 +11,7 @@ namespace hiveVKT
 	class CWindowCreator
 	{
 	public:
-		GLFWwindow* create(int vWidth, int vHeight, int vPosX = 0, int vPosY = 0, const std::string& vTitle = "", bool vFullScreen = false, bool vResizable = false)
-		{
-			SWindowCreateInfo WindowCreateInfo{ vWidth, vHeight, vPosX, vPosY, vTitle, vFullScreen, vResizable };
-			return this->create(WindowCreateInfo);
-		}
-
-		GLFWwindow* create(const SWindowCreateInfo& vCreateInfo)
+		GLFWwindow* create(const SDisplayInfo& vCreateInfo)
 		{
 			_HIVE_EARLY_RETURN(!vCreateInfo.isValid(), "Input parameters for creating window must be valid!", nullptr);
 
@@ -61,7 +55,7 @@ namespace hiveVKT
 			return true;
 		}
 
-		static GLFWwindow* __createFullScreenWindow(const SWindowCreateInfo& vDisplayInfo)
+		static GLFWwindow* __createFullScreenWindow(const SDisplayInfo& vDisplayInfo)
 		{
 			GLFWmonitor *pMonitor = glfwGetPrimaryMonitor();
 			_ASSERTE(pMonitor);

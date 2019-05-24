@@ -30,13 +30,15 @@
 
 namespace hiveVKT
 {
-	struct SWindowCreateInfo
+	struct SDisplayInfo
 	{
-		int WindowWidth = 0, WindowHeight = 0;
-		int WindowPosX = 0, WindowPosY = 0;
-		std::string WindowTitle = "";
+		uint32_t WindowWidth	= 800;
+		uint32_t WindowHeight	= 600;
+		uint32_t WindowPosX		= 100;
+		uint32_t WindowPosY		= 100;
+		std::string WindowTitle = "HIVE APPLICATION";
 		bool IsWindowFullScreen = false;
-		bool IsWindowResizable = false;
+		bool IsWindowResizable	= false;
 
 		bool isValid() const { return (WindowWidth > 0 && WindowHeight > 0); }	//TODO:
 	};
