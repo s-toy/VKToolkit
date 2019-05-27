@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{661593e5-e775-4481-9127-7f7b5aabd8d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general">
+      <UniqueIdentifier>{6015bd38-8c1b-4a93-8481-79356df622ce}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\vkt\Common.h">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Utility.h">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Mesh.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Model.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkContext.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkDebugMessenger.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkDeviceCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGenericImage.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGraphicsPipelineCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkInstanceCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkPhysicalDeviceInfoHelper.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkRenderPassCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkShaderModuleCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkSwapChainCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkTexture2D.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkUtility.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\vkt\Model.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkContext.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\Mesh.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkDebugMessenger.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkDeviceCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkGenericImage.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkGraphicsPipelineCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkInstanceCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkPhysicalDeviceInfoHelper.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkRenderPassCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkSwapChainCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkTexture2D.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkUtility.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
