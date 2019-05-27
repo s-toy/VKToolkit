@@ -2,7 +2,6 @@
 #include <set>
 #include <functional>
 #include <vulkan/vulkan.hpp>
-#include "VkPhysicalDeviceInfoHelper.h"
 
 namespace hiveVKT
 {

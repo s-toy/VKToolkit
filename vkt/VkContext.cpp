@@ -1,210 +1,241 @@
 #include "VkContext.h"
-#include "VkInstanceCreator.h"
-#include "VkDeviceCreator.h"
-#include "VkDebugMessenger.h"
-#include "VkPhysicalDeviceInfoHelper.h"
 
 using namespace hiveVKT;
 
-CVkContext::CVkContext()
+hiveVKT::CVkContext::CVkContext()
 {
-
 }
 
-CVkContext::~CVkContext()
+hiveVKT::CVkContext::~CVkContext()
 {
-
 }
 
-//************************************************************************************
-//Function:
-bool CVkContext::initVulkan(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance, const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device, GLFWwindow* vWindow, const vk::PhysicalDeviceFeatures& vEnabledFeatures)
+//*****************************************************************************************
+//FUNCTION:
+void CVkContext::createContext(uint32_t vPhysicalDeviceID)
 {
-	__checkExtensions(vExtensions4Instance, vExtensions4Device);
+	__createVulkanInstance();
+	__createVulkanDevice(vPhysicalDeviceID);
 
-	__createInstance(vExtensions4Instance, vLayers4Instance);
-	__createDebugMessenger();
-	if (m_EnabledPresentation) __createSurface(vWindow);
-	__pickPhysicalDevice();
-	__findRequiredQueueFamilies(m_VkPhysicalDevice);
-	__createDevice(vExtensions4Device, vLayers4Device, vEnabledFeatures);
-	__createCommandPool();
+	m_IsInitialized = true;
+}
 
-	if (m_EnabledPresentation)
+//*****************************************************************************************
+//FUNCTION:
+void CVkContext::destroyContext()
+{
+	if (!m_IsInitialized)return;
+
+	m_pDevice.waitIdle();
+
+	m_pDevice.destroyCommandPool(std::get<2>(m_ComprehensiveQueue));
+	if (m_ComputeQueue.has_value() && std::get<2>(m_ComputeQueue.value()) != std::get<2>(m_ComprehensiveQueue)) m_pDevice.destroyCommandPool(std::get<2>(m_ComputeQueue.value()));
+	if (m_TransferQueue.has_value() && std::get<2>(m_TransferQueue.value()) != std::get<2>(m_ComprehensiveQueue)) m_pDevice.destroyCommandPool(std::get<2>(m_TransferQueue.value()));
+	m_pDevice.destroy();
+	m_pInstance.destroy();
+
+	m_IsInitialized = false;
+
+	m_ForceGraphicsFunctionalityHint = false;
+	m_EnableDebugUtilsHint = false;
+	m_EnablePresentationHint = false;
+	m_EnableApiDumpHint = false;
+	m_EnableFpsMonitorHint = false;
+	m_EnableScreenshotHint = false;
+	m_PreferDedicatedComputeQueueHint = false;
+	m_PreferDedicatedTransferQueueHint = false;
+
+	m_pInstance = nullptr;
+	m_pPhysicalDevice = nullptr;
+	m_pDevice = nullptr;
+	m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr };
+	m_ComputeQueue.reset();
+	m_TransferQueue.reset();
+
+	m_EnabledInstanceLayers = {};
+	m_EnabledInstanceExtensions = {};
+	m_EnabledDeviceExtensions = {};
+	m_EnabledPhysicalDeviceFeatures = {};
+}
+
+//*****************************************************************************************
+//FUNCTION:
+void CVkContext::__createVulkanInstance()
+{
+	_ASSERT(!m_IsInitialized);
+
+	std::vector<const char*> EnabledInstanceLayers, EnabledInstanceExtensions;
+	if (m_EnableDebugUtilsHint)
 	{
-		int Width, Height;
-		glfwGetFramebufferSize(vWindow, &Width, &Height);
-		__createSwapChain(Width, Height);
-		__createImageViews();
+		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_standard_validation");
+		EnabledInstanceExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	}
+	if (m_EnablePresentationHint)
+	{
+		EnabledInstanceExtensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		EnabledInstanceExtensions.emplace_back("VK_KHR_win32_surface");
+	}
+	if (m_EnableApiDumpHint)
+		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_api_dump");
+	if (m_EnableFpsMonitorHint)
+		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_monitor");
+	if (m_EnableScreenshotHint)
+		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_screenshot");
+	//TODO：检查是否支持这些层和拓展
+
+	m_EnabledInstanceLayers = std::vector<std::string>(EnabledInstanceLayers.begin(), EnabledInstanceLayers.end());
+	m_EnabledInstanceExtensions = std::vector<std::string>(EnabledInstanceExtensions.begin(), EnabledInstanceExtensions.end());
+
+	vk::ApplicationInfo ApplicationInfo = {
+		m_ApplicationName.c_str(),m_ApplicationVersion,
+		m_EngineName.c_str(),m_EngineVersion,
+		m_ApiVersion
+	};
+
+	vk::InstanceCreateInfo InstanceCreateInfo = {
+		vk::InstanceCreateFlags(),&ApplicationInfo,
+		static_cast<uint32_t>(EnabledInstanceLayers.size()),EnabledInstanceLayers.data(),
+		static_cast<uint32_t>(EnabledInstanceExtensions.size()),EnabledInstanceExtensions.data()
+	};
+
+	m_pInstance = vk::createInstance(InstanceCreateInfo);
+
+	m_DynamicDispatchLoader.init(m_pInstance, nullptr);
+}
+
+//*****************************************************************************************
+//FUNCTION:
+void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
+{
+	_ASSERT(!m_IsInitialized);
+
+	auto PhysicalDevices = m_pInstance.enumeratePhysicalDevices();
+	_ASSERT_EXPR(!PhysicalDevices.empty(), "No physical device that support Vulkan");
+	_ASSERT_EXPR(vPhysicalDeviceID < static_cast<int>(PhysicalDevices.size()), "Physical device id out of range");
+
+	m_pPhysicalDevice = PhysicalDevices[vPhysicalDeviceID];
+
+	__determineQueueFamilies();
+
+	std::vector<vk::DeviceQueueCreateInfo> DeviceQueueCreateInfos;
+	float QueuePriority = 1.0f;
+
+	DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_ComprehensiveQueue), 1, &QueuePriority));
+	if (m_ComputeQueue.has_value())
+	{
+		if (std::get<0>(m_ComputeQueue.value()) != std::get<0>(m_ComprehensiveQueue))
+			DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_ComputeQueue.value()), 1, &QueuePriority));
+	}
+	if (m_TransferQueue.has_value())
+	{
+		if (std::get<0>(m_TransferQueue.value()) != std::get<0>(m_ComprehensiveQueue))
+			DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_TransferQueue.value()), 1, &QueuePriority));
 	}
 
-	return true;
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createInstance(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance)
-{
-	hiveVKT::CVkInstanceCreator InstanceCreator;
-	InstanceCreator.setEnabledExtensions(vExtensions4Instance);
-	InstanceCreator.setEnabledLayers(vLayers4Instance);
-	m_VkInstance = InstanceCreator.create();
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createDebugMessenger()
-{
-	m_pDebugMessenger = new CVkDebugMessenger;
-	m_pDebugMessenger->setupDebugMessenger(m_VkInstance);
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createSurface(GLFWwindow* vWindow)
-{
-	if (glfwCreateWindowSurface(m_VkInstance, vWindow, nullptr, &m_VkSurface) != VK_SUCCESS)
-		_THROW_RUNTIME_ERROR("Failed to create window surface!");
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__pickPhysicalDevice()
-{
-	auto PhysicalDeviceSet = m_VkInstance.enumeratePhysicalDevices();
-	_ASSERTE(!PhysicalDeviceSet.empty());
-	m_VkPhysicalDevice = PhysicalDeviceSet[0];	//TODO: check whether the physical device is suitable.
-
-	CVkPhysicalDeviceInfoHelper::getInstance()->init(m_VkPhysicalDevice);
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createDevice(const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device, const vk::PhysicalDeviceFeatures& vEnabledFeatures)
-{
-	hiveVKT::CVkDeviceCreator DeviceCreator;
-	DeviceCreator.setEnabledExtensions(vExtensions4Device);
-	DeviceCreator.setEnabledLayers(vLayers4Device);
-	DeviceCreator.addQueue(m_RequiredQueueFamilyIndices.QueueFamily.value(), 1, 1.0f);
-	DeviceCreator.setPhysicalDeviceFeatures(&vEnabledFeatures);
-	m_VkDevice = DeviceCreator.create(m_VkPhysicalDevice);
-
-	m_VkQueue = m_VkDevice.getQueue(m_RequiredQueueFamilyIndices.QueueFamily.value(), 0);
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createSwapChain(int vWidth, int vHeight)
-{
-	CVkSwapChainCreator SwapchainCreator;
-	m_VkSwapchain = SwapchainCreator.create(m_VkSurface, m_VkDevice, m_VkPhysicalDevice, vWidth, vHeight);
-
-	m_SwapChainSupportDetails = SwapchainCreator.queryPhysicalDeviceSwapChainSupport(m_VkSurface, m_VkPhysicalDevice);
-	m_SwapChainImageFormat = SwapchainCreator.getSwapChainImageFormat();
-	m_SwapChainExtent = SwapchainCreator.getSwapChainExtent();
-	m_SwapChainImages = m_VkDevice.getSwapchainImagesKHR(m_VkSwapchain);
-}
-
-//************************************************************************************
-//Function:
-void CVkContext::__createImageViews()
-{
-	m_SwapChainImageViews.resize(m_SwapChainImages.size());
-	for (size_t i = 0; i < m_SwapChainImages.size(); ++i)
+	if (m_EnablePresentationHint)
 	{
-		vk::ImageViewCreateInfo CreateInfo = {};
-		CreateInfo.image = m_SwapChainImages[i];
-		CreateInfo.viewType = vk::ImageViewType::e2D;
-		CreateInfo.format = m_SwapChainImageFormat;
-		CreateInfo.components = vk::ComponentSwizzle::eIdentity;
-		CreateInfo.subresourceRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
-		m_SwapChainImageViews[i] = m_VkDevice.createImageView(CreateInfo);
+		_ASSERT(m_pPhysicalDevice.getWin32PresentationSupportKHR(std::get<0>(m_ComprehensiveQueue), m_DynamicDispatchLoader));
+		m_EnabledDeviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	}
+	//TODO：检查设备是否支持拓展以及相应的物理设备特性
+
+	std::vector<const char*> EnabledDeviceExtensions;
+	for (auto& DeviceExtension : m_EnabledDeviceExtensions)
+		EnabledDeviceExtensions.emplace_back(DeviceExtension.c_str());
+
+	vk::DeviceCreateInfo DeviceCreateInfo = {
+		vk::DeviceCreateFlags(),
+		static_cast<uint32_t>(DeviceQueueCreateInfos.size()),DeviceQueueCreateInfos.data(),
+		0,nullptr,
+		static_cast<uint32_t>(EnabledDeviceExtensions.size()),EnabledDeviceExtensions.data(),
+		&m_EnabledPhysicalDeviceFeatures
+	};
+
+	m_pDevice = m_pPhysicalDevice.createDevice(DeviceCreateInfo);
+
+	__retrieveQueuesAndCreateCommandPools();
 }
 
-//************************************************************************************
-//Function:
-void CVkContext::__checkExtensions(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vExtensions4Device)
+//*****************************************************************************************
+//FUNCTION:
+void hiveVKT::CVkContext::__determineQueueFamilies()
 {
-	std::vector<std::string> RequiredExtensionSet(vExtensions4Instance.begin(), vExtensions4Instance.end());
-	RequiredExtensionSet.insert(RequiredExtensionSet.end(), vExtensions4Device.begin(), vExtensions4Device.end());
+	_ASSERT(m_pPhysicalDevice);
 
-	if (std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SURFACE_EXTENSION_NAME) == RequiredExtensionSet.end() ||
-		std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), "VK_KHR_win32_surface") == RequiredExtensionSet.end() ||
-		std::find(RequiredExtensionSet.begin(), RequiredExtensionSet.end(), VK_KHR_SWAPCHAIN_EXTENSION_NAME) == RequiredExtensionSet.end())
+	auto QueueFamilyProperties = m_pPhysicalDevice.getQueueFamilyProperties();
+	_ASSERT(!QueueFamilyProperties.empty());
+	uint32_t ComprehensiveQueueFlags = 0;
+	uint32_t ComprehensiveQueueFamilyIndex = UINT32_MAX, ComputeQueueFamilyIndex = UINT32_MAX, TransferQueueFamilyIndex = UINT32_MAX;
+
+	for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
 	{
-		m_EnabledPresentation = false;
-	}
-	else
-	{
-		m_EnabledPresentation = true;
-	}
-}
-
-//************************************************************************************
-//Function:
-void hiveVKT::CVkContext::__createCommandPool()
-{
-	vk::CommandPoolCreateInfo CommandPoolCreateInfo;
-	CommandPoolCreateInfo.flags = vk::CommandPoolCreateFlags();
-	CommandPoolCreateInfo.queueFamilyIndex = m_RequiredQueueFamilyIndices.QueueFamily.value();
-
-	m_VkCommandPool = m_VkDevice.createCommandPool(CommandPoolCreateInfo);
-}
-
-//************************************************************************************
-//Function:
-SQueueFamilyIndices CVkContext::__findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice)
-{
-	auto QueueFamilyPropertySet = vPhysicalDevice.getQueueFamilyProperties();
-
-	int i = 0;
-	for (const auto& QueueFamilyProperty : QueueFamilyPropertySet)
-	{
-		VkBool32 GraphicsSupport = VK_FALSE, PresentSupport = VK_FALSE, TransferSupport = VK_FALSE;
-
-		GraphicsSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics);
-		TransferSupport = static_cast<VkBool32>(QueueFamilyProperty.queueFlags & vk::QueueFlagBits::eTransfer);
-		
-		if (GraphicsSupport && TransferSupport)
+		if (static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags) > ComprehensiveQueueFlags)
 		{
-			if (m_EnabledPresentation)
+			if (m_ForceGraphicsFunctionalityHint)
+				if (!(QueueFamilyProperties[i].queueFlags | vk::QueueFlagBits::eGraphics))
+					break;
+
+			ComprehensiveQueueFlags = static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags);
+			ComprehensiveQueueFamilyIndex = i;
+		}
+	}
+	_ASSERT(ComprehensiveQueueFamilyIndex != UINT32_MAX);// 不管m_ForceGraphicsFunctionalityHint是true还是false，都应该有ComprehensiveQueue
+														 // 如果 ComprehensiveQueueFamilyIndex == UINT32_MAX 说明在m_ForceGraphicsFunctionalityHint
+														 // 是true的情况下找不到合适的队列簇
+
+	if (QueueFamilyProperties[ComprehensiveQueueFamilyIndex].queueFlags | vk::QueueFlagBits::eCompute)
+		ComputeQueueFamilyIndex = ComprehensiveQueueFamilyIndex;
+	if (QueueFamilyProperties[ComprehensiveQueueFamilyIndex].queueFlags | vk::QueueFlagBits::eTransfer)
+		TransferQueueFamilyIndex = ComprehensiveQueueFamilyIndex;
+
+	auto FindDedicateQueueFamily = [=](bool vHint, vk::QueueFlagBits vQueueFlag, uint32_t& voQueueFamilyIndex) {
+		if (vHint)
+		{
+			for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
 			{
-				PresentSupport = static_cast<VkBool32>(vPhysicalDevice.getSurfaceSupportKHR(i, m_VkSurface));
-				if (PresentSupport)
+				if (QueueFamilyProperties[i].queueFlags == vQueueFlag)
 				{
-					m_RequiredQueueFamilyIndices.QueueFamily = i;
+					voQueueFamilyIndex = i;
 					break;
 				}
 			}
-			else
-			{
-				m_RequiredQueueFamilyIndices.QueueFamily = i;
-				break;
-			}
 		}
-		i++;
-	}
+	};
+	FindDedicateQueueFamily(m_PreferDedicatedComputeQueueHint, vk::QueueFlagBits::eCompute, ComputeQueueFamilyIndex);
+	FindDedicateQueueFamily(m_PreferDedicatedTransferQueueHint, vk::QueueFlagBits::eTransfer, TransferQueueFamilyIndex);
 
-	return m_RequiredQueueFamilyIndices; //HACK:
+	m_ComprehensiveQueue = std::tuple(ComprehensiveQueueFamilyIndex, nullptr, nullptr);
+	if (ComputeQueueFamilyIndex != UINT32_MAX)
+		m_ComputeQueue = std::tuple(ComputeQueueFamilyIndex, nullptr, nullptr);
+	if (TransferQueueFamilyIndex != UINT32_MAX)
+		m_TransferQueue = std::tuple(TransferQueueFamilyIndex, nullptr, nullptr);
 }
 
-//************************************************************************************
-//Function:
-void hiveVKT::CVkContext::destroyVulkan()
+//*****************************************************************************************
+//FUNCTION:
+void hiveVKT::CVkContext::__retrieveQueuesAndCreateCommandPools()
 {
-	m_VkDevice.destroyCommandPool(m_VkCommandPool);
+	_ASSERT(m_pDevice);
 
-	for (size_t i = 0; i < m_SwapChainImageViews.size(); ++i)
+	std::get<1>(m_ComprehensiveQueue) = m_pDevice.getQueue(std::get<0>(m_ComprehensiveQueue), 0);
+	if (m_ComputeQueue.has_value())
+		std::get<1>(m_ComputeQueue.value()) = m_pDevice.getQueue(std::get<0>(m_ComputeQueue.value()), 0);
+	if (m_TransferQueue.has_value())
+		std::get<1>(m_TransferQueue.value()) = m_pDevice.getQueue(std::get<0>(m_TransferQueue.value()), 0);
+
+	std::get<2>(m_ComprehensiveQueue) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_ComprehensiveQueue)));
+	if (m_ComputeQueue.has_value())
 	{
-		m_VkDevice.destroyImageView(m_SwapChainImageViews[i]);
+		if (std::get<0>(m_ComputeQueue.value()) == std::get<0>(m_ComprehensiveQueue))
+			std::get<2>(m_ComputeQueue.value()) = std::get<2>(m_ComprehensiveQueue);
+		else
+			std::get<2>(m_ComputeQueue.value()) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_ComputeQueue.value())));
 	}
-	if (m_EnabledPresentation) m_VkDevice.destroySwapchainKHR(m_VkSwapchain);
-	m_VkDevice.destroy();
-
-	m_pDebugMessenger->destroyDebugMessenger(m_VkInstance);
-	_SAFE_DELETE(m_pDebugMessenger);
-
-	if (m_EnabledPresentation) m_VkInstance.destroySurfaceKHR(m_VkSurface);
-	m_VkInstance.destroy();
+	if (m_TransferQueue.has_value())
+	{
+		if (std::get<0>(m_TransferQueue.value()) == std::get<0>(m_ComprehensiveQueue))
+			std::get<2>(m_TransferQueue.value()) = std::get<2>(m_ComprehensiveQueue);
+		else
+			std::get<2>(m_TransferQueue.value()) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_TransferQueue.value())));
+	}
 }

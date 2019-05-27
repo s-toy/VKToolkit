@@ -1,4 +1,5 @@
 #include "VkUtility.h"
+#include "VkContext.h"
 
 //***********************************************************************************************
 //FUNCTION:
@@ -17,7 +18,7 @@ bool hiveVKT::checkInstanceLayersSupport(const std::vector<std::string>& vRequir
 //FUNCTION:
 uint32_t hiveVKT::findMemoryTypeIndex(uint32_t vMemoryTypeFilter, vk::MemoryPropertyFlags vMemoryPropertyFilter)
 {
-	vk::PhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = CVkPhysicalDeviceInfoHelper::getInstance()->getPhysicalDeviceMemoryProperties();
+	vk::PhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = CVkContext::getInstance()->getPhysicalDevice().getMemoryProperties();
 
 	for (uint32_t i = 0; i < PhysicalDeviceMemoryProperties.memoryTypeCount; ++i, vMemoryTypeFilter >>= 1)
 	{

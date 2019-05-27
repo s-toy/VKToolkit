@@ -36,10 +36,10 @@ void hiveVKT::CVkTexture2D::create(vk::Device vDevice, vk::CommandPool vCommandP
 {
 	_ASSERT(vDevice && vCommandPool && vQueue);
 
-	uint32_t MaxMipLevel = static_cast<uint32_t>(std::floor(std::log2(std::max(vTextureWidth, vTextureHeight)))) + 1;
+	uint32_t MaxMipLevel = static_cast<uint32_t>(std::floor(std::log2(_MAX(vTextureWidth, vTextureHeight)))) + 1;
 
 	m_ImageCreateInfo.extent = vk::Extent3D{ static_cast<uint32_t>(vTextureWidth), static_cast<uint32_t>(vTextureHeight), 1 };
-	m_ImageCreateInfo.mipLevels = std::min(vTextureMipLevel, MaxMipLevel);
+	m_ImageCreateInfo.mipLevels = _MIN(vTextureMipLevel, MaxMipLevel);
 	m_ImageCreateInfo.format = vTextureFormat;
 
 	m_SamplerCreateInfo.maxLod = static_cast<float>(m_ImageCreateInfo.mipLevels);

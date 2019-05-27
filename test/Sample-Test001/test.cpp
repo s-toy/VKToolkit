@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "VkInstanceCreator.h"
+#include "VkContext.h"
 #include "VkDebugMessenger.h"
 
 using namespace hiveVKT;
@@ -9,24 +9,23 @@ class Test_CreateVkInstance : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		glfwInit(); //HACK: glfwInit should not be called inside this test class.
+		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		CVkContext::getInstance()->setPreferDedicatedComputeQueueHint(true);
+		CVkContext::getInstance()->setPreferDedicatedTransferQueueHint(true);
+		ASSERT_NO_THROW(CVkContext::getInstance()->createContext(0));
 	}
 
 	virtual void TearDown() override
 	{
-		ASSERT_NO_THROW(m_DebugMessenger.destroyDebugMessenger(m_VkInstance));
-		ASSERT_NO_THROW(m_VkInstance.destroy());
-		glfwTerminate();
+		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
-	vk::Instance m_VkInstance;
-	CVkDebugMessenger m_DebugMessenger;
+	CVkDebugUtilsMessenger m_DebugMessenger;
 };
 
 TEST_F(Test_CreateVkInstance, CreateVkInstance)
 {
-	CVkInstanceCreator InstanceCreator;
-	ASSERT_NO_THROW((m_VkInstance = InstanceCreator.create())); //NOTE: if the creation of vk::Instance failed, an exception should be thrown.
-	ASSERT_NO_THROW(m_DebugMessenger.setupDebugMessenger(m_VkInstance));
+	ASSERT_NO_THROW(m_DebugMessenger.setupDebugUtilsMessenger());
 	ASSERT_EQ(m_DebugMessenger.getWarningAndErrorCount(), 0);
+	ASSERT_NO_THROW(m_DebugMessenger.destroyDebugUtilsMessenger());
 }

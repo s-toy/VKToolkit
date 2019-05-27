@@ -1,80 +1,93 @@
 #pragma once
-#include <vector>
 #include <optional>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
-#include "VkSwapChainCreator.h"
+
+#define Singleton(T) static T* getInstance() { static T Instance; return &Instance; }
 
 namespace hiveVKT
 {
-	struct SQueueFamilyIndices
-	{
-		std::optional<uint32_t> QueueFamily;
-		bool IsComplete() const { return QueueFamily.has_value(); }
-	};
-
-	class CVkDebugMessenger;
-
 	class CVkContext
 	{
 	public:
-		CVkContext();
+		Singleton(CVkContext)
+
+	public:
 		~CVkContext();
 
-		bool initVulkan(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance,
-						const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device,
-						GLFWwindow* vWindow = nullptr,
-						const vk::PhysicalDeviceFeatures& vEnabledFeatures = vk::PhysicalDeviceFeatures{});
+		void setForceGraphicsFunctionalityHint(bool vForceGraphicsFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceGraphicsFunctionalityHint = vForceGraphicsFunctionalityHint; }
+		void setEnableDebugUtilsHint(bool vEnableDebugUtilsHint) { _ASSERT(!m_IsInitialized); m_EnableDebugUtilsHint = vEnableDebugUtilsHint; }
+		void setEnablePresentationHint(bool vInitPresentationExtensionsHint) { _ASSERT(!m_IsInitialized); m_EnablePresentationHint = vInitPresentationExtensionsHint; }
+		void setEnableApiDumpHint(bool vEnableApiDumpHint) { _ASSERT(!m_IsInitialized); m_EnableApiDumpHint = vEnableApiDumpHint; }
+		void setEnableFpsMonitorHint(bool vEnableFpsMonitorHint) { _ASSERT(!m_IsInitialized); m_EnableFpsMonitorHint = vEnableFpsMonitorHint; }
+		void setEnableScreenshotHint(bool vEnableScreenshotHint) { _ASSERT(!m_IsInitialized); m_EnableScreenshotHint = vEnableScreenshotHint; }
+		void setPreferDedicatedComputeQueueHint(bool vPreferDedicatedComputeQueueHint) { _ASSERT(!m_IsInitialized); m_PreferDedicatedComputeQueueHint = vPreferDedicatedComputeQueueHint; }
+		void setPreferDedicatedTransferQueueHint(bool vPreferDedicatedTransferQueueHint) { _ASSERT(!m_IsInitialized); m_PreferDedicatedTransferQueueHint = vPreferDedicatedTransferQueueHint; }
 
-		void destroyVulkan();
+		void setApplicationName(const std::string& vApplicationName) { _ASSERT(!m_IsInitialized); m_ApplicationName = vApplicationName; }
+		void setEngineName(const std::string& vEngineName) { _ASSERT(!m_IsInitialized); m_EngineName = vEngineName; }
+		void setApplicationVersion(uint32_t vApplicationVersion) { _ASSERT(!m_IsInitialized); m_ApplicationVersion = vApplicationVersion; }
+		void setEngineVersion(uint32_t vEngineVersion) { _ASSERT(!m_IsInitialized); m_EngineVersion = vEngineVersion; }
+		void setApiVersion(uint32_t vApiVersion) { _ASSERT(!m_IsInitialized); m_ApiVersion = vApiVersion; }
 
-		vk::Instance		getInstance() const { return m_VkInstance; }
-		vk::SurfaceKHR		getSurface() const { return m_VkSurface; }
-		vk::PhysicalDevice	getPhysicalDevice() const { return m_VkPhysicalDevice; }
-		vk::Device			getDevice() const { return m_VkDevice; }
-		vk::SwapchainKHR	getSwapchainKHR() const { return m_VkSwapchain; }
-		vk::Format			getSwapchainImageFormat() const { return m_SwapChainImageFormat; }
-		vk::Image           getSwapChainImageAt(int vIdx) const { return m_SwapChainImages[vIdx]; }
-		vk::ImageView       getSwapChainImageViewAt(int vIdx) const { return m_SwapChainImageViews[vIdx]; }
-		vk::Queue			getQueue() const { return m_VkQueue; }
-		vk::CommandPool		getCommandPool() const { return m_VkCommandPool; }
-		int				    getSwapChainImageSize() const { return static_cast<int>(m_SwapChainImages.size()); }
+		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { _ASSERT(!m_IsInitialized); m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
+		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { _ASSERT(!m_IsInitialized); m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
-		const vk::Extent2D&				getSwapchainExtent() const { return m_SwapChainExtent; }
-		const SQueueFamilyIndices&		getRequiredQueueFamilyIndices() const { return m_RequiredQueueFamilyIndices; }
-		const SSwapChainSupportDetails& getSwapChainSupportDetails() const { return m_SwapChainSupportDetails; }
+		void createContext(uint32_t vPhysicalDeviceID = 0);
+		void destroyContext();
+
+		const vk::Instance& getVulkanInstance()const { _ASSERT(m_IsInitialized); return m_pInstance; }
+		const vk::PhysicalDevice& getPhysicalDevice()const { _ASSERT(m_IsInitialized); return m_pPhysicalDevice; }
+		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { _ASSERT(m_IsInitialized); return m_DynamicDispatchLoader; }
+		const vk::Device& getVulkanDevice()const { _ASSERT(m_IsInitialized); return m_pDevice; }
+
+		int getComprehensiveQueueFamilyIndex()const { _ASSERT(m_IsInitialized); return std::get<0>(m_ComprehensiveQueue); }
+		int getComputeQueueFamilyIndex()const { _ASSERT(m_IsInitialized && m_ComputeQueue.has_value()); return std::get<0>(m_ComputeQueue.value()); }
+		int getTransferQueueFamilyIndex()const { _ASSERT(m_IsInitialized && m_TransferQueue.has_value()); return std::get<0>(m_TransferQueue.value()); }
+		const vk::Queue& getComprehensiveQueue()const { _ASSERT(m_IsInitialized); return std::get<1>(m_ComprehensiveQueue); }
+		const vk::Queue& getComputeQueue()const { _ASSERT(m_IsInitialized && m_ComputeQueue.has_value()); return std::get<1>(m_ComputeQueue.value()); }
+		const vk::Queue& getTransferQueue()const { _ASSERT(m_IsInitialized && m_TransferQueue.has_value()); return std::get<1>(m_TransferQueue.value()); }
+		const vk::CommandPool& getComprehensiveCommandPool()const { _ASSERT(m_IsInitialized); return std::get<2>(m_ComprehensiveQueue); }
+		const vk::CommandPool& getComputeCommandPool()const { _ASSERT(m_IsInitialized && m_ComputeQueue.has_value()); return std::get<2>(m_ComputeQueue.value()); }
+		const vk::CommandPool& getTransferCommandPool()const { _ASSERT(m_IsInitialized && m_TransferQueue.has_value()); return std::get<2>(m_TransferQueue.value()); }
+
+		bool isContextCreated()const { return m_IsInitialized; }
 
 	private:
-		SQueueFamilyIndices m_RequiredQueueFamilyIndices = {};
-		SSwapChainSupportDetails m_SwapChainSupportDetails = {};
-		CVkDebugMessenger* m_pDebugMessenger = nullptr;
-		
-		VkSurfaceKHR m_VkSurface;
+		CVkContext();
 
-		vk::Instance m_VkInstance;
-		vk::PhysicalDevice m_VkPhysicalDevice;
-		vk::Queue m_VkQueue;
-		vk::Device m_VkDevice;
-		vk::SwapchainKHR m_VkSwapchain;
-		vk::Format m_SwapChainImageFormat;
-		vk::Extent2D m_SwapChainExtent;
-		vk::CommandPool m_VkCommandPool;
-		std::vector<vk::Image> m_SwapChainImages;
-		std::vector<vk::ImageView> m_SwapChainImageViews;
+		bool m_IsInitialized = false;
 
-		bool m_EnabledPresentation = false;
+		bool m_ForceGraphicsFunctionalityHint = false;
+		bool m_EnableDebugUtilsHint = false;
+		bool m_EnablePresentationHint = false;
+		bool m_EnableApiDumpHint = false;
+		bool m_EnableFpsMonitorHint = false;
+		bool m_EnableScreenshotHint = false;
+		bool m_PreferDedicatedComputeQueueHint = false;
+		bool m_PreferDedicatedTransferQueueHint = false;
 
-		void __createInstance(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vLayers4Instance);
-		void __createDebugMessenger();
-		void __createSurface(GLFWwindow* vWindow);
-		void __pickPhysicalDevice();
-		void __createDevice(const std::vector<const char*>& vExtensions4Device, const std::vector<const char*>& vLayers4Device, const vk::PhysicalDeviceFeatures& vEnabledFeatures);
-		void __createSwapChain(int vWidth, int vHeight);
-		void __createImageViews();
-		void __checkExtensions(const std::vector<const char*>& vExtensions4Instance, const std::vector<const char*>& vExtensions4Device);
-		void __createCommandPool();
+		std::string m_ApplicationName = "Application";
+		std::string m_EngineName = "HiveVKT";
+		uint32_t m_ApplicationVersion = VK_MAKE_VERSION(0, 0, 0);
+		uint32_t m_EngineVersion = VK_MAKE_VERSION(0, 0, 0);
+		uint32_t m_ApiVersion = VK_API_VERSION_1_0;
 
-		SQueueFamilyIndices __findRequiredQueueFamilies(const vk::PhysicalDevice& vPhysicalDevice);
+		std::vector<std::string> m_EnabledInstanceLayers = {};
+		std::vector<std::string> m_EnabledInstanceExtensions = {};
+		std::vector<std::string> m_EnabledDeviceExtensions = {};
+		vk::PhysicalDeviceFeatures m_EnabledPhysicalDeviceFeatures = {};
+
+		vk::Instance m_pInstance = nullptr;
+		vk::PhysicalDevice m_pPhysicalDevice = nullptr;
+		vk::DispatchLoaderDynamic m_DynamicDispatchLoader;
+		vk::Device m_pDevice = nullptr;
+		std::tuple<uint32_t, vk::Queue, vk::CommandPool> m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr }; //<queue family index, queue, command pool>
+		std::optional<std::tuple<uint32_t, vk::Queue, vk::CommandPool>> m_ComputeQueue;
+		std::optional<std::tuple<uint32_t, vk::Queue, vk::CommandPool>> m_TransferQueue;
+
+		void __createVulkanInstance();
+		void __createVulkanDevice(uint32_t vPhysicalDeviceID);
+		void __determineQueueFamilies();
+		void __retrieveQueuesAndCreateCommandPools();
 	};
 }
