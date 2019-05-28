@@ -51,7 +51,7 @@ namespace hiveVKT
 			m_SamplerCreateInfo.mipLodBias = vMipLoDBias;
 		}
 
-		void create(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue, int vTextureWidth, int vTextureHeight, vk::Format vTextureFormat, uint32_t vTextureMipLevel, vk::DeviceSize vSize, unsigned char* vPixel);
+		void create(int vTextureWidth, int vTextureHeight, vk::Format vTextureFormat, uint32_t vTextureMipLevel, vk::DeviceSize vSize, unsigned char* vPixel);
 
 		const vk::Sampler& getSampler()const { return m_pSampler; }
 

@@ -1,4 +1,5 @@
 #include "VkTexture2D.h"
+#include "VkContext.h"
 
 using namespace hiveVKT;
 
@@ -32,32 +33,30 @@ hiveVKT::CVkTexture2D::CVkTexture2D()
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkTexture2D::create(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue, int vTextureWidth, int vTextureHeight, vk::Format vTextureFormat, uint32_t vTextureMipLevel, vk::DeviceSize vSize, unsigned char* vPixel)
+void hiveVKT::CVkTexture2D::create(int vTextureWidth, int vTextureHeight, vk::Format vTextureFormat, uint32_t vTextureMipLevel, vk::DeviceSize vSize, unsigned char* vPixel)
 {
-	_ASSERT(vDevice && vCommandPool && vQueue);
-
-	uint32_t MaxMipLevel = static_cast<uint32_t>(std::floor(std::log2(std::max(vTextureWidth, vTextureHeight)))) + 1;
+	uint32_t MaxMipLevel = static_cast<uint32_t>(std::floor(std::log2(_MAX(vTextureWidth, vTextureHeight)))) + 1;
 
 	m_ImageCreateInfo.extent = vk::Extent3D{ static_cast<uint32_t>(vTextureWidth), static_cast<uint32_t>(vTextureHeight), 1 };
-	m_ImageCreateInfo.mipLevels = std::min(vTextureMipLevel, MaxMipLevel);
+	m_ImageCreateInfo.mipLevels = _MIN(vTextureMipLevel, MaxMipLevel);
 	m_ImageCreateInfo.format = vTextureFormat;
 
 	m_SamplerCreateInfo.maxLod = static_cast<float>(m_ImageCreateInfo.mipLevels);
 
-	CVkGenericImage::create(vDevice, m_ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
+	CVkGenericImage::create(m_ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
 
 	vk::Buffer pStagingBuffer;
 	vk::DeviceMemory pStagingBufferDeviceMemory;
 
-	createBuffer(vDevice, vSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, pStagingBuffer, pStagingBufferDeviceMemory);
+	createBuffer(vSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, pStagingBuffer, pStagingBufferDeviceMemory);
 
 	void* Data = nullptr;
-	vkMapMemory(vDevice, pStagingBufferDeviceMemory, 0, vSize, 0, &Data);
+	vkMapMemory(CVkContext::getInstance()->getVulkanDevice(), pStagingBufferDeviceMemory, 0, vSize, 0, &Data);
 	memcpy(Data, vPixel, static_cast<size_t>(vSize));
-	vkUnmapMemory(vDevice, pStagingBufferDeviceMemory);
+	vkUnmapMemory(CVkContext::getInstance()->getVulkanDevice(), pStagingBufferDeviceMemory);
 
 	//将像素从stage buffer拷贝到image的第0个mipmap
-	executeImmediately(vDevice, vCommandPool, vQueue, [&](vk::CommandBuffer vCommandBuffer) {
+	executeImmediately([&](vk::CommandBuffer vCommandBuffer) {
 		vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,m_ImageCreateInfo.mipLevels,0,m_ImageCreateInfo.arrayLayers };
 		translateImageLayout(vCommandBuffer, vk::ImageLayout::eTransferDstOptimal, TranslateRange);
 
@@ -72,8 +71,8 @@ void hiveVKT::CVkTexture2D::create(vk::Device vDevice, vk::CommandPool vCommandP
 		vCommandBuffer.copyBufferToImage(pStagingBuffer, m_pImage, vk::ImageLayout::eTransferDstOptimal, CopyRegion);
 		});
 
-	vDevice.destroyBuffer(pStagingBuffer);
-	vDevice.freeMemory(pStagingBufferDeviceMemory);
+	CVkContext::getInstance()->getVulkanDevice().destroyBuffer(pStagingBuffer);
+	CVkContext::getInstance()->getVulkanDevice().freeMemory(pStagingBufferDeviceMemory);
 
 	//由第0个mipmap生成其余的mipmap的像素
 	if (m_ImageCreateInfo.mipLevels > 1)
@@ -81,7 +80,7 @@ void hiveVKT::CVkTexture2D::create(vk::Device vDevice, vk::CommandPool vCommandP
 		int MipWidth = m_ImageCreateInfo.extent.width;
 		int MipHeight = m_ImageCreateInfo.extent.height;
 
-		executeImmediately(vDevice, vCommandPool, vQueue, [&](vk::CommandBuffer vCommandBuffer) {
+		executeImmediately([&](vk::CommandBuffer vCommandBuffer) {
 			for (uint32_t i = 1; i < m_ImageCreateInfo.mipLevels; ++i)
 			{
 				translateImageLayoutAtParticularMipmapLevel(vCommandBuffer, vk::ImageLayout::eTransferSrcOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
@@ -112,7 +111,7 @@ void hiveVKT::CVkTexture2D::create(vk::Device vDevice, vk::CommandPool vCommandP
 			});
 	}
 
-	m_pSampler = vDevice.createSampler(m_SamplerCreateInfo);
+	m_pSampler = CVkContext::getInstance()->getVulkanDevice().createSampler(m_SamplerCreateInfo);
 }
 
 //***********************************************************************************************

@@ -25,15 +25,12 @@
     <ClInclude Include="..\vkt\Utility.h" />
     <ClInclude Include="..\vkt\VkContext.h" />
     <ClInclude Include="..\vkt\VkDebugMessenger.h" />
-    <ClInclude Include="..\vkt\VkDeviceCreator.h" />
     <ClInclude Include="..\vkt\VkGenericImage.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineCreator.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h" />
-    <ClInclude Include="..\vkt\VkInstanceCreator.h" />
-    <ClInclude Include="..\vkt\VkPhysicalDeviceInfoHelper.h" />
     <ClInclude Include="..\vkt\VkRenderPassCreator.h" />
     <ClInclude Include="..\vkt\VkShaderModuleCreator.h" />
-    <ClInclude Include="..\vkt\VkSwapChainCreator.h" />
+    <ClInclude Include="..\vkt\VkSwapchain.h" />
     <ClInclude Include="..\vkt\VkTexture2D.h" />
     <ClInclude Include="..\vkt\VkUtility.h" />
   </ItemGroup>
@@ -42,14 +39,11 @@
     <ClCompile Include="..\vkt\Model.cpp" />
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
-    <ClCompile Include="..\vkt\VkDeviceCreator.cpp" />
     <ClCompile Include="..\vkt\VkGenericImage.cpp" />
     <ClCompile Include="..\vkt\VkGraphicsPipelineCreator.cpp" />
-    <ClCompile Include="..\vkt\VkInstanceCreator.cpp" />
-    <ClCompile Include="..\vkt\VkPhysicalDeviceInfoHelper.cpp" />
     <ClCompile Include="..\vkt\VkRenderPassCreator.cpp" />
     <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp" />
-    <ClCompile Include="..\vkt\VkSwapChainCreator.cpp" />
+    <ClCompile Include="..\vkt\VkSwapchain.cpp" />
     <ClCompile Include="..\vkt\VkTexture2D.cpp" />
     <ClCompile Include="..\vkt\VkUtility.cpp" />
   </ItemGroup>
@@ -143,7 +137,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)/include;../external;</AdditionalIncludeDirectories>

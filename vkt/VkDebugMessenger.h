@@ -5,25 +5,26 @@
 
 namespace hiveVKT
 {
-	class CVkDebugMessenger
+	class CVkDebugUtilsMessenger
 	{
 	public:
-		bool setupDebugMessenger(const vk::Instance& vInstance);
-		void destroyDebugMessenger(const vk::Instance& vInstance);
+		void setupDebugUtilsMessenger();
+		void destroyDebugUtilsMessenger();
 
-#ifdef _ENABLE_DEBUG_UTILS
+#ifdef UNIT_TEST
 		uint32_t getWarningAndErrorCount() const { return m_WarningCount + m_ErrorCount; }
 		uint32_t getWarningCount() const { return m_WarningCount; }
 		uint32_t getErrorCount() const { return m_ErrorCount; }
-#endif
+#endif // UNIT_TEST		
 
 	private:
-#ifdef _ENABLE_DEBUG_UTILS
-		VkDebugUtilsMessengerEXT m_pDebugUtilsMessenger = VK_NULL_HANDLE;
-		uint32_t m_WarningCount = 0, m_ErrorCount = 0;
+		vk::DebugUtilsMessengerEXT m_pDebugUtilsMessenger = nullptr;
 
-		static VKAPI_ATTR VkBool32 VKAPI_CALL __debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, 
-			VkDebugUtilsMessageTypeFlagsEXT vMessageTypeFlags, const VkDebugUtilsMessengerCallbackDataEXT* vCallbackData, void* vUserData);
-#endif
+#ifdef UNIT_TEST
+		uint32_t m_WarningCount = 0, m_ErrorCount = 0;
+#endif // UNIT_TEST
+
+		static VKAPI_ATTR VkBool32 VKAPI_CALL __debugUtilsCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, 
+			vk::DebugUtilsMessageTypeFlagBitsEXT vMessageTypeFlags, const vk::DebugUtilsMessengerCallbackDataEXT* vMessengerCallbackData, void* vUserData);
 	};
 }

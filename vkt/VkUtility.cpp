@@ -1,4 +1,5 @@
 #include "VkUtility.h"
+#include "VkContext.h"
 
 //***********************************************************************************************
 //FUNCTION:
@@ -17,7 +18,7 @@ bool hiveVKT::checkInstanceLayersSupport(const std::vector<std::string>& vRequir
 //FUNCTION:
 uint32_t hiveVKT::findMemoryTypeIndex(uint32_t vMemoryTypeFilter, vk::MemoryPropertyFlags vMemoryPropertyFilter)
 {
-	vk::PhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = CVkPhysicalDeviceInfoHelper::getInstance()->getPhysicalDeviceMemoryProperties();
+	vk::PhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = CVkContext::getInstance()->getPhysicalDevice().getMemoryProperties();
 
 	for (uint32_t i = 0; i < PhysicalDeviceMemoryProperties.memoryTypeCount; ++i, vMemoryTypeFilter >>= 1)
 	{
@@ -33,14 +34,19 @@ uint32_t hiveVKT::findMemoryTypeIndex(uint32_t vMemoryTypeFilter, vk::MemoryProp
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::executeImmediately(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue, const std::function<void(vk::CommandBuffer vCommandBuffer)>& vFunction)
+void hiveVKT::executeImmediately(const std::function<void(vk::CommandBuffer vCommandBuffer)>& vFunction)
 {
+	_ASSERT(CVkContext::getInstance()->isContextCreated());
+	auto Device = CVkContext::getInstance()->getVulkanDevice();
+	auto CommandPool = CVkContext::getInstance()->getComprehensiveCommandPool();
+	auto Queue = CVkContext::getInstance()->getComprehensiveQueue();
+
 	vk::CommandBufferAllocateInfo CommandBufferAllocateInfo;
-	CommandBufferAllocateInfo.commandPool = vCommandPool;
+	CommandBufferAllocateInfo.commandPool = CommandPool;
 	CommandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
 	CommandBufferAllocateInfo.commandBufferCount = 1;
 
-	auto CommandBuffers = vDevice.allocateCommandBuffers(CommandBufferAllocateInfo);
+	auto CommandBuffers = Device.allocateCommandBuffers(CommandBufferAllocateInfo);
 
 	vk::CommandBufferBeginInfo CommandBufferBeginInfo;
 	CommandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -53,31 +59,34 @@ void hiveVKT::executeImmediately(vk::Device vDevice, vk::CommandPool vCommandPoo
 	SubmitInfo.commandBufferCount = static_cast<uint32_t>(CommandBuffers.size());
 	SubmitInfo.pCommandBuffers = CommandBuffers.data();
 
-	vQueue.submit(SubmitInfo, vk::Fence{});
+	Queue.submit(SubmitInfo, vk::Fence{});
 
-	vDevice.waitIdle();//NOTE
+	Device.waitIdle();//NOTE
 
-	vDevice.freeCommandBuffers(vCommandPool, CommandBuffers);
+	Device.freeCommandBuffers(CommandPool, CommandBuffers);
 }
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::createBuffer(vk::Device vDevice, vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, vk::MemoryPropertyFlags vMemoryProperty, vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory)
+void hiveVKT::createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, vk::MemoryPropertyFlags vMemoryProperty, vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory)
 {
+	_ASSERT(CVkContext::getInstance()->isContextCreated());
+	auto Device = CVkContext::getInstance()->getVulkanDevice();
+
 	vk::BufferCreateInfo BufferCreateInfo = {};
 	BufferCreateInfo.size = vBufferSize;
 	BufferCreateInfo.usage = vBufferUsage;
 	BufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-	voBuffer = vDevice.createBuffer(BufferCreateInfo);
+	voBuffer = Device.createBuffer(BufferCreateInfo);
 
-	vk::MemoryRequirements MemoryRequirements = vDevice.getBufferMemoryRequirements(voBuffer);
+	vk::MemoryRequirements MemoryRequirements = Device.getBufferMemoryRequirements(voBuffer);
 
 	vk::MemoryAllocateInfo MemoryAllocateInfo = {};
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(MemoryRequirements.memoryTypeBits, vMemoryProperty);
 
-	voBufferDeviceMemory = vDevice.allocateMemory(MemoryAllocateInfo);
+	voBufferDeviceMemory = Device.allocateMemory(MemoryAllocateInfo);
 
-	vDevice.bindBufferMemory(voBuffer, voBufferDeviceMemory, 0);
+	Device.bindBufferMemory(voBuffer, voBufferDeviceMemory, 0);
 }

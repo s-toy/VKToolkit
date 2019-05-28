@@ -1,21 +1,24 @@
 #include "VkGenericImage.h"
+#include "VkContext.h"
 
 using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkGenericImage::create(vk::Device vDevice, const vk::ImageCreateInfo& vImageCreateInfo, vk::ImageViewType vImageViewType, vk::ImageAspectFlags vImageAspectMasks, bool vHostVisible)
+void hiveVKT::CVkGenericImage::create(const vk::ImageCreateInfo& vImageCreateInfo, vk::ImageViewType vImageViewType, vk::ImageAspectFlags vImageAspectMasks, bool vHostVisible)
 {
 	if (m_IsImageCreated)
 		return;
 
-	_ASSERT(vImageCreateInfo.arrayLayers == 1 && vDevice);
+	_ASSERT(vImageCreateInfo.arrayLayers == 1);
+	_ASSERT(CVkContext::getInstance()->isContextCreated());
+	auto Device = CVkContext::getInstance()->getVulkanDevice();
 
 	m_CurrentImageLayoutSet.resize(vImageCreateInfo.mipLevels, vImageCreateInfo.initialLayout);
 	m_ImageCreateInfo = vImageCreateInfo;
-	m_pImage = vDevice.createImage(vImageCreateInfo);
+	m_pImage = Device.createImage(vImageCreateInfo);
 
-	auto MemoryRequirements = vDevice.getImageMemoryRequirements(m_pImage);
+	auto MemoryRequirements = Device.getImageMemoryRequirements(m_pImage);
 
 	vk::MemoryPropertyFlags MemoryProperties = {};
 	if (vHostVisible)
@@ -28,9 +31,9 @@ void hiveVKT::CVkGenericImage::create(vk::Device vDevice, const vk::ImageCreateI
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = MemoryTypeIndex;
 
-	m_pDeviceMemory = vDevice.allocateMemory(MemoryAllocateInfo);
+	m_pDeviceMemory = Device.allocateMemory(MemoryAllocateInfo);
 
-	vDevice.bindImageMemory(m_pImage, m_pDeviceMemory, 0);
+	Device.bindImageMemory(m_pImage, m_pDeviceMemory, 0);
 
 	vk::ImageViewCreateInfo ImageViewCreateInfo = {};
 	ImageViewCreateInfo.image = m_pImage;
@@ -39,7 +42,7 @@ void hiveVKT::CVkGenericImage::create(vk::Device vDevice, const vk::ImageCreateI
 	ImageViewCreateInfo.components = { vk::ComponentSwizzle::eR,vk::ComponentSwizzle::eG,vk::ComponentSwizzle::eB,vk::ComponentSwizzle::eA };
 	ImageViewCreateInfo.subresourceRange = vk::ImageSubresourceRange{ vImageAspectMasks,0,vImageCreateInfo.mipLevels,0,vImageCreateInfo.arrayLayers };
 
-	m_pImageView = vDevice.createImageView(ImageViewCreateInfo);
+	m_pImageView = Device.createImageView(ImageViewCreateInfo);
 
 	m_IsImageCreated = true;
 }
