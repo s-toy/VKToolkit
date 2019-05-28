@@ -9,8 +9,9 @@ class Test_CreateVkInstance : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
+		CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		ASSERT_NO_THROW(CVkContext::getInstance()->createContext(0));
+		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 	}
 
 	virtual void TearDown() override
