@@ -75,7 +75,7 @@ void CVkContext::__createVulkanInstance()
 		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_monitor");
 	if (m_EnableScreenshotHint)
 		EnabledInstanceLayers.emplace_back("VK_LAYER_LUNARG_screenshot");
-	//TODO£º¼ì²éÊÇ·ñÖ§³ÖÕâĞ©²ãºÍÍØÕ¹
+	//TODOï¼šæ£€æŸ¥æ˜¯å¦æ”¯æŒè¿™äº›å±‚å’Œæ‹“å±•
 
 	m_EnabledInstanceLayers = std::vector<std::string>(EnabledInstanceLayers.begin(), EnabledInstanceLayers.end());
 	m_EnabledInstanceExtensions = std::vector<std::string>(EnabledInstanceExtensions.begin(), EnabledInstanceExtensions.end());
@@ -119,7 +119,7 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 		_ASSERT(m_pPhysicalDevice.getWin32PresentationSupportKHR(std::get<0>(m_ComprehensiveQueue), m_DynamicDispatchLoader));
 		m_EnabledDeviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	}
-	//TODO£º¼ì²éÉè±¸ÊÇ·ñÖ§³ÖÍØÕ¹ÒÔ¼°ÏàÓ¦µÄÎïÀíÉè±¸ÌØĞÔ
+	//TODOï¼šæ£€æŸ¥è®¾å¤‡æ˜¯å¦æ”¯æŒæ‹“å±•ä»¥åŠç›¸åº”çš„ç‰©ç†è®¾å¤‡ç‰¹æ€§
 
 	std::vector<const char*> EnabledDeviceExtensions;
 	for (auto& DeviceExtension : m_EnabledDeviceExtensions)
@@ -155,7 +155,7 @@ void hiveVKT::CVkContext::__determineComprehensiveQueueFamilyIndex()
 		if (static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags) > ComprehensiveQueueFlags)
 		{
 			if (m_ForceGraphicsFunctionalityHint)
-				if (!(QueueFamilyProperties[i].queueFlags | vk::QueueFlagBits::eGraphics))
+				if (!(QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics))
 					break;
 
 			ComprehensiveQueueFlags = static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags);
