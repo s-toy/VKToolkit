@@ -1,11 +1,13 @@
 #include "Model.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "VkContext.h"
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo)
 {
+	_ASSERT(CVkContext::getInstance()->isContextCreated());
 	Assimp::Importer Importer;
 	const aiScene* Scene = Importer.ReadFile(vFilePath, DEFAULT_MODEL_LOADING_FLAGS);
 
@@ -16,9 +18,9 @@ void hiveVKT::CModel::loadModel(std::string vFilePath, const SVertexLayout& vVer
 	m_VertexLayout = vVertexLayout;
 	m_TextureDescriptorBindingInfo = vTextureDescriptorBindingInfo;
 
-	__createVulkanResource(vDevice, Scene->mNumMeshes);
+	__createVulkanResource(Scene->mNumMeshes);
 
-	__processNodes(Scene->mRootNode, Scene, vDevice, vCommandPool, vQueue);
+	__processNodes(Scene->mRootNode, Scene);
 }
 
 //************************************************************************************
@@ -51,8 +53,10 @@ void hiveVKT::CModel::destroy(vk::Device vDevice)
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::__createVulkanResource(vk::Device vDevice, unsigned int vNumMesh)
+void hiveVKT::CModel::__createVulkanResource(unsigned int vNumMesh)
 {
+	auto Device = CVkContext::getInstance()->getVulkanDevice();
+
 	std::vector<vk::DescriptorSetLayoutBinding> DescriptorSetLayoutBindingSet;
 	for (auto BindingInfo : m_TextureDescriptorBindingInfo.TextureDescriptorBindingInfo)
 	{
@@ -71,7 +75,7 @@ void hiveVKT::CModel::__createVulkanResource(vk::Device vDevice, unsigned int vN
 	DescriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(DescriptorSetLayoutBindingSet.size());
 	DescriptorSetLayoutCreateInfo.pBindings = DescriptorSetLayoutBindingSet.data();
 
-	m_pDescriptorSetLayout = vDevice.createDescriptorSetLayout(DescriptorSetLayoutCreateInfo);
+	m_pDescriptorSetLayout = Device.createDescriptorSetLayout(DescriptorSetLayoutCreateInfo);
 
 	std::array<vk::DescriptorPoolSize, 1> DescriptorPoolSizeSet = {};
 	DescriptorPoolSizeSet[0].type = vk::DescriptorType::eCombinedImageSampler;
@@ -82,28 +86,28 @@ void hiveVKT::CModel::__createVulkanResource(vk::Device vDevice, unsigned int vN
 	DescriptorPoolCreateInfo.pPoolSizes = DescriptorPoolSizeSet.data();
 	DescriptorPoolCreateInfo.maxSets = vNumMesh;
 
-	m_pDescriptorPool = vDevice.createDescriptorPool(DescriptorPoolCreateInfo);
+	m_pDescriptorPool = Device.createDescriptorPool(DescriptorPoolCreateInfo);
 }
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::__processNodes(const aiNode* vNode, const aiScene* vScene, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+void hiveVKT::CModel::__processNodes(const aiNode* vNode, const aiScene* vScene)
 {
 	for (unsigned int i = 0; i < vNode->mNumMeshes; ++i)
 	{
 		aiMesh* Mesh = vScene->mMeshes[vNode->mMeshes[i]];
-		__processMesh(Mesh, vScene, vDevice, vCommandPool, vQueue);
+		__processMesh(Mesh, vScene);
 	}
 
 	for (unsigned int i = 0; i < vNode->mNumChildren; ++i)
 	{
-		__processNodes(vNode->mChildren[i], vScene, vDevice, vCommandPool, vQueue);
+		__processNodes(vNode->mChildren[i], vScene);
 	}
 }
 
 //************************************************************************************
 //Function:
-void hiveVKT::CModel::__processMesh(const aiMesh* vMesh, const aiScene* vScene, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+void hiveVKT::CModel::__processMesh(const aiMesh* vMesh, const aiScene* vScene)
 {
 	std::vector<float> VertexData;
 	std::vector<uint32_t> IndexData;
@@ -154,7 +158,7 @@ void hiveVKT::CModel::__processMesh(const aiMesh* vMesh, const aiScene* vScene, 
 
 	for (auto BindingInfo : m_TextureDescriptorBindingInfo.TextureDescriptorBindingInfo)
 	{
-		int TextureIndex = __loadMaterialTextures(Material, BindingInfo.first, vDevice, vCommandPool, vQueue);
+		int TextureIndex = __loadMaterialTextures(Material, BindingInfo.first);
 
 		if (TextureIndex >= 0)
 		{
@@ -163,15 +167,15 @@ void hiveVKT::CModel::__processMesh(const aiMesh* vMesh, const aiScene* vScene, 
 		}
 	}
 
-	vk::DescriptorSet DescriptorSet = __createDescriptorSet(vDevice, TextureIndexSet, BindingInfoSet);
+	vk::DescriptorSet DescriptorSet = __createDescriptorSet(TextureIndexSet, BindingInfoSet);
 
-	CMesh* Mesh = new CMesh(vDevice, vCommandPool, vQueue, VertexData, IndexData, DescriptorSet);
+	CMesh* Mesh = new CMesh(VertexData, IndexData, DescriptorSet);
 	m_MeshSet.push_back(Mesh);
 }
 
 //************************************************************************************
 //Function:
-int hiveVKT::CModel::__createNewTexture(const std::string& vTextureName, ETextureType vTextureType, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+int hiveVKT::CModel::__createNewTexture(const std::string& vTextureName, ETextureType vTextureType)
 {
 	int TextureWidth = 0, TextureHeight = 0, TextureChannels = 0;
 	unsigned char* Pixels = stbi_load(vTextureName.c_str(), &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
@@ -185,7 +189,7 @@ int hiveVKT::CModel::__createNewTexture(const std::string& vTextureName, ETextur
 	vk::DeviceSize Size = static_cast<vk::DeviceSize>(TextureWidth * TextureHeight * 4);
 
 	STextureInfo* TextureInfo = new STextureInfo();
-	TextureInfo->Texture.create(vDevice, vCommandPool, vQueue, TextureWidth, TextureHeight, vk::Format::eR8G8B8A8Unorm, 3, Size, Pixels);
+	TextureInfo->Texture.create(TextureWidth, TextureHeight, vk::Format::eR8G8B8A8Unorm, 3, Size, Pixels);
 	TextureInfo->TextureName = vTextureName;
 	TextureInfo->TextureType = vTextureType;
 
@@ -198,7 +202,7 @@ int hiveVKT::CModel::__createNewTexture(const std::string& vTextureName, ETextur
 
 //************************************************************************************
 //Function:
-int hiveVKT::CModel::__loadMaterialTextures(const aiMaterial* vMaterial, ETextureType vTextureType, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue)
+int hiveVKT::CModel::__loadMaterialTextures(const aiMaterial* vMaterial, ETextureType vTextureType)
 {
 	aiTextureType AiTextureType;
 
@@ -223,7 +227,7 @@ int hiveVKT::CModel::__loadMaterialTextures(const aiMaterial* vMaterial, ETextur
 
 	int Index = __getTextureIndex(TextureName);
 	if (Index < 0)
-		Index = __createNewTexture(TextureName, vTextureType, vDevice, vCommandPool, vQueue);
+		Index = __createNewTexture(TextureName, vTextureType);
 
 	return Index;
 }
@@ -243,9 +247,11 @@ int hiveVKT::CModel::__getTextureIndex(const std::string& vTextureName)
 
 //************************************************************************************
 //Function:
-vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, const std::vector<int>& vTextureIndexSet, const std::vector<int>& vTextureBindingInfoSet)
+vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(const std::vector<int>& vTextureIndexSet, const std::vector<int>& vTextureBindingInfoSet)
 {
 	_ASSERT(vTextureIndexSet.size() == vTextureBindingInfoSet.size());
+
+	auto Device = CVkContext::getInstance()->getVulkanDevice();
 
 	vk::DescriptorSetAllocateInfo DescriptorSetAllocateInfo = {};
 	DescriptorSetAllocateInfo.descriptorPool = m_pDescriptorPool;
@@ -253,7 +259,7 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 	DescriptorSetAllocateInfo.pSetLayouts = &m_pDescriptorSetLayout;
 
 	std::vector<vk::DescriptorSet> DescriptorSets;
-	DescriptorSets = vDevice.allocateDescriptorSets(DescriptorSetAllocateInfo);
+	DescriptorSets = Device.allocateDescriptorSets(DescriptorSetAllocateInfo);
 
 	std::vector<vk::DescriptorImageInfo> DescriptorImageInfos(vTextureIndexSet.size());
 	std::vector<vk::WriteDescriptorSet> WriteDescriptorSetInfos(vTextureIndexSet.size());
@@ -276,7 +282,7 @@ vk::DescriptorSet hiveVKT::CModel::__createDescriptorSet(vk::Device vDevice, con
 		WriteDescriptorSetInfos[i] = WriteDescriptorSet;
 	}
 
-	vDevice.updateDescriptorSets(WriteDescriptorSetInfos, nullptr);
+	Device.updateDescriptorSets(WriteDescriptorSetInfos, nullptr);
 
 	return DescriptorSets[0];
 }

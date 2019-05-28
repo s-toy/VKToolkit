@@ -10,7 +10,7 @@ namespace hiveVKT
 		CVkSwapchain();
 		~CVkSwapchain();
 
-		void createSwapchain(GLFWwindow* vGLFWwindow, vk::ImageUsageFlags vImageUsageFlags = vk::ImageUsageFlagBits::eColorAttachment, vk::SharingMode vSharingMode = vk::SharingMode::eExclusive, const std::vector<uint32_t>& vQueueFmilyIndices = {}, vk::SwapchainKHR vOldSwapchain = nullptr);
+		void createSwapchain(GLFWwindow* vGLFWwindow, vk::ImageUsageFlags vImageUsageFlags = vk::ImageUsageFlagBits::eColorAttachment, vk::SwapchainKHR vOldSwapchain = nullptr);
 		void destroySwapchain();
 
 		const vk::SurfaceKHR& getSurface()const { _ASSERT(m_IsInitialized); return m_pSurface; }

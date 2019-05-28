@@ -2,16 +2,14 @@
 
 //***********************************************************************************************
 //FUNCTION:
-hiveVKT::CMesh::CMesh(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue, const std::vector<float>& vVertexData, const std::vector<uint32_t>& vIndexData, vk::DescriptorSet vTextureDescriptorSet)
+hiveVKT::CMesh::CMesh(const std::vector<float>& vVertexData, const std::vector<uint32_t>& vIndexData, vk::DescriptorSet vTextureDescriptorSet)
 {
-	_ASSERT(vDevice && vCommandPool && vQueue);
-
 	m_VertexData = vVertexData;
 	m_IndexData = vIndexData;
 	m_pTextureDescriptorSet = vTextureDescriptorSet;
 
-	__generateBufferResource(vDevice, vCommandPool, vQueue, vVertexData, vk::BufferUsageFlagBits::eVertexBuffer, m_pVertexBuffer, m_pVertexBufferDeviceMemory);
-	__generateBufferResource(vDevice, vCommandPool, vQueue, vIndexData, vk::BufferUsageFlagBits::eIndexBuffer, m_pIndexBuffer, m_pIndexBufferDeviceMemory);
+	__generateBufferResource(vVertexData, vk::BufferUsageFlagBits::eVertexBuffer, m_pVertexBuffer, m_pVertexBufferDeviceMemory);
+	__generateBufferResource(vIndexData, vk::BufferUsageFlagBits::eIndexBuffer, m_pIndexBuffer, m_pIndexBufferDeviceMemory);
 }
 
 //***********************************************************************************************

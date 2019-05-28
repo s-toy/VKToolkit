@@ -10,8 +10,6 @@ protected:
 	virtual void SetUp() override
 	{
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		CVkContext::getInstance()->setPreferDedicatedComputeQueueHint(true);
-		CVkContext::getInstance()->setPreferDedicatedTransferQueueHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext(0));
 	}
 

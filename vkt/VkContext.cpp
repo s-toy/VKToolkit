@@ -29,8 +29,6 @@ void CVkContext::destroyContext()
 	m_pDevice.waitIdle();
 
 	m_pDevice.destroyCommandPool(std::get<2>(m_ComprehensiveQueue));
-	if (m_ComputeQueue.has_value() && std::get<2>(m_ComputeQueue.value()) != std::get<2>(m_ComprehensiveQueue)) m_pDevice.destroyCommandPool(std::get<2>(m_ComputeQueue.value()));
-	if (m_TransferQueue.has_value() && std::get<2>(m_TransferQueue.value()) != std::get<2>(m_ComprehensiveQueue)) m_pDevice.destroyCommandPool(std::get<2>(m_TransferQueue.value()));
 	m_pDevice.destroy();
 	m_pInstance.destroy();
 
@@ -42,15 +40,11 @@ void CVkContext::destroyContext()
 	m_EnableApiDumpHint = false;
 	m_EnableFpsMonitorHint = false;
 	m_EnableScreenshotHint = false;
-	m_PreferDedicatedComputeQueueHint = false;
-	m_PreferDedicatedTransferQueueHint = false;
 
 	m_pInstance = nullptr;
 	m_pPhysicalDevice = nullptr;
 	m_pDevice = nullptr;
 	m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr };
-	m_ComputeQueue.reset();
-	m_TransferQueue.reset();
 
 	m_EnabledInstanceLayers = {};
 	m_EnabledInstanceExtensions = {};
@@ -115,22 +109,10 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 
 	m_pPhysicalDevice = PhysicalDevices[vPhysicalDeviceID];
 
-	__determineQueueFamilies();
+	__determineComprehensiveQueueFamilyIndex();
 
-	std::vector<vk::DeviceQueueCreateInfo> DeviceQueueCreateInfos;
 	float QueuePriority = 1.0f;
-
-	DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_ComprehensiveQueue), 1, &QueuePriority));
-	if (m_ComputeQueue.has_value())
-	{
-		if (std::get<0>(m_ComputeQueue.value()) != std::get<0>(m_ComprehensiveQueue))
-			DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_ComputeQueue.value()), 1, &QueuePriority));
-	}
-	if (m_TransferQueue.has_value())
-	{
-		if (std::get<0>(m_TransferQueue.value()) != std::get<0>(m_ComprehensiveQueue))
-			DeviceQueueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), std::get<0>(m_TransferQueue.value()), 1, &QueuePriority));
-	}
+	vk::DeviceQueueCreateInfo DeviceQueueCreateInfo = { vk::DeviceQueueCreateFlags(), std::get<0>(m_ComprehensiveQueue), 1, &QueuePriority };
 
 	if (m_EnablePresentationHint)
 	{
@@ -145,7 +127,7 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 
 	vk::DeviceCreateInfo DeviceCreateInfo = {
 		vk::DeviceCreateFlags(),
-		static_cast<uint32_t>(DeviceQueueCreateInfos.size()),DeviceQueueCreateInfos.data(),
+		1,&DeviceQueueCreateInfo,
 		0,nullptr,
 		static_cast<uint32_t>(EnabledDeviceExtensions.size()),EnabledDeviceExtensions.data(),
 		&m_EnabledPhysicalDeviceFeatures
@@ -153,19 +135,20 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 
 	m_pDevice = m_pPhysicalDevice.createDevice(DeviceCreateInfo);
 
-	__retrieveQueuesAndCreateCommandPools();
+	std::get<1>(m_ComprehensiveQueue) = m_pDevice.getQueue(std::get<0>(m_ComprehensiveQueue), 0);
+	std::get<2>(m_ComprehensiveQueue) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_ComprehensiveQueue)));
 }
 
 //*****************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkContext::__determineQueueFamilies()
+void hiveVKT::CVkContext::__determineComprehensiveQueueFamilyIndex()
 {
 	_ASSERT(m_pPhysicalDevice);
 
 	auto QueueFamilyProperties = m_pPhysicalDevice.getQueueFamilyProperties();
 	_ASSERT(!QueueFamilyProperties.empty());
 	uint32_t ComprehensiveQueueFlags = 0;
-	uint32_t ComprehensiveQueueFamilyIndex = UINT32_MAX, ComputeQueueFamilyIndex = UINT32_MAX, TransferQueueFamilyIndex = UINT32_MAX;
+	uint32_t ComprehensiveQueueFamilyIndex = UINT32_MAX;
 
 	for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
 	{
@@ -179,63 +162,7 @@ void hiveVKT::CVkContext::__determineQueueFamilies()
 			ComprehensiveQueueFamilyIndex = i;
 		}
 	}
-	_ASSERT(ComprehensiveQueueFamilyIndex != UINT32_MAX);// 不管m_ForceGraphicsFunctionalityHint是true还是false，都应该有ComprehensiveQueue
-														 // 如果 ComprehensiveQueueFamilyIndex == UINT32_MAX 说明在m_ForceGraphicsFunctionalityHint
-														 // 是true的情况下找不到合适的队列簇
-
-	if (QueueFamilyProperties[ComprehensiveQueueFamilyIndex].queueFlags | vk::QueueFlagBits::eCompute)
-		ComputeQueueFamilyIndex = ComprehensiveQueueFamilyIndex;
-	if (QueueFamilyProperties[ComprehensiveQueueFamilyIndex].queueFlags | vk::QueueFlagBits::eTransfer)
-		TransferQueueFamilyIndex = ComprehensiveQueueFamilyIndex;
-
-	auto FindDedicateQueueFamily = [=](bool vHint, vk::QueueFlagBits vQueueFlag, uint32_t& voQueueFamilyIndex) {
-		if (vHint)
-		{
-			for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
-			{
-				if (QueueFamilyProperties[i].queueFlags == vQueueFlag)
-				{
-					voQueueFamilyIndex = i;
-					break;
-				}
-			}
-		}
-	};
-	FindDedicateQueueFamily(m_PreferDedicatedComputeQueueHint, vk::QueueFlagBits::eCompute, ComputeQueueFamilyIndex);
-	FindDedicateQueueFamily(m_PreferDedicatedTransferQueueHint, vk::QueueFlagBits::eTransfer, TransferQueueFamilyIndex);
+	_ASSERT(ComprehensiveQueueFamilyIndex != UINT32_MAX);
 
 	m_ComprehensiveQueue = std::tuple(ComprehensiveQueueFamilyIndex, nullptr, nullptr);
-	if (ComputeQueueFamilyIndex != UINT32_MAX)
-		m_ComputeQueue = std::tuple(ComputeQueueFamilyIndex, nullptr, nullptr);
-	if (TransferQueueFamilyIndex != UINT32_MAX)
-		m_TransferQueue = std::tuple(TransferQueueFamilyIndex, nullptr, nullptr);
-}
-
-//*****************************************************************************************
-//FUNCTION:
-void hiveVKT::CVkContext::__retrieveQueuesAndCreateCommandPools()
-{
-	_ASSERT(m_pDevice);
-
-	std::get<1>(m_ComprehensiveQueue) = m_pDevice.getQueue(std::get<0>(m_ComprehensiveQueue), 0);
-	if (m_ComputeQueue.has_value())
-		std::get<1>(m_ComputeQueue.value()) = m_pDevice.getQueue(std::get<0>(m_ComputeQueue.value()), 0);
-	if (m_TransferQueue.has_value())
-		std::get<1>(m_TransferQueue.value()) = m_pDevice.getQueue(std::get<0>(m_TransferQueue.value()), 0);
-
-	std::get<2>(m_ComprehensiveQueue) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_ComprehensiveQueue)));
-	if (m_ComputeQueue.has_value())
-	{
-		if (std::get<0>(m_ComputeQueue.value()) == std::get<0>(m_ComprehensiveQueue))
-			std::get<2>(m_ComputeQueue.value()) = std::get<2>(m_ComprehensiveQueue);
-		else
-			std::get<2>(m_ComputeQueue.value()) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_ComputeQueue.value())));
-	}
-	if (m_TransferQueue.has_value())
-	{
-		if (std::get<0>(m_TransferQueue.value()) == std::get<0>(m_ComprehensiveQueue))
-			std::get<2>(m_TransferQueue.value()) = std::get<2>(m_ComprehensiveQueue);
-		else
-			std::get<2>(m_TransferQueue.value()) = m_pDevice.createCommandPool(vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::get<0>(m_TransferQueue.value())));
-	}
 }

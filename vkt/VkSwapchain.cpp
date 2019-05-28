@@ -11,7 +11,7 @@ hiveVKT::CVkSwapchain::~CVkSwapchain()
 
 //*****************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkSwapchain::createSwapchain(GLFWwindow* vGLFWwindow, vk::ImageUsageFlags vImageUsageFlags, vk::SharingMode vSharingMode, const std::vector<uint32_t>& vQueueFmilyIndices, vk::SwapchainKHR vOldSwapchain)
+void hiveVKT::CVkSwapchain::createSwapchain(GLFWwindow* vGLFWwindow, vk::ImageUsageFlags vImageUsageFlags, vk::SwapchainKHR vOldSwapchain)
 {
 	_ASSERT(!m_IsInitialized);
 	_ASSERT(vGLFWwindow);
@@ -51,14 +51,11 @@ void hiveVKT::CVkSwapchain::createSwapchain(GLFWwindow* vGLFWwindow, vk::ImageUs
 	if (SurfaceCapabilities.maxImageCount > 0 && ImageCount > SurfaceCapabilities.maxImageCount)
 		ImageCount = SurfaceCapabilities.maxImageCount;
 
-	if (vSharingMode == vk::SharingMode::eExclusive)_ASSERT(vQueueFmilyIndices.empty());
-	if (vSharingMode == vk::SharingMode::eConcurrent)_ASSERT(!vQueueFmilyIndices.empty());
-
 	vk::SwapchainCreateInfoKHR SwapchainCreateInfo = {
 		vk::SwapchainCreateFlagsKHR(),
 		m_pSurface,
 		ImageCount,SurfaceFormat.format,SurfaceFormat.colorSpace,Extent,1,vImageUsageFlags,
-		vSharingMode,static_cast<uint32_t>(vQueueFmilyIndices.size()),vQueueFmilyIndices.data(),
+		vk::SharingMode::eExclusive,0,nullptr,
 		SurfaceCapabilities.currentTransform,
 		vk::CompositeAlphaFlagBitsKHR::eOpaque,
 		PresentMode,

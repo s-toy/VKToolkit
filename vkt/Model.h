@@ -46,7 +46,7 @@ namespace hiveVKT
 	public:
 		CModel() = default;
 
-		void loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
+		void loadModel(std::string vFilePath, const SVertexLayout& vVertexLayout, const STextureDescriptorBindingInfo& vTextureDescriptorBindingInfo);
 
 		const vk::DescriptorSetLayout& getModelDescriptorSetLayout()const { return m_pDescriptorSetLayout; }
 
@@ -68,14 +68,14 @@ namespace hiveVKT
 		vk::DescriptorSetLayout m_pDescriptorSetLayout;
 		vk::DescriptorPool m_pDescriptorPool;
 
-		void __createVulkanResource(vk::Device vDevice, unsigned int vNumMesh);
-		void __processNodes(const aiNode* vNode, const aiScene* vScene, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
-		void __processMesh(const aiMesh* vMesh, const aiScene* vScene, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
+		void __createVulkanResource(unsigned int vNumMesh);
+		void __processNodes(const aiNode* vNode, const aiScene* vScene);
+		void __processMesh(const aiMesh* vMesh, const aiScene* vScene);
 
-		int __createNewTexture(const std::string& vTextureName, ETextureType vTextureType, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
-		int __loadMaterialTextures(const aiMaterial* vMaterial, ETextureType vTextureType, vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue);
+		int __createNewTexture(const std::string& vTextureName, ETextureType vTextureType);
+		int __loadMaterialTextures(const aiMaterial* vMaterial, ETextureType vTextureType);
 		int __getTextureIndex(const std::string& vTextureName);
 
-		vk::DescriptorSet __createDescriptorSet(vk::Device vDevice, const std::vector<int>& vTextureIndexSet, const std::vector<int>& vTextureBindingInfoSet);
+		vk::DescriptorSet __createDescriptorSet(const std::vector<int>& vTextureIndexSet, const std::vector<int>& vTextureBindingInfoSet);
 	};
 }

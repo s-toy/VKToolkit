@@ -9,7 +9,7 @@ namespace hiveVKT
 
 	uint32_t findMemoryTypeIndex(uint32_t vMemoryTypeFilter, vk::MemoryPropertyFlags vMemoryPropertyFilter);
 
-	void executeImmediately(vk::Device vDevice, vk::CommandPool vCommandPool, vk::Queue vQueue, const std::function<void(vk::CommandBuffer vCommandBuffer)>& vFunction);
+	void executeImmediately(const std::function<void(vk::CommandBuffer vCommandBuffer)>& vFunction);
 
-	void createBuffer(vk::Device vDevice, vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, vk::MemoryPropertyFlags vMemoryProperty, vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory);
+	void createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, vk::MemoryPropertyFlags vMemoryProperty, vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory);
 }
