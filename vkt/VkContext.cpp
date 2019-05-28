@@ -12,10 +12,10 @@ hiveVKT::CVkContext::~CVkContext()
 
 //*****************************************************************************************
 //FUNCTION:
-void CVkContext::createContext(uint32_t vPhysicalDeviceID)
+void CVkContext::createContext()
 {
 	__createVulkanInstance();
-	__createVulkanDevice(vPhysicalDeviceID);
+	__createVulkanDevice();
 
 	m_IsInitialized = true;
 }
@@ -32,24 +32,27 @@ void CVkContext::destroyContext()
 	m_pDevice.destroy();
 	m_pInstance.destroy();
 
-	m_IsInitialized = false;
-
+	m_PreferDiscreteGpuHint = false;
 	m_ForceGraphicsFunctionalityHint = false;
+	m_ForceComputeFunctionalityHint = false;
+	m_ForceTransferFunctionalityHint = false;
 	m_EnableDebugUtilsHint = false;
 	m_EnablePresentationHint = false;
 	m_EnableApiDumpHint = false;
 	m_EnableFpsMonitorHint = false;
 	m_EnableScreenshotHint = false;
 
+	m_EnabledInstanceLayers = {};
+	m_EnabledInstanceExtensions = {};
+	m_EnabledDeviceExtensions = {};
+	m_EnabledPhysicalDeviceFeatures = {};
+
 	m_pInstance = nullptr;
 	m_pPhysicalDevice = nullptr;
 	m_pDevice = nullptr;
 	m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr };
 
-	m_EnabledInstanceLayers = {};
-	m_EnabledInstanceExtensions = {};
-	m_EnabledDeviceExtensions = {};
-	m_EnabledPhysicalDeviceFeatures = {};
+	m_IsInitialized = false;
 }
 
 //*****************************************************************************************
@@ -99,20 +102,9 @@ void CVkContext::__createVulkanInstance()
 
 //*****************************************************************************************
 //FUNCTION:
-void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
+void CVkContext::__createVulkanDevice()
 {
 	_ASSERT(!m_IsInitialized);
-
-	auto PhysicalDevices = m_pInstance.enumeratePhysicalDevices();
-	_ASSERT_EXPR(!PhysicalDevices.empty(), "No physical device that support Vulkan");
-	_ASSERT_EXPR(vPhysicalDeviceID < static_cast<int>(PhysicalDevices.size()), "Physical device id out of range");
-
-	m_pPhysicalDevice = PhysicalDevices[vPhysicalDeviceID];
-
-	__determineComprehensiveQueueFamilyIndex();
-
-	float QueuePriority = 1.0f;
-	vk::DeviceQueueCreateInfo DeviceQueueCreateInfo = { vk::DeviceQueueCreateFlags(), std::get<0>(m_ComprehensiveQueue), 1, &QueuePriority };
 
 	if (m_EnablePresentationHint)
 	{
@@ -121,9 +113,14 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 	}
 	//TODO：检查设备是否支持拓展以及相应的物理设备特性
 
+	__pickPhysicalDevice();
+
 	std::vector<const char*> EnabledDeviceExtensions;
 	for (auto& DeviceExtension : m_EnabledDeviceExtensions)
 		EnabledDeviceExtensions.emplace_back(DeviceExtension.c_str());
+
+	float QueuePriority = 1.0f;
+	vk::DeviceQueueCreateInfo DeviceQueueCreateInfo = { vk::DeviceQueueCreateFlags(), std::get<0>(m_ComprehensiveQueue), 1, &QueuePriority };
 
 	vk::DeviceCreateInfo DeviceCreateInfo = {
 		vk::DeviceCreateFlags(),
@@ -141,28 +138,60 @@ void CVkContext::__createVulkanDevice(uint32_t vPhysicalDeviceID)
 
 //*****************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkContext::__determineComprehensiveQueueFamilyIndex()
+void hiveVKT::CVkContext::__pickPhysicalDevice()
 {
-	_ASSERT(m_pPhysicalDevice);
+	auto PhysicalDevices = m_pInstance.enumeratePhysicalDevices();
+	_ASSERT_EXPR(!PhysicalDevices.empty(), "No physical device that support Vulkan");
 
-	auto QueueFamilyProperties = m_pPhysicalDevice.getQueueFamilyProperties();
-	_ASSERT(!QueueFamilyProperties.empty());
-	uint32_t ComprehensiveQueueFlags = 0;
-	uint32_t ComprehensiveQueueFamilyIndex = UINT32_MAX;
-
-	for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
-	{
-		if (static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags) > ComprehensiveQueueFlags)
+	auto PickPhysicalDevice = [&](bool vPreferDiscreteGpu) {
+		for (auto PhysicalDevice : PhysicalDevices)
 		{
-			if (m_ForceGraphicsFunctionalityHint)
-				if (!(QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics))
+			if (vPreferDiscreteGpu)
+			{
+				auto PhysicalDeviceProperties = PhysicalDevice.getProperties();
+				if (PhysicalDeviceProperties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu)
 					break;
+			}
 
-			ComprehensiveQueueFlags = static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags);
-			ComprehensiveQueueFamilyIndex = i;
+			auto QueueFamilyProperties = PhysicalDevice.getQueueFamilyProperties();
+			_ASSERT(!QueueFamilyProperties.empty());
+			uint32_t ComprehensiveQueueFlags = 0;
+			uint32_t ComprehensiveQueueFamilyIndex = UINT32_MAX;
+
+			for (auto i = 0; i < QueueFamilyProperties.size(); ++i)
+			{
+				if (static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags) > ComprehensiveQueueFlags)
+				{
+					if (m_ForceGraphicsFunctionalityHint)
+						if (!(QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics))
+							break;
+
+					if (m_ForceComputeFunctionalityHint)
+						if (!(QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eCompute))
+							break;
+
+					if (m_ForceTransferFunctionalityHint)
+						if (!(QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eTransfer))
+							break;
+
+					ComprehensiveQueueFlags = static_cast<uint32_t>(QueueFamilyProperties[i].queueFlags);
+					ComprehensiveQueueFamilyIndex = i;
+				}
+			}
+
+			if (ComprehensiveQueueFamilyIndex != UINT32_MAX)
+			{
+				m_ComprehensiveQueue = std::tuple(ComprehensiveQueueFamilyIndex, nullptr, nullptr);
+				m_pPhysicalDevice = PhysicalDevice;
+				return;
+			}
 		}
-	}
-	_ASSERT(ComprehensiveQueueFamilyIndex != UINT32_MAX);
+	};
 
-	m_ComprehensiveQueue = std::tuple(ComprehensiveQueueFamilyIndex, nullptr, nullptr);
+	PickPhysicalDevice(m_PreferDiscreteGpuHint);
+
+	if (m_PreferDiscreteGpuHint && (!m_pPhysicalDevice || std::get<0>(m_ComprehensiveQueue) == UINT32_MAX))
+		PickPhysicalDevice(false);
+
+	_ASSERT(m_pPhysicalDevice && std::get<0>(m_ComprehensiveQueue) != UINT32_MAX);
 }

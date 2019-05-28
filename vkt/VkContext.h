@@ -13,9 +13,12 @@ namespace hiveVKT
 	public:
 		~CVkContext();
 
+		void setPreferDiscreteGpuHint(bool vPreferDiscreteGpuHint) { _ASSERT(!m_IsInitialized); m_PreferDiscreteGpuHint = vPreferDiscreteGpuHint; }
 		void setForceGraphicsFunctionalityHint(bool vForceGraphicsFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceGraphicsFunctionalityHint = vForceGraphicsFunctionalityHint; }
+		void setForceComputeFunctionalityHint(bool vForceComputeFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceComputeFunctionalityHint = vForceComputeFunctionalityHint; }
+		void setForceTransferFunctionalityHint(bool vForceTransferFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceTransferFunctionalityHint = vForceTransferFunctionalityHint; }
 		void setEnableDebugUtilsHint(bool vEnableDebugUtilsHint) { _ASSERT(!m_IsInitialized); m_EnableDebugUtilsHint = vEnableDebugUtilsHint; }
-		void setEnablePresentationHint(bool vInitPresentationExtensionsHint) { _ASSERT(!m_IsInitialized); m_EnablePresentationHint = vInitPresentationExtensionsHint; }
+		void setEnablePresentationHint(bool vEnablePresentationHint) { _ASSERT(!m_IsInitialized); m_EnablePresentationHint = vEnablePresentationHint; }
 		void setEnableApiDumpHint(bool vEnableApiDumpHint) { _ASSERT(!m_IsInitialized); m_EnableApiDumpHint = vEnableApiDumpHint; }
 		void setEnableFpsMonitorHint(bool vEnableFpsMonitorHint) { _ASSERT(!m_IsInitialized); m_EnableFpsMonitorHint = vEnableFpsMonitorHint; }
 		void setEnableScreenshotHint(bool vEnableScreenshotHint) { _ASSERT(!m_IsInitialized); m_EnableScreenshotHint = vEnableScreenshotHint; }
@@ -29,7 +32,7 @@ namespace hiveVKT
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { _ASSERT(!m_IsInitialized); m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
 		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { _ASSERT(!m_IsInitialized); m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
-		void createContext(uint32_t vPhysicalDeviceID = 0);
+		void createContext();
 		void destroyContext();
 
 		const vk::Instance& getVulkanInstance()const { _ASSERT(m_IsInitialized); return m_pInstance; }
@@ -48,7 +51,10 @@ namespace hiveVKT
 
 		bool m_IsInitialized = false;
 
+		bool m_PreferDiscreteGpuHint = false;
 		bool m_ForceGraphicsFunctionalityHint = false;
+		bool m_ForceComputeFunctionalityHint = false;
+		bool m_ForceTransferFunctionalityHint = false;
 		bool m_EnableDebugUtilsHint = false;
 		bool m_EnablePresentationHint = false;
 		bool m_EnableApiDumpHint = false;
@@ -73,7 +79,7 @@ namespace hiveVKT
 		std::tuple<uint32_t, vk::Queue, vk::CommandPool> m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr }; //<queue family index, queue, command pool>
 
 		void __createVulkanInstance();
-		void __createVulkanDevice(uint32_t vPhysicalDeviceID);
-		void __determineComprehensiveQueueFamilyIndex();
+		void __createVulkanDevice();
+		void __pickPhysicalDevice();
 	};
 }
