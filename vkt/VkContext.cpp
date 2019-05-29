@@ -106,14 +106,14 @@ void CVkContext::__createVulkanDevice()
 {
 	_ASSERT(!m_IsInitialized);
 
+	__pickPhysicalDevice();
+
 	if (m_EnablePresentationHint)
 	{
 		_ASSERT(m_pPhysicalDevice.getWin32PresentationSupportKHR(std::get<0>(m_ComprehensiveQueue), m_DynamicDispatchLoader));
 		m_EnabledDeviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	}
 	//TODO：检查设备是否支持拓展以及相应的物理设备特性
-
-	__pickPhysicalDevice();
 
 	std::vector<const char*> EnabledDeviceExtensions;
 	for (auto& DeviceExtension : m_EnabledDeviceExtensions)
