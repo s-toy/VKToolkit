@@ -18,13 +18,11 @@ protected:
 	{
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
-
-	CVkDebugUtilsMessenger m_DebugMessenger;
 };
 
 TEST_F(Test_CreateVkInstance, CreateVkInstance)
 {
-	ASSERT_NO_THROW(m_DebugMessenger.setupDebugUtilsMessenger());
-	ASSERT_EQ(m_DebugMessenger.getWarningAndErrorCount(), 0);
-	ASSERT_NO_THROW(m_DebugMessenger.destroyDebugUtilsMessenger());
+	auto DebugUtilsMessenger = CVkContext::getInstance()->getDebugUtilsMessenger();
+
+	ASSERT_EQ(DebugUtilsMessenger.getWarningAndErrorCount(), 0);
 }

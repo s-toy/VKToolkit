@@ -19,6 +19,9 @@ namespace hiveVKT
 		const vk::Image& getSwapchainImageAt(int vIndex)const { _ASSERT(m_IsInitialized && vIndex >= 0 && vIndex < m_SwapchainImages.size()); return m_SwapchainImages[vIndex]; }
 		const vk::ImageView& getSwapchainImageViewAt(int vIndex)const { _ASSERT(m_IsInitialized && vIndex >= 0 && vIndex < m_SwapchainImages.size()); return m_SwapchainImageViews[vIndex]; }
 
+		const vk::Format& getSwapchainImageFormat() const { return m_SwapchainImageFormat; }
+		const vk::Extent2D& getSwapchainImageExtent() const { return m_SwapchainImageExtent; }
+
 		size_t getNumSwapchainImage()const { _ASSERT(m_IsInitialized); return m_SwapchainImages.size(); }
 
 	private:
