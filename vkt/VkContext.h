@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "VkDebugMessenger.h"
 
 #define Singleton(T) static T* getInstance() { static T Instance; return &Instance; }
 
@@ -39,6 +40,7 @@ namespace hiveVKT
 		const vk::PhysicalDevice& getPhysicalDevice()const { _ASSERT(m_IsInitialized); return m_pPhysicalDevice; }
 		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { _ASSERT(m_IsInitialized); return m_DynamicDispatchLoader; }
 		const vk::Device& getVulkanDevice()const { _ASSERT(m_IsInitialized); return m_pDevice; }
+		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { _ASSERT(m_IsInitialized); return m_DebugUtilsMessenger; }
 
 		int getComprehensiveQueueFamilyIndex()const { _ASSERT(m_IsInitialized); return std::get<0>(m_ComprehensiveQueue); }
 		const vk::Queue& getComprehensiveQueue()const { _ASSERT(m_IsInitialized); return std::get<1>(m_ComprehensiveQueue); }
@@ -77,6 +79,7 @@ namespace hiveVKT
 		vk::DispatchLoaderDynamic m_DynamicDispatchLoader;
 		vk::Device m_pDevice = nullptr;
 		std::tuple<uint32_t, vk::Queue, vk::CommandPool> m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr }; //<queue family index, queue, command pool>
+		CVkDebugUtilsMessenger m_DebugUtilsMessenger;
 
 		void __createVulkanInstance();
 		void __createVulkanDevice();
