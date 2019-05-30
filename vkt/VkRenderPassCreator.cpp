@@ -4,18 +4,10 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::RenderPass hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice)
+vk::Result hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
 {
 	__prepareRenderPassCreateInfo();
-	return vDevice.createRenderPass(m_RenderPassCreateInfo);
-}
-
-//***********************************************************************************************
-//FUNCTION:
-vk::UniqueRenderPass hiveVKT::CVkRenderPassCreator::createUnique(const vk::Device& vDevice)
-{
-	__prepareRenderPassCreateInfo();
-	return vDevice.createRenderPassUnique(m_RenderPassCreateInfo);
+	return vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass);
 }
 
 //***********************************************************************************************
@@ -36,23 +28,18 @@ void hiveVKT::CVkRenderPassCreator::addAttachment(vk::Format vFormat, vk::ImageL
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkRenderPassCreator::addSubpass(const std::vector<vk::AttachmentReference>& vColorAttachmentReferences, 
-	const vk::AttachmentReference& vDepthStencilAttachmentReference, 
-	const std::vector<vk::AttachmentReference>& vResolveAttachmentReferences, 
-	const std::vector<vk::AttachmentReference>& vInputAttachmentReferences, 
-	const std::vector<uint32_t>& vPreserveAttachmentReferences, 
-	vk::PipelineBindPoint vBindPoint /*= vk::PipelineBindPoint::eGraphics*/)
+void hiveVKT::CVkRenderPassCreator::addSubpass(const SSubPassDescription& vSubPassDescription)
 {
 	vk::SubpassDescription SubpassDesc = {};
-	SubpassDesc.pipelineBindPoint = vBindPoint;
-	SubpassDesc.colorAttachmentCount = static_cast<uint32_t>(vColorAttachmentReferences.size());
-	SubpassDesc.pColorAttachments = vColorAttachmentReferences.data();
-	SubpassDesc.inputAttachmentCount = static_cast<uint32_t>(vInputAttachmentReferences.size());
-	SubpassDesc.pInputAttachments = vInputAttachmentReferences.data();
-	SubpassDesc.preserveAttachmentCount = static_cast<uint32_t>(vPreserveAttachmentReferences.size());
-	SubpassDesc.pPreserveAttachments = vPreserveAttachmentReferences.data();
-	SubpassDesc.pDepthStencilAttachment = (vDepthStencilAttachmentReference == vk::AttachmentReference()) ? nullptr : &vDepthStencilAttachmentReference;
-	SubpassDesc.pResolveAttachments = vResolveAttachmentReferences.data();
+	SubpassDesc.pipelineBindPoint = vSubPassDescription.BindPoint;
+	SubpassDesc.inputAttachmentCount = static_cast<uint32_t>(vSubPassDescription.InputAttachmentSet.size());
+	SubpassDesc.pInputAttachments = vSubPassDescription.InputAttachmentSet.data();
+	SubpassDesc.colorAttachmentCount = static_cast<uint32_t>(vSubPassDescription.ColorAttachmentSet.size());
+	SubpassDesc.pColorAttachments = vSubPassDescription.ColorAttachmentSet.data();
+	SubpassDesc.pResolveAttachments = &vSubPassDescription.ResolveAttachment;
+	SubpassDesc.pDepthStencilAttachment = &vSubPassDescription.DepthStencilAttachment;
+	SubpassDesc.preserveAttachmentCount = static_cast<uint32_t>(vSubPassDescription.PreserveAttachmentSet.size());
+	SubpassDesc.pPreserveAttachments = vSubPassDescription.PreserveAttachmentSet.data();
 	m_SubpassDescriptionSet.push_back(SubpassDesc);
 }
 
