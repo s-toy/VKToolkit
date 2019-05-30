@@ -30,6 +30,7 @@ namespace hiveVKT
 		void setEngineVersion(uint32_t vEngineVersion) { _ASSERT(!m_IsInitialized); m_EngineVersion = vEngineVersion; }
 		void setApiVersion(uint32_t vApiVersion) { _ASSERT(!m_IsInitialized); m_ApiVersion = vApiVersion; }
 
+		//TODO：提供查询物理设备支持的扩展和特性
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { _ASSERT(!m_IsInitialized); m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
 		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { _ASSERT(!m_IsInitialized); m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
