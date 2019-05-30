@@ -10,9 +10,6 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{2ca36b9e-81b3-48c7-8765-dede7952e989}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third Party">
-      <UniqueIdentifier>{aa714b72-6634-4ea6-847d-67a8ed491df5}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -20,12 +17,6 @@
     </ClInclude>
     <ClInclude Include="VulkanApp.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\stb_image.h">
-      <Filter>Third Party</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\tiny_obj_loader.h">
-      <Filter>Third Party</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

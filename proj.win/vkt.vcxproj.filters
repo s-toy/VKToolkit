@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="general">
+      <UniqueIdentifier>{6015bd38-8c1b-4a93-8481-79356df622ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{cc98133f-1b73-4e58-be25-68a9aa354c89}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\vkt\Common.h">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Utility.h">
+      <Filter>general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkUtility.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkTexture2D.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkSwapchain.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkShaderModuleCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkRenderPassCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGraphicsPipelineCreator.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkGenericImage.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkDebugMessenger.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkContext.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Model.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\Mesh.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\vkt\VkUtility.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkTexture2D.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkSwapchain.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkRenderPassCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkGraphicsPipelineCreator.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkGenericImage.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkDebugMessenger.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\VkContext.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\Model.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vkt\Mesh.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

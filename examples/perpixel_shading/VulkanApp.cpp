@@ -1,8 +1,6 @@
 #include "VulkanApp.h"
-#include <set>
 #include <iostream>
 #include <chrono>
-#include <unordered_map>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <GLM/gtc/matrix_transform.hpp>
 #include "VkGraphicsPipelineCreator.hpp"
@@ -11,6 +9,7 @@
 #include "VkRenderPassCreator.hpp"
 #include "Camera.hpp"
 #include "Model.hpp"
+#include "VkUtility.hpp"
 
 using namespace hiveVKT;
 
@@ -28,11 +27,8 @@ bool VulkanApp::CPerpixelShadingApp::_initV()
 {
 	m_SampleCount = __getMaxSampleCount();
 
-	__retrieveDeviceQueue();
-	__createCommandPool();
 	__createDescriptorSetLayout();
 	__loadModel();
-	__retrieveSwapChainImagesAndCreateImageViews();
 	__createRenderPass();
 
 	__createPipelineLayout();
@@ -79,7 +75,7 @@ void VulkanApp::CPerpixelShadingApp::_updateV()
 	SubmitInfo.signalSemaphoreCount = 1;
 	SubmitInfo.pSignalSemaphores = SignalSemaphores;
 	vkResetFences(m_VkContext.getDevice(), 1, &m_InFlightFenceSet[m_CurrentFrame]);
-	if (vkQueueSubmit(m_pQueue, 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
+	if (vkQueueSubmit(m_VkContext.getQueue(), 1, &SubmitInfo, m_InFlightFenceSet[m_CurrentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("Failed to submit draw command buffer!");
 
 	VkPresentInfoKHR PresentInfo = {};
@@ -91,7 +87,7 @@ void VulkanApp::CPerpixelShadingApp::_updateV()
 	PresentInfo.pSwapchains = SwapChains;
 	PresentInfo.pImageIndices = &ImageIndex;
 	PresentInfo.pResults = nullptr;
-	Result = vkQueuePresentKHR(m_pQueue, &PresentInfo);
+	Result = vkQueuePresentKHR(m_VkContext.getQueue(), &PresentInfo);
 	if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
 		throw std::runtime_error("Failed to present swap chain image!");
 	else if (Result != VK_SUCCESS)
@@ -117,7 +113,7 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 
 	vkDestroyDescriptorPool(m_VkContext.getDevice(), m_pDescriptorPool, nullptr);
 
-	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
+	for (auto i = 0; i < m_VkContext.getSwapChainImageSize(); ++i)
 	{
 		vkDestroyBuffer(m_VkContext.getDevice(), m_UniformBufferSet[i], nullptr);
 		vkFreeMemory(m_VkContext.getDevice(), m_UniformBufferDeviceMemorySet[i], nullptr);
@@ -126,15 +122,10 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 	for (auto i = 0; i < m_FramebufferSet.size(); ++i)
 		vkDestroyFramebuffer(m_VkContext.getDevice(), m_FramebufferSet[i], nullptr);
 
-	vkDestroyCommandPool(m_VkContext.getDevice(), m_pCommandPool, nullptr);
-
 	vkDestroyPipeline(m_VkContext.getDevice(), m_pGraphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(m_VkContext.getDevice(), m_pPipelineLayout, nullptr);
 	vkDestroyDescriptorSetLayout(m_VkContext.getDevice(), m_pDescriptorSetLayout, nullptr);
 	vkDestroyRenderPass(m_VkContext.getDevice(), m_pRenderPass, nullptr);
-
-	for (auto i = 0; i < m_SwapChainImageViewSet.size(); ++i)
-		vkDestroyImageView(m_VkContext.getDevice(), m_SwapChainImageViewSet[i], nullptr);
 
 	m_MsaaAttachment.destroy(m_VkContext.getDevice());
 	m_DepthAttachment.destroy(m_VkContext.getDevice());
@@ -143,31 +134,6 @@ void VulkanApp::CPerpixelShadingApp::_destroyV()
 	delete m_pModel;
 
 	CVkApplicationBase::_destroyV();
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__retrieveDeviceQueue()
-{
-	SQueueFamilyIndices QueueFamilyIndices = m_VkContext.getRequiredQueueFamilyIndices();
-	vkGetDeviceQueue(m_VkContext.getDevice(), QueueFamilyIndices.QueueFamily.value(), 0, &m_pQueue);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__retrieveSwapChainImagesAndCreateImageViews()
-{
-	uint32_t SwapChainImageCount = 0;
-	vkGetSwapchainImagesKHR(m_VkContext.getDevice(), m_VkContext.getSwapchainKHR(), &SwapChainImageCount, nullptr);
-	m_SwapChainImageSet.resize(SwapChainImageCount);
-	vkGetSwapchainImagesKHR(m_VkContext.getDevice(), m_VkContext.getSwapchainKHR(), &SwapChainImageCount, m_SwapChainImageSet.data());
-
-	m_SwapChainImageViewSet.resize(SwapChainImageCount);
-
-	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
-	{
-		m_SwapChainImageViewSet[i] = __createImageView(m_SwapChainImageSet[i], (VkFormat)m_VkContext.getSwapchainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
-	}
 }
 
 //************************************************************************************
@@ -269,20 +235,6 @@ void VulkanApp::CPerpixelShadingApp::__createGraphicsPipeline()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__createCommandPool()
-{
-	SQueueFamilyIndices QueueFamilyIndices = m_VkContext.getRequiredQueueFamilyIndices();
-
-	VkCommandPoolCreateInfo CommandPoolCreateInfo = {};
-	CommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	CommandPoolCreateInfo.queueFamilyIndex = QueueFamilyIndices.QueueFamily.value();
-
-	if (vkCreateCommandPool(m_VkContext.getDevice(), &CommandPoolCreateInfo, nullptr, &m_pCommandPool) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create command pool!");
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 {
 	vk::ImageCreateInfo ImageCreateInfo = {};
@@ -298,10 +250,13 @@ void VulkanApp::CPerpixelShadingApp::__createMsaaResource()
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
 	m_MsaaAttachment.create(m_VkContext.getDevice(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eColor, false);
-	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
-	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
-	m_MsaaAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eColorAttachmentOptimal, TranslateRange);
-	__endSingleTimeCommands(CommandBuffer);
+
+	auto TransImgLayout = [&](vk::CommandBuffer vCommandBuffer) {
+		vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eColor,0,1,0,1 };
+		m_MsaaAttachment.translateImageLayout(vCommandBuffer, vk::ImageLayout::eColorAttachmentOptimal, TranslateRange);
+	};
+
+	hiveVKT::executeImmediately(m_VkContext.getDevice(), m_VkContext.getCommandPool(), m_VkContext.getQueue(), TransImgLayout);
 }
 
 //************************************************************************************
@@ -323,21 +278,24 @@ void VulkanApp::CPerpixelShadingApp::__createDepthResources()
 	ImageCreateInfo.samples = static_cast<vk::SampleCountFlagBits>(m_SampleCount);
 
 	m_DepthAttachment.create(m_VkContext.getDevice(), ImageCreateInfo, vk::ImageViewType::e2D, vk::ImageAspectFlagBits::eDepth, false);
-	vk::CommandBuffer CommandBuffer = __beginSingleTimeCommands();
-	vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eDepth,0,1,0,1 };
-	m_DepthAttachment.translateImageLayout(CommandBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal, TranslateRange);
-	__endSingleTimeCommands(CommandBuffer);
+
+	auto TransImgLayout = [&](vk::CommandBuffer vCommandBuffer) {
+		vk::ImageSubresourceRange TranslateRange = { vk::ImageAspectFlagBits::eDepth,0,1,0,1 };
+		m_DepthAttachment.translateImageLayout(vCommandBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal, TranslateRange);
+	};
+
+	hiveVKT::executeImmediately(m_VkContext.getDevice(), m_VkContext.getCommandPool(), m_VkContext.getQueue(), TransImgLayout);
 }
 
 //************************************************************************************
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createFramebuffers()
 {
-	m_FramebufferSet.resize(m_SwapChainImageSet.size());
+	m_FramebufferSet.resize(m_VkContext.getSwapChainImageSize());
 
-	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
+	for (auto i = 0; i < m_VkContext.getSwapChainImageSize(); ++i)
 	{
-		std::array<VkImageView, 3> Attachments = { m_MsaaAttachment.getImageView(),m_DepthAttachment.getImageView(),m_SwapChainImageViewSet[i] };
+		std::array<VkImageView, 3> Attachments = { m_MsaaAttachment.getImageView(),m_DepthAttachment.getImageView(),m_VkContext.getSwapChainImageViewAt(i) };
 
 		VkFramebufferCreateInfo FramebufferCreateInfo = {};
 		FramebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -365,64 +323,37 @@ void VulkanApp::CPerpixelShadingApp::__generateMipmaps(hiveVKT::CVkGenericImage&
 	int32_t MipmapWidth = vTextureWidth;
 	int32_t MipmapHeight = vTextureHeight;
 
-	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
+	auto GenOtherMip = [&](vk::CommandBuffer vCommandBuffer) {
+		for (uint32_t i = 1; i < vMipmapLevel; ++i)
+		{
+			vTexture.translateImageLayoutAtParticularMipmapLevel(vCommandBuffer, vk::ImageLayout::eTransferSrcOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
 
-	for (uint32_t i = 1; i < vMipmapLevel; ++i)
-	{
-		vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eTransferSrcOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
+			VkImageBlit ImageBlit = {};
+			ImageBlit.srcOffsets[0] = { 0,0,0 };
+			ImageBlit.srcOffsets[1] = { MipmapWidth,MipmapHeight,1 };
+			ImageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			ImageBlit.srcSubresource.mipLevel = i - 1;
+			ImageBlit.srcSubresource.baseArrayLayer = 0;
+			ImageBlit.srcSubresource.layerCount = 1;
+			ImageBlit.dstOffsets[0] = { 0,0,0 };
+			ImageBlit.dstOffsets[1] = { MipmapWidth > 1 ? MipmapWidth / 2 : 1, MipmapHeight > 1 ? MipmapHeight / 2 : 1, 1 };
+			ImageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			ImageBlit.dstSubresource.mipLevel = i;
+			ImageBlit.dstSubresource.baseArrayLayer = 0;
+			ImageBlit.dstSubresource.layerCount = 1;
 
-		VkImageBlit ImageBlit = {};
-		ImageBlit.srcOffsets[0] = { 0,0,0 };
-		ImageBlit.srcOffsets[1] = { MipmapWidth,MipmapHeight,1 };
-		ImageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		ImageBlit.srcSubresource.mipLevel = i - 1;
-		ImageBlit.srcSubresource.baseArrayLayer = 0;
-		ImageBlit.srcSubresource.layerCount = 1;
-		ImageBlit.dstOffsets[0] = { 0,0,0 };
-		ImageBlit.dstOffsets[1] = { MipmapWidth > 1 ? MipmapWidth / 2 : 1, MipmapHeight > 1 ? MipmapHeight / 2 : 1, 1 };
-		ImageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		ImageBlit.dstSubresource.mipLevel = i;
-		ImageBlit.dstSubresource.baseArrayLayer = 0;
-		ImageBlit.dstSubresource.layerCount = 1;
+			vkCmdBlitImage(vCommandBuffer, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &ImageBlit, VK_FILTER_LINEAR);
 
-		vkCmdBlitImage(CommandBuffer, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vTexture.getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &ImageBlit, VK_FILTER_LINEAR);
+			vTexture.translateImageLayoutAtParticularMipmapLevel(vCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
 
-		vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, i - 1);
+			if (MipmapWidth > 1) MipmapWidth /= 2;
+			if (MipmapHeight > 1) MipmapHeight /= 2;
+		}
 
-		if (MipmapWidth > 1) MipmapWidth /= 2;
-		if (MipmapHeight > 1) MipmapHeight /= 2;
-	}
+		vTexture.translateImageLayoutAtParticularMipmapLevel(vCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, vMipmapLevel - 1);
+	};
 
-	vTexture.translateImageLayoutAtParticularMipmapLevel(CommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eColor, vMipmapLevel - 1);
-
-	__endSingleTimeCommands(CommandBuffer);
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__createBuffer(VkDeviceSize vBufferSize, VkBufferUsageFlags vBufferUsage, VkMemoryPropertyFlags vMemoryProperty, VkBuffer& voBuffer, VkDeviceMemory& voBufferDeviceMemory)
-{
-	VkBufferCreateInfo BufferCreateInfo = {};
-	BufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	BufferCreateInfo.size = vBufferSize;
-	BufferCreateInfo.usage = vBufferUsage;
-	BufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if (vkCreateBuffer(m_VkContext.getDevice(), &BufferCreateInfo, nullptr, &voBuffer) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create vertex buffer!");
-
-	VkMemoryRequirements MemoryRequirements = {};
-	vkGetBufferMemoryRequirements(m_VkContext.getDevice(), voBuffer, &MemoryRequirements);
-
-	VkMemoryAllocateInfo MemoryAllocateInfo = {};
-	MemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
-	MemoryAllocateInfo.memoryTypeIndex = __findMemoryType(MemoryRequirements.memoryTypeBits, vMemoryProperty);
-
-	if (vkAllocateMemory(m_VkContext.getDevice(), &MemoryAllocateInfo, nullptr, &voBufferDeviceMemory) != VK_SUCCESS)
-		throw std::runtime_error("Failed to allocate memory for vertex buffer!");
-
-	vkBindBufferMemory(m_VkContext.getDevice(), voBuffer, voBufferDeviceMemory, 0);
+	hiveVKT::executeImmediately(m_VkContext.getDevice(), m_VkContext.getCommandPool(), m_VkContext.getQueue(), GenOtherMip);
 }
 
 //************************************************************************************
@@ -431,13 +362,11 @@ void VulkanApp::CPerpixelShadingApp::__createUniformBuffers()
 {
 	VkDeviceSize BufferSize = sizeof(SUniformBufferObject);
 
-	m_UniformBufferSet.resize(m_SwapChainImageSet.size());
-	m_UniformBufferDeviceMemorySet.resize(m_SwapChainImageSet.size());
+	m_UniformBufferSet.resize(m_VkContext.getSwapChainImageSize());
+	m_UniformBufferDeviceMemorySet.resize(m_VkContext.getSwapChainImageSize());
 
-	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
-	{
-		__createBuffer(BufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_UniformBufferSet[i], m_UniformBufferDeviceMemorySet[i]);
-	}
+	for (auto i = 0; i < m_VkContext.getSwapChainImageSize(); ++i)
+		hiveVKT::createBuffer(m_VkContext.getDevice(), BufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, m_UniformBufferSet[i], m_UniformBufferDeviceMemorySet[i]);
 }
 
 //************************************************************************************
@@ -446,13 +375,13 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 1> DescriptorPoolSizeSet = {};
 	DescriptorPoolSizeSet[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	DescriptorPoolSizeSet[0].descriptorCount = static_cast<uint32_t>(m_SwapChainImageSet.size());
+	DescriptorPoolSizeSet[0].descriptorCount = static_cast<uint32_t>(m_VkContext.getSwapChainImageSize());
 
 	VkDescriptorPoolCreateInfo DescriptorPoolCreateInfo = {};
 	DescriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	DescriptorPoolCreateInfo.poolSizeCount = 1;
 	DescriptorPoolCreateInfo.pPoolSizes = DescriptorPoolSizeSet.data();
-	DescriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(m_SwapChainImageSet.size());
+	DescriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(m_VkContext.getSwapChainImageSize());
 
 	if (vkCreateDescriptorPool(m_VkContext.getDevice(), &DescriptorPoolCreateInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create descriptor pool!");
@@ -462,19 +391,19 @@ void VulkanApp::CPerpixelShadingApp::__createDescriptorPool()
 //Function:
 void VulkanApp::CPerpixelShadingApp::__createDescriptorSet()
 {
-	std::vector<VkDescriptorSetLayout> DescriptorSetLayoutSet(m_SwapChainImageSet.size(), m_pDescriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> DescriptorSetLayoutSet(m_VkContext.getSwapChainImageSize(), m_pDescriptorSetLayout);
 
 	VkDescriptorSetAllocateInfo DescriptorSetAllocateInfo = {};
 	DescriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	DescriptorSetAllocateInfo.descriptorPool = m_pDescriptorPool;
-	DescriptorSetAllocateInfo.descriptorSetCount = static_cast<uint32_t>(m_SwapChainImageSet.size());
+	DescriptorSetAllocateInfo.descriptorSetCount = static_cast<uint32_t>(m_VkContext.getSwapChainImageSize());
 	DescriptorSetAllocateInfo.pSetLayouts = DescriptorSetLayoutSet.data();
 
-	m_DescriptorSet.resize(m_SwapChainImageSet.size());
+	m_DescriptorSet.resize(m_VkContext.getSwapChainImageSize());
 	if (vkAllocateDescriptorSets(m_VkContext.getDevice(), &DescriptorSetAllocateInfo, m_DescriptorSet.data()) != VK_SUCCESS)
 		throw std::runtime_error("Failed to allocate descriptor set!");
 
-	for (auto i = 0; i < m_SwapChainImageSet.size(); ++i)
+	for (auto i = 0; i < m_VkContext.getSwapChainImageSize(); ++i)
 	{
 		VkDescriptorBufferInfo DescriptorBufferInfo = {};
 		DescriptorBufferInfo.buffer = m_UniformBufferSet[i];
@@ -504,7 +433,7 @@ void VulkanApp::CPerpixelShadingApp::__createCommandBuffers()
 
 	VkCommandBufferAllocateInfo CommandBufferAllocateInfo = {};
 	CommandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	CommandBufferAllocateInfo.commandPool = m_pCommandPool;
+	CommandBufferAllocateInfo.commandPool = m_VkContext.getCommandPool();
 	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBufferSet.size());
 
@@ -571,28 +500,8 @@ void VulkanApp::CPerpixelShadingApp::__createSyncObjects()
 
 //************************************************************************************
 //Function:
-void VulkanApp::CPerpixelShadingApp::__copyBuffer(VkBuffer vSrcBuffer, VkBuffer vDstBuffer, VkDeviceSize vBufferSize)
-{
-	VkCommandBuffer CommandBuffer = __beginSingleTimeCommands();
-
-	VkBufferCopy CopyRegion = {};
-	CopyRegion.size = vBufferSize;
-	CopyRegion.srcOffset = 0;
-	CopyRegion.dstOffset = 0;
-	vkCmdCopyBuffer(CommandBuffer, vSrcBuffer, vDstBuffer, 1, &CopyRegion);
-
-	__endSingleTimeCommands(CommandBuffer);
-}
-
-//************************************************************************************
-//Function:
 void VulkanApp::CPerpixelShadingApp::__updateUniformBuffer(uint32_t vImageIndex)
 {
-	static auto StartTime = std::chrono::high_resolution_clock::now();
-
-	auto CurrentTime = std::chrono::high_resolution_clock::now();
-	float Time = std::chrono::duration<float, std::chrono::seconds::period>(CurrentTime - StartTime).count();
-
 	SUniformBufferObject UBO = {};
 	UBO.Model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
 	UBO.Model = glm::scale(UBO.Model, glm::vec3(0.3f, 0.3f, 0.3f));
@@ -619,33 +528,7 @@ void VulkanApp::CPerpixelShadingApp::__loadModel()
 	TextureDescriptorBindingInfo.TextureDescriptorBindingInfo.push_back({ hiveVKT::ETextureType::TEXTURE_TYPE_SPEC, 1 });
 
 	m_pModel = new hiveVKT::CModel();
-	m_pModel->loadModel("../../resource/models/nanosuit/nanosuit.obj", VertexLayout, TextureDescriptorBindingInfo, m_VkContext.getDevice(), m_pCommandPool, m_pQueue);
-}
-
-//************************************************************************************
-//Function:
-VkImageView VulkanApp::CPerpixelShadingApp::__createImageView(const VkImage& vImage, VkFormat vImageFormat, VkImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel)
-{
-	VkImageViewCreateInfo ImageViewCreateInfo = {};
-	ImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	ImageViewCreateInfo.image = vImage;
-	ImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	ImageViewCreateInfo.format = vImageFormat;
-	ImageViewCreateInfo.subresourceRange.aspectMask = vImageAspectFlags;
-	ImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	ImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	ImageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	ImageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	ImageViewCreateInfo.subresourceRange.levelCount = vMipmapLevel;
-	ImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-	ImageViewCreateInfo.subresourceRange.layerCount = 1;
-	ImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-
-	VkImageView ImageView;
-	if (vkCreateImageView(m_VkContext.getDevice(), &ImageViewCreateInfo, nullptr, &ImageView) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create image view!");
-
-	return ImageView;
+	m_pModel->loadModel("../../resource/models/nanosuit/nanosuit.obj", VertexLayout, TextureDescriptorBindingInfo, m_VkContext.getDevice(), m_VkContext.getCommandPool(), m_VkContext.getQueue());
 }
 
 //************************************************************************************
@@ -669,22 +552,6 @@ VkFormat VulkanApp::CPerpixelShadingApp::__findSupportedFormat(const std::vector
 
 //************************************************************************************
 //Function:
-uint32_t VulkanApp::CPerpixelShadingApp::__findMemoryType(uint32_t vMemoryTypeFilter, VkMemoryPropertyFlags vMemoryProperty)
-{
-	VkPhysicalDeviceMemoryProperties PhysicalDeviceMemoryProperties = {};
-	vkGetPhysicalDeviceMemoryProperties(m_VkContext.getPhysicalDevice(), &PhysicalDeviceMemoryProperties);
-
-	for (uint32_t i = 0; i < PhysicalDeviceMemoryProperties.memoryTypeCount; ++i)
-	{
-		if ((vMemoryTypeFilter & (1 << i)) && (PhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & vMemoryProperty) == vMemoryProperty)
-			return i;
-	}
-
-	throw std::runtime_error("Failed to find suitable memory type");
-}
-
-//************************************************************************************
-//Function:
 VkSampleCountFlagBits VulkanApp::CPerpixelShadingApp::__getMaxSampleCount()
 {
 	VkPhysicalDeviceProperties PhysicalDeviceProperties;
@@ -699,48 +566,4 @@ VkSampleCountFlagBits VulkanApp::CPerpixelShadingApp::__getMaxSampleCount()
 	if (Counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
 
 	return VK_SAMPLE_COUNT_1_BIT;
-}
-
-//************************************************************************************
-//Function:
-VkCommandBuffer VulkanApp::CPerpixelShadingApp::__beginSingleTimeCommands()
-{
-	VkCommandBufferAllocateInfo CommandBufferAllocateInfo = {};
-	CommandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	CommandBufferAllocateInfo.commandPool = m_pCommandPool;
-	CommandBufferAllocateInfo.commandBufferCount = 1;
-	CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-
-	VkCommandBuffer CommandBuffer = VK_NULL_HANDLE;
-	vkAllocateCommandBuffers(m_VkContext.getDevice(), &CommandBufferAllocateInfo, &CommandBuffer);
-
-	VkCommandBufferBeginInfo CommandBufferBeginInfo = {};
-	CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	CommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(CommandBuffer, &CommandBufferBeginInfo);
-
-	return CommandBuffer;
-}
-
-//************************************************************************************
-//Function:
-void VulkanApp::CPerpixelShadingApp::__endSingleTimeCommands(VkCommandBuffer vCommandBuffer)
-{
-	vkEndCommandBuffer(vCommandBuffer);
-
-	VkSubmitInfo SubmitInfo = {};
-	SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &vCommandBuffer;
-	SubmitInfo.signalSemaphoreCount = 0;
-	SubmitInfo.pSignalSemaphores = nullptr;
-	SubmitInfo.waitSemaphoreCount = 0;
-	SubmitInfo.pWaitSemaphores = nullptr;
-	SubmitInfo.pWaitDstStageMask = 0;
-
-	vkQueueSubmit(m_pQueue, 1, &SubmitInfo, nullptr);
-	vkQueueWaitIdle(m_pQueue);
-
-	vkFreeCommandBuffers(m_VkContext.getDevice(), m_pCommandPool, 1, &vCommandBuffer);
 }
