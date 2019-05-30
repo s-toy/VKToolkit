@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "VkContext.h"
 #include "VkRenderPassCreator.h"
-#include "VkDebugMessenger.h"
+#include "VkSwapchain.h"
 
 using namespace hiveVKT;
 
@@ -11,35 +11,35 @@ protected:
 	virtual void SetUp() override
 	{
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		CVkContext::getInstance()->createContext();
-		m_Messenger.setupDebugUtilsMessenger();
+		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 		m_VkDevice = CVkContext::getInstance()->getVulkanDevice();
+		ASSERT_TRUE(m_VkDevice);
+		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
+		ASSERT_TRUE(m_pMessenger);
+		//EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
 	}
 
 	virtual void TearDown() override
 	{
-		m_Messenger.destroyDebugUtilsMessenger();
-		CVkContext::getInstance()->destroyContext();
+		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
+		//EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
 	}
 
 	CVkRenderPassCreator m_Creator;
-	CVkDebugUtilsMessenger m_Messenger;
+	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
 
 	vk::Device m_VkDevice = nullptr;
 	vk::RenderPass m_VkRenderPass = nullptr;
 };
 
 //***********************************************************************************************
-//≤‚ ‘µ„:
+//≤‚ ‘µ„: 
 TEST_F(Test_CreateVkRenderPass, CreateRenderPass_Default)
 {
-	EXPECT_NO_THROW(m_VkRenderPass = m_Creator.create(m_VkDevice));
-	EXPECT_EQ(m_Messenger.getWarningAndErrorCount(), 0);
+	vk::Result r = m_Creator.create(m_VkDevice, m_VkRenderPass);
 }
 
 TEST_F(Test_CreateVkRenderPass, CreateRenderPass_OneAttachment)
 {
-	m_Creator.addAttachment(vk::Format::eR16G16B16A16Sfloat);
-	EXPECT_NO_THROW(m_VkRenderPass = m_Creator.create(m_VkDevice));
-	EXPECT_EQ(m_Messenger.getWarningAndErrorCount(), 0);
+
 }

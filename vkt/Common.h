@@ -16,7 +16,6 @@
 
 #define _OUTPUT_EVENT(e)			hiveUtility::hiveOutputEvent(e);
 #define _OUTPUT_WARNING(e)			hiveUtility::hiveOutputWarning(__EXCEPTION_SITE__, (e));
-#define _THROW_RUNTIME_ERROR(e)		throw std::runtime_error(e);
 
 #define _DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName &) = delete; \
