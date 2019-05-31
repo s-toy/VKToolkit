@@ -11,39 +11,38 @@ class Test_CreateVkShaderModule : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
-		auto DebugUtilsMessenger = CVkContext::getInstance()->getDebugUtilsMessenger();
-
-		hiveVKT::CVkShaderModuleCreator ShaderModuleCreator;
+		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
+		ASSERT_TRUE(m_pMessenger);
+	//	EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
 	}
 
 	virtual void TearDown() override
 	{
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
+	//	EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
 	}
+
+	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
+	CVkShaderModuleCreator m_ShaderModuleCreator;
 };
 
-
-TEST_F(Test_CreateVkShaderModule, CreateShaderModule)
+//测试点：传入正确文件名创建ShaderModule
+TEST_F(Test_CreateVkShaderModule, CreateShaderModule_Default)
 {
 
 }
 
-TEST(Test_ShaderModuleCreator, FeedCreatorWithWrongFileName)
+//测试点：测试传入错误文件名
+TEST(Test_ShaderModuleCreator, FeedCreator_WrongFileName)
 {
 
 }
 
-TEST(Test_ShaderModuleCreator, FeedCreatorWithWrongFormat)
+//测试点：测试传入错误格式文件名
+TEST(Test_ShaderModuleCreator, FeedCreator_WrongFormat)
 {
 
 }
-
-TEST(Test_ShaderModuleCreator, FeedCreatorWithEmptyFile)
-{
-
-}
-
