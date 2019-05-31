@@ -4,10 +4,16 @@ using namespace std;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Pipeline hiveVKT::CVkGraphicsPipelineCreator::create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass)
+//vk::Pipeline hiveVKT::CVkGraphicsPipelineCreator::create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass)
+//{
+//	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
+//	return vDevice.createGraphicsPipeline(vPipelineCache, m_PipelineCreateInfo);
+//}
+
+vk::Result hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
 {
 	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
-	return vDevice.createGraphicsPipeline(vPipelineCache, m_PipelineCreateInfo);
+	return vDevice.createGraphicsPipelines(vPipelineCache, 1, &m_PipelineCreateInfo,nullptr,&voPipeline);
 }
 
 //***********************************************************************************************
