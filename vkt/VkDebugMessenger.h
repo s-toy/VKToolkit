@@ -8,8 +8,8 @@ namespace hiveVKT
 	class CVkDebugUtilsMessenger
 	{
 	public:
-		void setupDebugUtilsMessenger(const vk::Instance& vInstance,const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);
-		void destroyDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);
+		vk::Result setupDebugUtilsMessenger(const vk::Instance& vInstance,const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);
+		vk::Result destroyDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);
 
 #ifdef UNIT_TEST
 		uint32_t getWarningAndErrorCount() const { return m_WarningCount + m_ErrorCount; }

@@ -5,7 +5,7 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& vSpvFileName)
+vk::Result CVkShaderModuleCreator::createUnique(const std::string& vSpvFileName, vk::UniqueShaderModule& voUniqueShaderModule)
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
@@ -14,12 +14,13 @@ vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& v
 	__prepareShaderModuleCreateInfo(SpvCode);
 
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
-	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo);
+//	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo, voUniqueShaderModule);
+	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo, voUniqueShaderModule);
 }
 
 //***********************************************************************************************
 //FUNCTION:
-vk::ShaderModule CVkShaderModuleCreator::create(const std::string& vSpvFileName)
+vk::Result CVkShaderModuleCreator::create(const std::string& vSpvFileName, vk::ShaderModule& voShaderModule)
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
@@ -28,7 +29,7 @@ vk::ShaderModule CVkShaderModuleCreator::create(const std::string& vSpvFileName)
 	__prepareShaderModuleCreateInfo(SpvCode);
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
 
-	return CVkContext::getInstance()->getVulkanDevice().createShaderModule(m_ShaderModuleCreateInfo);
+	return CVkContext::getInstance()->getVulkanDevice().createShaderModule(&m_ShaderModuleCreateInfo, nullptr, &voShaderModule);
 }
 
 //***********************************************************************************************
