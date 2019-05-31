@@ -55,7 +55,7 @@ vk::Result hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::I
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Result hiveVKT::CVkDebugUtilsMessenger::destroyDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
+void hiveVKT::CVkDebugUtilsMessenger::destroyDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
 {
 	if (m_pDebugUtilsMessenger)
 	{

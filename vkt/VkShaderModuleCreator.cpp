@@ -5,7 +5,7 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Result CVkShaderModuleCreator::createUnique(const std::string& vSpvFileName, vk::UniqueShaderModule& voUniqueShaderModule)
+vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& vSpvFileName)
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
@@ -14,8 +14,7 @@ vk::Result CVkShaderModuleCreator::createUnique(const std::string& vSpvFileName,
 	__prepareShaderModuleCreateInfo(SpvCode);
 
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
-//	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo, voUniqueShaderModule);
-	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo, voUniqueShaderModule);
+	return CVkContext::getInstance()->getVulkanDevice().createShaderModuleUnique(m_ShaderModuleCreateInfo);
 }
 
 //***********************************************************************************************

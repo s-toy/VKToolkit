@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "VkContext.h"
-#include "VkDebugMessenger.h"
 #include "VkShaderModuleCreator.h"
-#include <vulkan/vulkan.hpp>
 
 using namespace hiveVKT;
 

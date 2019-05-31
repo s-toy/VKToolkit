@@ -11,7 +11,7 @@ namespace hiveVKT
 
 	public:
 		vk::Result create(const std::string& vSpvFileName, vk::ShaderModule& voShaderModule);
-		vk::Result createUnique(const std::string& vSpvFileName, vk::UniqueShaderModule& voUniqueShaderModule);
+		vk::UniqueShaderModule createUnique(const std::string& vSpvFileName);
 
 	private:
 		vk::ShaderModuleCreateInfo m_ShaderModuleCreateInfo;
