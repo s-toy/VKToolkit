@@ -38,7 +38,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
+vk::Result hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
 {
 	if (m_pDebugUtilsMessenger)return;
 
@@ -50,7 +50,7 @@ void hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::Instanc
 	DebugUtilsMessengerCreateInfo.pfnUserCallback = reinterpret_cast<PFN_vkDebugUtilsMessengerCallbackEXT>(__debugUtilsCallback);
 	DebugUtilsMessengerCreateInfo.pUserData = this;
 
-	m_pDebugUtilsMessenger = vInstance.createDebugUtilsMessengerEXT(DebugUtilsMessengerCreateInfo, nullptr, vDynamicDispatchLoader);
+	return vInstance.createDebugUtilsMessengerEXT(&DebugUtilsMessengerCreateInfo, nullptr, &m_pDebugUtilsMessenger, vDynamicDispatchLoader);
 }
 
 //***********************************************************************************************
