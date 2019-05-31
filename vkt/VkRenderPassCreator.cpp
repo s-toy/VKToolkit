@@ -6,6 +6,12 @@ using namespace hiveVKT;
 //FUNCTION:
 vk::Result hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
 {
+	if (m_SubpassDescriptionSet.size() < 1)
+	{
+		voRenderPass = nullptr;
+		return vk::Result::eIncomplete;
+	}
+
 	__prepareRenderPassCreateInfo();
 	return vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass);
 }
