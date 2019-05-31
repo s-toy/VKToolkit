@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "VkDebugMessenger.h"
 
 #define Singleton(T) static T* getInstance() { static T Instance; return &Instance; }
 
@@ -29,6 +30,7 @@ namespace hiveVKT
 		void setEngineVersion(uint32_t vEngineVersion) { _ASSERT(!m_IsInitialized); m_EngineVersion = vEngineVersion; }
 		void setApiVersion(uint32_t vApiVersion) { _ASSERT(!m_IsInitialized); m_ApiVersion = vApiVersion; }
 
+		//TODO：提供查询物理设备支持的扩展和特性
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { _ASSERT(!m_IsInitialized); m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
 		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { _ASSERT(!m_IsInitialized); m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
@@ -39,6 +41,7 @@ namespace hiveVKT
 		const vk::PhysicalDevice& getPhysicalDevice()const { _ASSERT(m_IsInitialized); return m_pPhysicalDevice; }
 		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { _ASSERT(m_IsInitialized); return m_DynamicDispatchLoader; }
 		const vk::Device& getVulkanDevice()const { _ASSERT(m_IsInitialized); return m_pDevice; }
+		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { _ASSERT(m_IsInitialized); return m_DebugUtilsMessenger; }
 
 		int getComprehensiveQueueFamilyIndex()const { _ASSERT(m_IsInitialized); return std::get<0>(m_ComprehensiveQueue); }
 		const vk::Queue& getComprehensiveQueue()const { _ASSERT(m_IsInitialized); return std::get<1>(m_ComprehensiveQueue); }
@@ -77,6 +80,7 @@ namespace hiveVKT
 		vk::DispatchLoaderDynamic m_DynamicDispatchLoader;
 		vk::Device m_pDevice = nullptr;
 		std::tuple<uint32_t, vk::Queue, vk::CommandPool> m_ComprehensiveQueue = { UINT32_MAX,nullptr,nullptr }; //<queue family index, queue, command pool>
+		CVkDebugUtilsMessenger m_DebugUtilsMessenger;
 
 		void __createVulkanInstance();
 		void __createVulkanDevice();

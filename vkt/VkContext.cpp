@@ -15,6 +15,8 @@ hiveVKT::CVkContext::~CVkContext()
 void CVkContext::createContext()
 {
 	__createVulkanInstance();
+	if (m_EnableDebugUtilsHint)
+		m_DebugUtilsMessenger.setupDebugUtilsMessenger(m_pInstance, m_DynamicDispatchLoader);
 	__createVulkanDevice();
 
 	m_IsInitialized = true;
@@ -27,6 +29,9 @@ void CVkContext::destroyContext()
 	if (!m_IsInitialized)return;
 
 	m_pDevice.waitIdle();
+
+	if (m_EnableDebugUtilsHint)
+		m_DebugUtilsMessenger.destroyDebugUtilsMessenger(m_pInstance, m_DynamicDispatchLoader);
 
 	m_pDevice.destroyCommandPool(std::get<2>(m_ComprehensiveQueue));
 	m_pDevice.destroy();

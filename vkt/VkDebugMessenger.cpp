@@ -38,7 +38,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger()
+vk::Result hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
 {
 	if (m_pDebugUtilsMessenger)return;
 
@@ -50,23 +50,16 @@ void hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger()
 	DebugUtilsMessengerCreateInfo.pfnUserCallback = reinterpret_cast<PFN_vkDebugUtilsMessengerCallbackEXT>(__debugUtilsCallback);
 	DebugUtilsMessengerCreateInfo.pUserData = this;
 
-	_ASSERT(CVkContext::getInstance()->isContextCreated());
-	auto VulkanInstance = CVkContext::getInstance()->getVulkanInstance();
-	auto DynamicDispatchLoader = CVkContext::getInstance()->getDynamicDispatchLoader();
-
-	m_pDebugUtilsMessenger = VulkanInstance.createDebugUtilsMessengerEXT(DebugUtilsMessengerCreateInfo, nullptr, DynamicDispatchLoader);
+	return vInstance.createDebugUtilsMessengerEXT(&DebugUtilsMessengerCreateInfo, nullptr, &m_pDebugUtilsMessenger, vDynamicDispatchLoader);
 }
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkDebugUtilsMessenger::destroyDebugUtilsMessenger()
+void hiveVKT::CVkDebugUtilsMessenger::destroyDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
 {
 	if (m_pDebugUtilsMessenger)
 	{
-		auto VulkanInstance = CVkContext::getInstance()->getVulkanInstance();
-		auto DynamicDispatchLoader = CVkContext::getInstance()->getDynamicDispatchLoader();
-
-		VulkanInstance.destroyDebugUtilsMessengerEXT(m_pDebugUtilsMessenger, nullptr, DynamicDispatchLoader);
+		vInstance.destroyDebugUtilsMessengerEXT(m_pDebugUtilsMessenger, nullptr, vDynamicDispatchLoader);
 		m_pDebugUtilsMessenger = nullptr;
 	}
 }

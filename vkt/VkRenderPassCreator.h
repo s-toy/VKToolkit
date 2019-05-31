@@ -1,25 +1,31 @@
 #pragma once
+#include <vector>
+#define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.hpp>
 
 namespace hiveVKT
 {
+	struct SSubPassDescription
+	{
+		vk::PipelineBindPoint BindPoint = vk::PipelineBindPoint::eGraphics;
+		std::vector<vk::AttachmentReference> InputAttachmentSet = {};
+		std::vector<vk::AttachmentReference> ColorAttachmentSet = {};
+		vk::AttachmentReference DepthStencilAttachment = {};
+		vk::AttachmentReference ResolveAttachment = {};
+		std::vector<uint32_t>	PreserveAttachmentSet = {};
+	};
+
 	class CVkRenderPassCreator
 	{
 	public:
-		vk::RenderPass create(const vk::Device& vDevice);
-		vk::UniqueRenderPass createUnique(const vk::Device& vDevice);
+		vk::Result create(const vk::Device& vDevice, vk::RenderPass& voRenderPass);
 
 		void addAttachment(vk::Format vFormat, vk::ImageLayout vFinalLayout = vk::ImageLayout::eColorAttachmentOptimal, vk::SampleCountFlagBits vSamples = vk::SampleCountFlagBits::e1);
 
 		vk::AttachmentDescription& fetchAttachmentAt(uint32_t vIndex) { _ASSERTE(vIndex < m_AttachmentDescriptionSet.size()); return m_AttachmentDescriptionSet[vIndex]; }
 		vk::AttachmentDescription& fetchLastAttachment() { return m_AttachmentDescriptionSet.back(); }
 
-		void addSubpass(const std::vector<vk::AttachmentReference>& vColorAttachmentReferences,
-			const vk::AttachmentReference& vDepthStencilAttachmentReference,
-			const std::vector<vk::AttachmentReference>& vResolveAttachmentReferences,
-			const std::vector<vk::AttachmentReference>& vInputAttachmentReferences,
-			const std::vector<uint32_t>& vPreserveAttachmentReferences,
-			vk::PipelineBindPoint vBindPoint = vk::PipelineBindPoint::eGraphics);
+		void addSubpass(const SSubPassDescription& vSubPassDescription);
 
 		void addSubpassDependency(const vk::SubpassDependency& vSubpassDependency) { m_SubpassDependencySet.emplace_back(vSubpassDependency); }
 
