@@ -19,7 +19,7 @@ vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& v
 
 //***********************************************************************************************
 //FUNCTION:
-vk::ShaderModule CVkShaderModuleCreator::create(const std::string& vSpvFileName)
+vk::Result CVkShaderModuleCreator::create(const std::string& vSpvFileName, vk::ShaderModule& voShaderModule)
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
@@ -28,7 +28,7 @@ vk::ShaderModule CVkShaderModuleCreator::create(const std::string& vSpvFileName)
 	__prepareShaderModuleCreateInfo(SpvCode);
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
 
-	return CVkContext::getInstance()->getVulkanDevice().createShaderModule(m_ShaderModuleCreateInfo);
+	return CVkContext::getInstance()->getVulkanDevice().createShaderModule(&m_ShaderModuleCreateInfo, nullptr, &voShaderModule);
 }
 
 //***********************************************************************************************
