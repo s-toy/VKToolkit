@@ -1,10 +1,11 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkSwapchain
+	class VKT_DECLSPEC CVkSwapchain
 	{
 	public:
 		CVkSwapchain();

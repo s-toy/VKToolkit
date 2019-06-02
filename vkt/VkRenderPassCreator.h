@@ -2,6 +2,7 @@
 #include <vector>
 #define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.hpp>
+#include "Export.h"
 
 namespace hiveVKT
 {
@@ -15,7 +16,7 @@ namespace hiveVKT
 		std::vector<uint32_t>	PreserveAttachmentSet = {};
 	};
 
-	class CVkRenderPassCreator
+	class VKT_DECLSPEC CVkRenderPassCreator
 	{
 	public:
 		vk::Result create(const vk::Device& vDevice, vk::RenderPass& voRenderPass);

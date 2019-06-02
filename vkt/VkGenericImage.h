@@ -2,10 +2,11 @@
 #include <vulkan/vulkan.hpp>
 #include "VkUtility.h"
 #include "Common.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkGenericImage
+	class VKT_DECLSPEC CVkGenericImage
 	{
 	public:
 		CVkGenericImage() = default;

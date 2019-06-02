@@ -1,9 +1,10 @@
 #pragma once
 #include "VkGenericImage.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkTexture2D :public CVkGenericImage
+	class VKT_DECLSPEC CVkTexture2D :public CVkGenericImage
 	{
 	public:
 		CVkTexture2D();

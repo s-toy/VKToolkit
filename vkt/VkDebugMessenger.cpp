@@ -5,7 +5,7 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags, 
+VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT vMessageSeverityFlags,
 	vk::DebugUtilsMessageTypeFlagBitsEXT vMessageTypeFlags, const vk::DebugUtilsMessengerCallbackDataEXT* vMessengerCallbackData, void* vUserData)
 {
 	std::string Severity;
@@ -15,16 +15,16 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::
 
 	if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) { Severity = "VERBOSE"; }
 	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) { Severity = "INFO"; }
-	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) 
-	{ 
-		Severity = "WARNING"; 
+	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+	{
+		Severity = "WARNING";
 #ifdef UNIT_TEST
 		pDebugMessenger->m_WarningCount++;
 #endif // UNIT_TEST
 	}
-	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) 
-	{ 
-		Severity = "ERROR"; 
+	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	{
+		Severity = "ERROR";
 #ifdef UNIT_TEST
 		pDebugMessenger->m_ErrorCount++;
 #endif // UNIT_TEST
@@ -40,7 +40,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::
 //FUNCTION:
 vk::Result hiveVKT::CVkDebugUtilsMessenger::setupDebugUtilsMessenger(const vk::Instance& vInstance, const vk::DispatchLoaderDynamic& vDynamicDispatchLoader)
 {
-	if (m_pDebugUtilsMessenger)return;
+	if (m_pDebugUtilsMessenger) return vk::Result::eIncomplete;
 
 	vk::DebugUtilsMessengerCreateInfoEXT DebugUtilsMessengerCreateInfo;
 	DebugUtilsMessengerCreateInfo.flags = vk::DebugUtilsMessengerCreateFlagsEXT();

@@ -2,11 +2,12 @@
 #include <vulkan/vulkan.hpp>
 #include "VkUtility.h"
 #include "Common.h"
+#include "Export.h"
 #include "VkContext.h"
 
 namespace hiveVKT
 {
-	class CMesh
+	class VKT_DECLSPEC CMesh
 	{
 	public:
 		CMesh(const std::vector<float>& vVertexData, const std::vector<uint32_t>& vIndexData, vk::DescriptorSet vTextureDescriptorSet);

@@ -4,6 +4,7 @@
 #include <Assimp\postprocess.h>
 #include "VkTexture2D.h"
 #include "Mesh.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
@@ -41,7 +42,7 @@ namespace hiveVKT
 		std::string   TextureName;
 	};
 
-	class CModel
+	class VKT_DECLSPEC CModel
 	{
 	public:
 		CModel() = default;

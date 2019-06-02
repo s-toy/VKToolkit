@@ -2,10 +2,11 @@
 #include <optional>
 #include <vulkan/vulkan.hpp>
 #include "VkGraphicsPipelineDefaultState.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkGraphicsPipelineCreator
+	class VKT_DECLSPEC CVkGraphicsPipelineCreator
 	{
 	public:
 		CVkGraphicsPipelineCreator() {}
