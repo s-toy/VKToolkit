@@ -2,10 +2,11 @@
 #include <vulkan/vulkan.hpp>
 #include "Utility.h"
 #include "Common.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkDebugUtilsMessenger
+	class VKT_DECLSPEC CVkDebugUtilsMessenger
 	{
 	public:
 		vk::Result setupDebugUtilsMessenger(const vk::Instance& vInstance,const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);

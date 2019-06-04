@@ -2,10 +2,11 @@
 #include <vulkan/vulkan.hpp>
 #include "Utility.h"
 #include "Common.h"
+#include "Export.h"
 
 namespace hiveVKT
 {
-	class CVkShaderModuleCreator
+	class VKT_DECLSPEC CVkShaderModuleCreator
 	{
 		using SprivCodeType = std::vector<uint32_t>;
 

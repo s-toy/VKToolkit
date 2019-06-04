@@ -51,6 +51,9 @@
     <ClInclude Include="..\vkt\Mesh.h">
       <Filter>graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\vkt\Export.h">
+      <Filter>general</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\vkt\VkUtility.cpp">
