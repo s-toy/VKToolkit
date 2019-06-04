@@ -12,7 +12,7 @@ using namespace hiveVKT;
 
 EResult hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
 {
-	if (/*TODO: check invalid parameters*/true) return EResult::ERROR_INVALID_PARAMETERS;
+	if (/*TODO: check invalid parameters*/true) return EResult::eErrorInvalidParameters;
 
 	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
 	return static_cast<EResult>(vDevice.createGraphicsPipelines(vPipelineCache, 1, &m_PipelineCreateInfo, nullptr, &voPipeline));
