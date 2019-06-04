@@ -2,6 +2,7 @@
 #include <optional>
 #include <vulkan/vulkan.hpp>
 #include "VkGraphicsPipelineDefaultState.h"
+#include "Common.h"
 
 namespace hiveVKT
 {
@@ -12,7 +13,7 @@ namespace hiveVKT
 		 
 
 		//vk::Pipeline create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
-		vk::Result create(vk::Pipeline& voPipeline,const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
+		EResult create(vk::Pipeline& voPipeline,const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
 		vk::UniquePipeline createUnique(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
 
 		vk::PipelineInputAssemblyStateCreateInfo& fetchInputAssemblyState() { return m_InputAssemblyStateCreateInfo; }

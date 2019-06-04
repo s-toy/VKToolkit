@@ -1,7 +1,7 @@
 #include "VkGraphicsPipelineCreator.h"
 
 using namespace std;
-
+using namespace hiveVKT;
 //***********************************************************************************************
 //FUNCTION:
 //vk::Pipeline hiveVKT::CVkGraphicsPipelineCreator::create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass)
@@ -10,10 +10,12 @@ using namespace std;
 //	return vDevice.createGraphicsPipeline(vPipelineCache, m_PipelineCreateInfo);
 //}
 
-vk::Result hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
+EResult hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
 {
+	if (/*TODO: check invalid parameters*/true) return EResult::ERROR_INVALID_PARAMETERS;
+
 	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
-	return vDevice.createGraphicsPipelines(vPipelineCache, 1, &m_PipelineCreateInfo,nullptr,&voPipeline);
+	return static_cast<EResult>(vDevice.createGraphicsPipelines(vPipelineCache, 1, &m_PipelineCreateInfo, nullptr, &voPipeline));
 }
 
 //***********************************************************************************************
