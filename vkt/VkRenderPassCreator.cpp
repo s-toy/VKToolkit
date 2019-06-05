@@ -8,11 +8,18 @@ using namespace hiveVKT;
 //FUNCTION:
 EResult hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
 {
-	bool Success = true;
-	if (!vDevice) { Success = false;  _OUTPUT_WARNING("") } //TODO: 提示warning信息
-	if (m_SubpassDescriptionSet.size() < 1) { Success = false; _OUTPUT_WARNING("") }
+	bool IsParamsValid = true;
 
-	if (!Success) { voRenderPass = nullptr; return EResult::eErrorInvalidParameters; }
+	if (!vDevice) {
+		IsParamsValid = false;
+		_OUTPUT_WARNING("The input paramter [vDevice] must be a valid vk::Device handle.")
+	}
+	if (m_SubpassDescriptionSet.size() < 1) {
+		IsParamsValid = false;
+		_OUTPUT_WARNING("A render pass must have at least one subpass, call CVkRenderPassCreator::addSubpass() to add a subpass.")
+	}
+
+	if (!IsParamsValid) { voRenderPass = nullptr; return EResult::eErrorInvalidParameters; }
 
 	__prepareRenderPassCreateInfo();
 	return static_cast<EResult>(vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass));
