@@ -10,14 +10,19 @@ class Test_CreateVkDebugMessenger : public ::testing::Test
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 	}
+
+	virtual void TearDown() override
+	{
+		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
+	}
 };
 
-//测试点：DebugUtilsMessenger是否创建成功
+//测试点：DebugUtilsMessenger创建成功
 TEST_F(Test_CreateVkDebugMessenger, SetupDebugUtilsMessenger_Default)
 {
 	const CVkDebugUtilsMessenger* m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
 	EXPECT_TRUE(m_pMessenger);
-//	EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
+	EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), 0);
 }
 
 //测试点：回调函数是否生效
