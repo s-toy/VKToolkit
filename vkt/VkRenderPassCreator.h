@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
+#include <optional>
 #define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.hpp>
 #include "Export.h"
+#include "Common.h"
 
 namespace hiveVKT
 {
@@ -11,15 +13,15 @@ namespace hiveVKT
 		vk::PipelineBindPoint BindPoint = vk::PipelineBindPoint::eGraphics;
 		std::vector<vk::AttachmentReference> InputAttachmentSet = {};
 		std::vector<vk::AttachmentReference> ColorAttachmentSet = {};
-		vk::AttachmentReference DepthStencilAttachment = {};
-		vk::AttachmentReference ResolveAttachment = {};
+		std::optional<vk::AttachmentReference> DepthStencilAttachment;
+		std::optional<vk::AttachmentReference> ResolveAttachment;
 		std::vector<uint32_t>	PreserveAttachmentSet = {};
 	};
 
 	class VKT_DECLSPEC CVkRenderPassCreator
 	{
 	public:
-		vk::Result create(const vk::Device& vDevice, vk::RenderPass& voRenderPass);
+		EResult create(const vk::Device& vDevice, vk::RenderPass& voRenderPass);
 
 		void addAttachment(vk::Format vFormat, vk::ImageLayout vFinalLayout = vk::ImageLayout::eColorAttachmentOptimal, vk::SampleCountFlagBits vSamples = vk::SampleCountFlagBits::e1);
 
