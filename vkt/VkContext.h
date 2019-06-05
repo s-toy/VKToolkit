@@ -15,38 +15,46 @@ namespace hiveVKT
 	public:
 		~CVkContext();
 
-		void setPreferDiscreteGpuHint(bool vPreferDiscreteGpuHint) { _ASSERT(!m_IsInitialized); m_PreferDiscreteGpuHint = vPreferDiscreteGpuHint; }
-		void setForceGraphicsFunctionalityHint(bool vForceGraphicsFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceGraphicsFunctionalityHint = vForceGraphicsFunctionalityHint; }
-		void setForceComputeFunctionalityHint(bool vForceComputeFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceComputeFunctionalityHint = vForceComputeFunctionalityHint; }
-		void setForceTransferFunctionalityHint(bool vForceTransferFunctionalityHint) { _ASSERT(!m_IsInitialized); m_ForceTransferFunctionalityHint = vForceTransferFunctionalityHint; }
-		void setEnableDebugUtilsHint(bool vEnableDebugUtilsHint) { _ASSERT(!m_IsInitialized); m_EnableDebugUtilsHint = vEnableDebugUtilsHint; }
-		void setEnablePresentationHint(bool vEnablePresentationHint) { _ASSERT(!m_IsInitialized); m_EnablePresentationHint = vEnablePresentationHint; }
-		void setEnableApiDumpHint(bool vEnableApiDumpHint) { _ASSERT(!m_IsInitialized); m_EnableApiDumpHint = vEnableApiDumpHint; }
-		void setEnableFpsMonitorHint(bool vEnableFpsMonitorHint) { _ASSERT(!m_IsInitialized); m_EnableFpsMonitorHint = vEnableFpsMonitorHint; }
-		void setEnableScreenshotHint(bool vEnableScreenshotHint) { _ASSERT(!m_IsInitialized); m_EnableScreenshotHint = vEnableScreenshotHint; }
+		void setPreferDiscreteGpuHint(bool vPreferDiscreteGpuHint) { if(m_IsInitialized) return; m_PreferDiscreteGpuHint = vPreferDiscreteGpuHint; }
+		void setForceGraphicsFunctionalityHint(bool vForceGraphicsFunctionalityHint) { if (m_IsInitialized) return; m_ForceGraphicsFunctionalityHint = vForceGraphicsFunctionalityHint; }
+		void setForceComputeFunctionalityHint(bool vForceComputeFunctionalityHint) { if (m_IsInitialized) return; m_ForceComputeFunctionalityHint = vForceComputeFunctionalityHint; }
+		void setForceTransferFunctionalityHint(bool vForceTransferFunctionalityHint) { if (m_IsInitialized) return; m_ForceTransferFunctionalityHint = vForceTransferFunctionalityHint; }
+		void setEnableDebugUtilsHint(bool vEnableDebugUtilsHint) { if (m_IsInitialized) return; m_EnableDebugUtilsHint = vEnableDebugUtilsHint; }
+		void setEnablePresentationHint(bool vEnablePresentationHint) { if (m_IsInitialized) return; m_EnablePresentationHint = vEnablePresentationHint; }
+		void setEnableApiDumpHint(bool vEnableApiDumpHint) { if (m_IsInitialized) return; m_EnableApiDumpHint = vEnableApiDumpHint; }
+		void setEnableFpsMonitorHint(bool vEnableFpsMonitorHint) { if (m_IsInitialized) return; m_EnableFpsMonitorHint = vEnableFpsMonitorHint; }
+		void setEnableScreenshotHint(bool vEnableScreenshotHint) { if (m_IsInitialized) return; m_EnableScreenshotHint = vEnableScreenshotHint; }
 
-		void setApplicationName(const std::string& vApplicationName) { _ASSERT(!m_IsInitialized); m_ApplicationName = vApplicationName; }
-		void setEngineName(const std::string& vEngineName) { _ASSERT(!m_IsInitialized); m_EngineName = vEngineName; }
-		void setApplicationVersion(uint32_t vApplicationVersion) { _ASSERT(!m_IsInitialized); m_ApplicationVersion = vApplicationVersion; }
-		void setEngineVersion(uint32_t vEngineVersion) { _ASSERT(!m_IsInitialized); m_EngineVersion = vEngineVersion; }
-		void setApiVersion(uint32_t vApiVersion) { _ASSERT(!m_IsInitialized); m_ApiVersion = vApiVersion; }
+		void setApplicationName(const std::string& vApplicationName) { if (m_IsInitialized) return; m_ApplicationName = vApplicationName; }
+		void setEngineName(const std::string& vEngineName) { if (m_IsInitialized) return; m_EngineName = vEngineName; }
+		void setApplicationVersion(uint32_t vApplicationVersion) { if (m_IsInitialized) return; m_ApplicationVersion = vApplicationVersion; }
+		void setEngineVersion(uint32_t vEngineVersion) { if (m_IsInitialized) return; m_EngineVersion = vEngineVersion; }
+		void setApiVersion(uint32_t vApiVersion) { if (m_IsInitialized) return; m_ApiVersion = vApiVersion; }
 
 		//TODO：提供查询物理设备支持的扩展和特性
-		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { _ASSERT(!m_IsInitialized); m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
-		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { _ASSERT(!m_IsInitialized); m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
+		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { if (m_IsInitialized) return; m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
+		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { if (m_IsInitialized) return; m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
+
+		std::vector<std::string> fetchEnabledDeviceExtensions() {
+			return std::vector<std::string>();
+		}//TODO
+		std::vector<std::string> fetchEnabledDeviceLayers() {
+			return std::vector<std::string>();
+		}//TODO
 
 		void createContext();
 		void destroyContext();
 
-		const vk::Instance& getVulkanInstance()const { _ASSERT(m_IsInitialized); return m_pInstance; }
-		const vk::PhysicalDevice& getPhysicalDevice()const { _ASSERT(m_IsInitialized); return m_pPhysicalDevice; }
-		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { _ASSERT(m_IsInitialized); return m_DynamicDispatchLoader; }
-		const vk::Device& getVulkanDevice()const { _ASSERT(m_IsInitialized); return m_pDevice; }
-		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { _ASSERT(m_IsInitialized); return m_DebugUtilsMessenger; }
+		const vk::Instance& getVulkanInstance()const { return m_pInstance; }
+		const vk::PhysicalDevice& getPhysicalDevice()const { return m_pPhysicalDevice; }
+		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { return m_DynamicDispatchLoader; }
+		const vk::Device& getVulkanDevice()const { return m_pDevice; }
 
-		int getComprehensiveQueueFamilyIndex()const { _ASSERT(m_IsInitialized); return std::get<0>(m_ComprehensiveQueue); }
-		const vk::Queue& getComprehensiveQueue()const { _ASSERT(m_IsInitialized); return std::get<1>(m_ComprehensiveQueue); }
-		const vk::CommandPool& getComprehensiveCommandPool()const { _ASSERT(m_IsInitialized); return std::get<2>(m_ComprehensiveQueue); }
+		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { return m_DebugUtilsMessenger; }
+
+		int getComprehensiveQueueFamilyIndex()const { return std::get<0>(m_ComprehensiveQueue); }
+		const vk::Queue& getComprehensiveQueue()const { return std::get<1>(m_ComprehensiveQueue); }
+		const vk::CommandPool& getComprehensiveCommandPool()const { return std::get<2>(m_ComprehensiveQueue); }
 
 		bool isContextCreated()const { return m_IsInitialized; }
 
