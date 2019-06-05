@@ -18,16 +18,12 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CVkDebugUtilsMessenger::__debugUtilsCallback(vk::
 	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 	{
 		Severity = "WARNING";
-#ifdef UNIT_TEST
 		pDebugMessenger->m_WarningCount++;
-#endif // UNIT_TEST
 	}
 	else if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 	{
 		Severity = "ERROR";
-#ifdef UNIT_TEST
 		pDebugMessenger->m_ErrorCount++;
-#endif // UNIT_TEST
 	}
 
 	if (static_cast<VkDebugUtilsMessageSeverityFlagBitsEXT>(vMessageSeverityFlags) >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)

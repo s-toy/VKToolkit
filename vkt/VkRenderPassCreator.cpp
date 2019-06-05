@@ -1,19 +1,28 @@
 #include "VkRenderPassCreator.h"
+#include "common/CommonMicro.h"
+#include "common/UtilityInterface.h"
 
 using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Result hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
+EResult hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
 {
-	if (m_SubpassDescriptionSet.size() < 1)
-	{
-		voRenderPass = nullptr;
-		return vk::Result::eIncomplete;
+	bool IsParamsValid = true;
+
+	if (!vDevice) {
+		IsParamsValid = false;
+		_OUTPUT_WARNING("The input paramter [vDevice] must be a valid vk::Device handle.")
+	}
+	if (m_SubpassDescriptionSet.size() < 1) {
+		IsParamsValid = false;
+		_OUTPUT_WARNING("A render pass must have at least one subpass, call CVkRenderPassCreator::addSubpass() to add a subpass.")
 	}
 
+	if (!IsParamsValid) { voRenderPass = nullptr; return EResult::eErrorInvalidParameters; }
+
 	__prepareRenderPassCreateInfo();
-	return vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass);
+	return static_cast<EResult>(vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass));
 }
 
 //***********************************************************************************************
@@ -42,8 +51,8 @@ void hiveVKT::CVkRenderPassCreator::addSubpass(const SSubPassDescription& vSubPa
 	SubpassDesc.pInputAttachments = vSubPassDescription.InputAttachmentSet.data();
 	SubpassDesc.colorAttachmentCount = static_cast<uint32_t>(vSubPassDescription.ColorAttachmentSet.size());
 	SubpassDesc.pColorAttachments = vSubPassDescription.ColorAttachmentSet.data();
-	SubpassDesc.pResolveAttachments = &vSubPassDescription.ResolveAttachment;
-	SubpassDesc.pDepthStencilAttachment = &vSubPassDescription.DepthStencilAttachment;
+	SubpassDesc.pResolveAttachments = vSubPassDescription.ResolveAttachment.has_value() ? &vSubPassDescription.ResolveAttachment.value() : nullptr;
+	SubpassDesc.pDepthStencilAttachment = vSubPassDescription.DepthStencilAttachment.has_value() ? &vSubPassDescription.DepthStencilAttachment.value() : nullptr;
 	SubpassDesc.preserveAttachmentCount = static_cast<uint32_t>(vSubPassDescription.PreserveAttachmentSet.size());
 	SubpassDesc.pPreserveAttachments = vSubPassDescription.PreserveAttachmentSet.data();
 	m_SubpassDescriptionSet.push_back(SubpassDesc);
