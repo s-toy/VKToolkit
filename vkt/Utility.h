@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <fstream>
+#include <vector>
+#include "Common.h"
 
 namespace hiveVKT
 {
