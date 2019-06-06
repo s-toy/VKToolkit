@@ -3,14 +3,14 @@
 
 void ValidateVkCreateInstance(const hiveVKT::TParseResult& vResult)
 {
-	auto VkCallSet = vResult.find(std::make_pair(0, 0));
+	auto VkCallSet = vResult.at(std::make_pair(0, 0));
 
 	int Counter = 0;
 	for (auto Call : VkCallSet)
 	{
 		if (Call.FunctionName == "vkCreateInstance")
 		{
-			EXPECT_TRUE(Call.RetureValue == "VK_SUCCESS");
+			EXPECT_TRUE(Call.ReturnValue == "VK_SUCCESS");
 			Counter++;
 		}
 	}
@@ -20,8 +20,10 @@ void ValidateVkCreateInstance(const hiveVKT::TParseResult& vResult)
 void ValidateNonInvokedVkCall(const hiveVKT::TParseResult& vResult)
 {
 	int Counter = 0;
-	for (auto Value : vResult)
+
+	for (hiveVKT::TParseResult::const_iterator it = vResult.begin(); it != vResult.end(); ++it)
 	{
+		auto Value = (*it).second;
 		for (auto Call : Value)
 			if (Call.FunctionName == "vkCreateGraphicsPipelines")
 				Counter++;
@@ -49,7 +51,7 @@ TEST(Test_VkCallParser, NormalPattern)
 
 	auto ParseResult = Parser.parse(ApiDumpFile);
 
-	EXPECT_EQ(vResult.size(), 1);
+	EXPECT_EQ(ParseResult.size(), 1);
 
 	ValidateVkCreateInstance(ParseResult);
 	ValidateNonInvokedVkCall(ParseResult);

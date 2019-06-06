@@ -2,6 +2,7 @@
 #include <fstream>
 #include "common/UtilityInterface.h"
 #include "Utility.h"
+#include "VkUtility.h"
 
 using namespace hiveVKT;
 
@@ -23,7 +24,7 @@ TParseResult CVkCallParser::parse(const std::string& vFileName)
 	for (auto VKCallStr : VKCallStrSet)
 	{
 		std::vector<std::string> Lines;
-		hiveUtility::hiveSplitLine(VKCallStr, "", false, -1, Lines);
+		hiveUtility::hiveSplitLine(VKCallStr, "\n", false, -1, Lines);
 		_ASSERTE(Lines.size() >= 2);
 
 		auto IDPair = __parseThreadAndFrameID(Lines[0]);
@@ -62,16 +63,16 @@ SVKCallInfo CVkCallParser::__parseVKCallInfo(const std::string& vLine)
 {
 	SVKCallInfo VKCallInfo = {};
 
-	std::string l, r;
-	hiveUtility::hiveSplitLine(vLine, "returns", false, l, r);
+	std::vector<std::string> StrSet;
+	hiveVKT::splitByStr(vLine, "returns", StrSet);
 
-	std::string l1, l2;
-	hiveUtility::hiveSplitLine(l, "(", false, l1, l2);
-	VKCallInfo.FunctionName = l1;
+	std::vector<std::string> SubStrSet1;
+	hiveUtility::hiveSplitLine(StrSet[0], "(", false, -1, SubStrSet1);
+	VKCallInfo.FunctionName = SubStrSet1[0];
 
-	std::vector<std::string> rs;
-	hiveUtility::hiveSplitLine(r, " ", false, -1, rs);
-	VKCallInfo.ReturnValue = rs[1];
+	std::vector<std::string> SubStrSet2;
+	hiveUtility::hiveSplitLine(StrSet[1], " ", false, -1, SubStrSet2);
+	VKCallInfo.ReturnValue = SubStrSet2[1];
 
 	return VKCallInfo;
 }

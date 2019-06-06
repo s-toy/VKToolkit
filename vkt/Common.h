@@ -1,4 +1,5 @@
 #pragma once
+#include <vulkan/vulkan.hpp>
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
 

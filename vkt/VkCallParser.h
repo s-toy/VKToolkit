@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "Export.h"
 
 namespace hiveVKT
 {
@@ -13,7 +14,7 @@ namespace hiveVKT
 
 	using TParseResult = std::map<std::pair<int, int>, std::vector<SVKCallInfo>>;
 
-	class CVkCallParser
+	class VKT_DECLSPEC CVkCallParser
 	{
 	public:
 		TParseResult parse(const std::string& vFileName);
