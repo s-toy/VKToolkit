@@ -21,9 +21,9 @@ namespace hiveVKT
 	#define DefaultPipelineViewportStateCreateInfo    \
 	{												  \
 		vk::PipelineViewportStateCreateFlags(),       \
-		0,       /*viewportCount*/					  \
+		0,       /*viewportCount*/	/*0->1*/			  \
 		nullptr, /*pViewports*/						  \
-		0,       /*scissorCount*/					  \
+		0,       /*scissorCount*/	/*0->1*/				  \
 		nullptr  /*pScissors*/						  \
 	}
 
