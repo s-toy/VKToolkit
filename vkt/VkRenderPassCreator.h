@@ -21,7 +21,7 @@ namespace hiveVKT
 	class VKT_DECLSPEC CVkRenderPassCreator
 	{
 	public:
-		EResult create(const vk::Device& vDevice, vk::RenderPass& voRenderPass);
+		EResult create(vk::RenderPass& voRenderPass);
 
 		void addAttachment(vk::Format vFormat, vk::ImageLayout vFinalLayout = vk::ImageLayout::eColorAttachmentOptimal, vk::SampleCountFlagBits vSamples = vk::SampleCountFlagBits::e1);
 

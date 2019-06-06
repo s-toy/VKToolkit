@@ -39,6 +39,7 @@
   <ItemGroup>
     <ClCompile Include="..\vkt\Mesh.cpp" />
     <ClCompile Include="..\vkt\Model.cpp" />
+    <ClCompile Include="..\vkt\Utility.cpp" />
     <ClCompile Include="..\vkt\VkCallParser.cpp" />
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
