@@ -11,9 +11,12 @@ using namespace hiveVKT;
 //}
 
 EResult hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
-{
-	if (/*TODO: check invalid parameters*/true) return EResult::eErrorInvalidParameters;
 
+{
+	if (__isParameterWrong(vDevice,vPipelineLayout,vRenderPass,vSubPass))
+		return EResult::eErrorInvalidParameters;
+	if (__isPipelineSettingWrong())
+		return EResult::eErrorInitializationFailed;
 	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
 	return static_cast<EResult>(vDevice.createGraphicsPipelines(vPipelineCache, 1, &m_PipelineCreateInfo, nullptr, &voPipeline));
 }
@@ -24,6 +27,38 @@ vk::UniquePipeline hiveVKT::CVkGraphicsPipelineCreator::createUnique(const vk::D
 {
 	__preparePipelineCreateInfo(vPipelineLayout, vRenderPass, vSubPass);
 	return vDevice.createGraphicsPipelineUnique(vPipelineCache, m_PipelineCreateInfo);
+}
+
+bool hiveVKT::CVkGraphicsPipelineCreator::__isParameterWrong(const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, 
+	const vk::RenderPass & vRenderPass, uint32_t vSubPass)
+{
+		//!=和==两个重载有相似的转换
+	if (/*vDevice != NULL && vPipelineLayout != VK_NULL_HANDLE && vRenderPass != VK_NULL_HANDLE &&*/ vSubPass == 0 )
+		return false;
+	else
+	{
+		return true;
+	}
+}
+
+bool hiveVKT::CVkGraphicsPipelineCreator::__isPipelineSettingWrong()
+{
+	if (m_ShaderStageSet.size() <= 1 || m_ViewportSet.size() <= 0 || m_ScissorSet.size() <= 0
+		|| m_ColorBlendAttachmentStateSet.size() <= 0)
+		return true;
+	else
+	{
+		return false;
+	}
+}
+
+bool hiveVKT::CVkGraphicsPipelineCreator::__isShaderStageWrong()
+{
+	/*if (m_ShaderStageSet.size() >= 2)
+	{
+		if(m_ShaderStageSet[0].)
+	}*/
+	return false;
 }
 
 //***********************************************************************************************
