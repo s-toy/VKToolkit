@@ -62,6 +62,11 @@ namespace hiveVKT
 
 		vk::GraphicsPipelineCreateInfo m_PipelineCreateInfo;
 
+		bool __isParameterWrong(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, 
+			 const vk::RenderPass& vRenderPass, uint32_t vSubPass);
+
+		bool __isPipelineSettingWrong();
+		bool __isShaderStageWrong();
 		void __preparePipelineCreateInfo(const vk::PipelineLayout& vPipelineLayout, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
 	};
 }
