@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <fstream>
+#include <common/UtilityInterface.h>
+#include <boost/regex.hpp>
 
 namespace hiveVKT
 {
@@ -36,5 +38,23 @@ namespace hiveVKT
 		Fin.close();
 
 		return true;
+	}
+
+	std::vector<std::string> splitByEnter(std::string vInput)
+	{
+		std::vector<std::string> Result;
+		boost::regex e("\r\n", boost::regbase::normal | boost::regbase::icase);
+		boost::regex_split(std::back_inserter(Result), vInput, e);
+
+		return Result;
+	}
+
+	std::vector<std::string> splitBySpaceLine(std::string vInput)
+	{
+		std::vector<std::string> Result;
+		boost::regex e("\r\n\r\n", boost::regbase::normal | boost::regbase::icase);
+		boost::regex_split(std::back_inserter(Result), vInput, e);
+
+		return Result;
 	}
 }
