@@ -145,14 +145,14 @@
       <PreprocessorDefinitions>VKT_EXPORTS;_DEBUG;_CONSOLE;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)/include;../external;$(ASSIMP)/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)/include;../external;$(ASSIMP)/include;$(boost);</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ASSIMP)\lib\$(PlatformTarget);$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ASSIMP)\lib\$(PlatformTarget);$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(boost)\$(PlatformTarget);</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp-vc140-mt.lib;hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

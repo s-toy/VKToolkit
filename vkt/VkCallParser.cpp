@@ -16,8 +16,7 @@ TParseResult CVkCallParser::parse(const std::string& vFileName)
 	_ASSERTE(ifs.is_open());
 	std::string FileContent((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 
-	std::vector<std::string> VKCallStrSet;
-	hiveUtility::hiveSplitLine(FileContent, "", false, -1, VKCallStrSet);
+	std::vector<std::string> VKCallStrSet = hiveVKT::splitBySpaceLine(FileContent);
 
 	TParseResult Result;
 

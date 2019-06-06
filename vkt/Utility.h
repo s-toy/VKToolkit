@@ -41,7 +41,7 @@ namespace hiveVKT
 		return true;
 	}
 
-	std::vector<std::string> splitByEnter(std::string vInput)
+	static std::vector<std::string> splitByEnter(std::string vInput)
 	{
 		std::vector<std::string> Result;
 		boost::regex e("\r\n", boost::regbase::normal | boost::regbase::icase);
@@ -50,7 +50,7 @@ namespace hiveVKT
 		return Result;
 	}
 
-	std::vector<std::string> splitBySpaceLine(std::string vInput)
+	static std::vector<std::string> splitBySpaceLine(std::string vInput)
 	{
 		std::vector<std::string> Result;
 		boost::regex e("\r\n\r\n", boost::regbase::normal | boost::regbase::icase);
