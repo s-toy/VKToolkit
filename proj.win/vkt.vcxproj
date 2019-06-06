@@ -24,6 +24,7 @@
     <ClInclude Include="..\vkt\Mesh.h" />
     <ClInclude Include="..\vkt\Model.h" />
     <ClInclude Include="..\vkt\Utility.h" />
+    <ClInclude Include="..\vkt\VkCallParser.h" />
     <ClInclude Include="..\vkt\VkContext.h" />
     <ClInclude Include="..\vkt\VkDebugMessenger.h" />
     <ClInclude Include="..\vkt\VkGenericImage.h" />
@@ -38,6 +39,7 @@
   <ItemGroup>
     <ClCompile Include="..\vkt\Mesh.cpp" />
     <ClCompile Include="..\vkt\Model.cpp" />
+    <ClCompile Include="..\vkt\VkCallParser.cpp" />
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
     <ClCompile Include="..\vkt\VkGenericImage.cpp" />

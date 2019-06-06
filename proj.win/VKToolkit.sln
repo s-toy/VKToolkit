@@ -24,6 +24,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test006(TestCreateBuffer)", "..\test\Sample-Test006\Sample-Test006.vcxproj", "{7847B89B-AF46-48E4-9B91-2B97F1B5DA78}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test008(TestVkUtility)", "..\test\Sample-Test008\Sample-Test008.vcxproj", "{EBC095BC-1FB6-4654-9EC1-1904F1EC6D89}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test000 (TestParseVkCall)", "..\test\Sample-Test000\Sample-Test000.vcxproj", "{F60AC400-2E0D-4814-94DE-551BF6B5F498}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +106,14 @@ Global
 		{EBC095BC-1FB6-4654-9EC1-1904F1EC6D89}.Release|x64.Build.0 = Release|x64
 		{EBC095BC-1FB6-4654-9EC1-1904F1EC6D89}.Release|x86.ActiveCfg = Release|Win32
 		{EBC095BC-1FB6-4654-9EC1-1904F1EC6D89}.Release|x86.Build.0 = Release|Win32
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Debug|x64.ActiveCfg = Debug|x64
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Debug|x64.Build.0 = Debug|x64
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Debug|x86.ActiveCfg = Debug|Win32
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Debug|x86.Build.0 = Debug|Win32
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Release|x64.ActiveCfg = Release|x64
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Release|x64.Build.0 = Release|x64
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Release|x86.ActiveCfg = Release|Win32
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,6 +128,7 @@ Global
 		{5ED2A99F-7C6B-43B8-8245-E1E53CCD3AFC} = {8F608AC5-E7D1-44F6-8F9A-3AD1BB468C6D}
 		{7847B89B-AF46-48E4-9B91-2B97F1B5DA78} = {8F608AC5-E7D1-44F6-8F9A-3AD1BB468C6D}
 		{EBC095BC-1FB6-4654-9EC1-1904F1EC6D89} = {8F608AC5-E7D1-44F6-8F9A-3AD1BB468C6D}
+		{F60AC400-2E0D-4814-94DE-551BF6B5F498} = {8F608AC5-E7D1-44F6-8F9A-3AD1BB468C6D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {71CD24B9-2ECE-4B54-A511-112D3B0E8193}
