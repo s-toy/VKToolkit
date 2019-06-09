@@ -39,7 +39,6 @@
   <ItemGroup>
     <ClCompile Include="..\vkt\Mesh.cpp" />
     <ClCompile Include="..\vkt\Model.cpp" />
-    <ClCompile Include="..\vkt\Utility.cpp" />
     <ClCompile Include="..\vkt\VkCallParser.cpp" />
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
@@ -146,15 +145,15 @@
       <PreprocessorDefinitions>VKT_EXPORTS;_DEBUG;_CONSOLE;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)/include;../external;$(ASSIMP)/include;$(boost);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HIVE_ROOT)/include;$(VULKAN)/include;../external;$(boost);</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ASSIMP)\lib\$(PlatformTarget);$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;$(boost)\$(PlatformTarget);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc140-mt.lib;hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(HIVE_ROOT)\lib\$(PlatformTarget);$(VULKAN)\Lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hiveCommon-vc141D.lib;hiveUtility-vc141D.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

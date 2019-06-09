@@ -3,7 +3,6 @@
 #include <fstream>
 #include <vector>
 #include "Common.h"
-#include "Export.h"
 
 namespace hiveVKT
 {
@@ -40,8 +39,4 @@ namespace hiveVKT
 
 		return true;
 	}
-
-	VKT_DECLSPEC std::vector<std::string> splitByEnter(std::string vInput);
-
-	VKT_DECLSPEC std::vector<std::string> splitBySpaceLine(std::string vInput);
 }

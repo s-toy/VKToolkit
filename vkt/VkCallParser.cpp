@@ -8,38 +8,35 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-TParseResult CVkCallParser::parse(const std::string& vFileName)
+bool CVkCallParser::parse(const std::string& vFileName)
 {
-	_ASSERTE(!vFileName.empty());
+	if (vFileName.empty()) return false;
 
 	std::ifstream ifs(vFileName);
-	_ASSERTE(ifs.is_open());
+	if (!ifs.is_open()) return false;
 	std::string FileContent((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 
-	std::vector<std::string> VKCallStrSet = hiveVKT::splitBySpaceLine(FileContent);
-
-	TParseResult Result;
+	std::vector<std::string> VKCallStrSet;
+	hiveUtility::hiveSplitLineByRegexPattern(FileContent, "\n\n", false, VKCallStrSet);
 
 	for (auto VKCallStr : VKCallStrSet)
 	{
 		std::vector<std::string> Lines;
-		hiveUtility::hiveSplitLine(VKCallStr, "\n", false, -1, Lines);
-		_ASSERTE(Lines.size() >= 2);
+		hiveUtility::hiveSplitLineByRegexPattern(VKCallStr, "\n", false, Lines);
+		if (Lines.size() < 2 || Lines[0].empty(), Lines[1].empty()) return false;
 
 		auto IDPair = __parseThreadAndFrameID(Lines[0]);
 		auto VKCallInfo = __parseVKCallInfo(Lines[1]);
-		Result[IDPair].push_back(VKCallInfo);
+		m_ParseResult[IDPair].push_back(VKCallInfo);
 	}
 
-	return Result;
+	return true;
 }
 
 //***********************************************************************************************
 //FUNCTION:
 std::pair<int, int> CVkCallParser::__parseThreadAndFrameID(const std::string& vLine)
 {
-	_ASSERTE(!vLine.empty());
-
 	std::pair<int, int> FrameIDs;
 
 	std::string l, r;
@@ -71,7 +68,7 @@ SVKCallInfo CVkCallParser::__parseVKCallInfo(const std::string& vLine)
 
 	std::vector<std::string> SubStrSet2;
 	hiveUtility::hiveSplitLine(StrSet[1], " ", false, -1, SubStrSet2);
-	VKCallInfo.ReturnValue = SubStrSet2[1];
+	VKCallInfo.ReturnValue = SubStrSet2.size() <= 1 ? "void" : SubStrSet2[1];
 
 	return VKCallInfo;
 }

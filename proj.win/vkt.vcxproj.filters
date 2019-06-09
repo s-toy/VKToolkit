@@ -95,8 +95,5 @@
     <ClCompile Include="..\vkt\VkCallParser.cpp">
       <Filter>general</Filter>
     </ClCompile>
-    <ClCompile Include="..\vkt\Utility.cpp">
-      <Filter>general</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
