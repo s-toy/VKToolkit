@@ -10,7 +10,7 @@ namespace hiveVKT
 	class VKT_DECLSPEC CVkGraphicsPipelineCreator
 	{
 	public:
-		CVkGraphicsPipelineCreator() {}
+		CVkGraphicsPipelineCreator(const vk::Extent2D& vExtent);
 		 
 		//vk::Pipeline create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);
 		EResult create(vk::Pipeline& voPipeline,const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass);

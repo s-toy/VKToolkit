@@ -59,6 +59,7 @@ namespace hiveVKT
 		eErrorFragmentationEXT = VK_ERROR_FRAGMENTATION_EXT,
 		eErrorNotPermittedEXT = VK_ERROR_NOT_PERMITTED_EXT,
 		eErrorInvalidDeviceAddressEXT = VK_ERROR_INVALID_DEVICE_ADDRESS_EXT,
-		eErrorInvalidParameters
+		eErrorInvalidParameters,
+		eErrorContextNotInitialized
 	};
 }

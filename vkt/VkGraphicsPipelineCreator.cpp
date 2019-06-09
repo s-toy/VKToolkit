@@ -2,6 +2,14 @@
 
 using namespace std;
 using namespace hiveVKT;
+
+CVkGraphicsPipelineCreator::CVkGraphicsPipelineCreator(const vk::Extent2D& vExtent)
+{
+	addColorBlendAttachment(DefaultPipelineColorBlendAttachmentState);
+	addViewport(vk::Viewport(0, 0, vExtent.width, vExtent.height, 0, 1.0));
+	addScissor(vk::Rect2D(vk::Offset2D(0, 0), vExtent));
+}
+
 //***********************************************************************************************
 //FUNCTION:
 //vk::Pipeline hiveVKT::CVkGraphicsPipelineCreator::create(const vk::Device& vDevice, const vk::PipelineLayout& vPipelineLayout, const vk::PipelineCache& vPipelineCache, const vk::RenderPass& vRenderPass, uint32_t vSubPass)
@@ -11,7 +19,6 @@ using namespace hiveVKT;
 //}
 
 EResult hiveVKT::CVkGraphicsPipelineCreator::create(vk::Pipeline & voPipeline, const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout, const vk::PipelineCache & vPipelineCache, const vk::RenderPass & vRenderPass, uint32_t vSubPass)
-
 {
 	if (__isParameterWrong(vDevice,vPipelineLayout,vRenderPass,vSubPass))
 		return EResult::eErrorInvalidParameters;

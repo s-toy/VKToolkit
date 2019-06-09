@@ -42,7 +42,7 @@ protected:
 //测试点: 创建默认的RenderPass
 TEST_F(Test_CreateVkRenderPass, CreateDefaultRenderPass)
 {
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_FALSE(m_VkRenderPass);			//由于RenderPass要求至少有一个Subpass，所以应该返回空的Handle
 	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
 }
@@ -57,7 +57,7 @@ TEST_F(Test_CreateVkRenderPass, CreateWithOneSubpass)
 	SubpassDesc.ColorAttachmentSet = { vk::AttachmentReference {0, vk::ImageLayout::eColorAttachmentOptimal} };
 	m_Creator.addSubpass(SubpassDesc);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_TRUE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eSuccess);
 }
@@ -71,12 +71,12 @@ TEST_F(Test_CreateVkRenderPass, CreateTwoRenderpass)
 	SubpassDesc.DepthStencilAttachment = { vk::AttachmentReference {0, vk::ImageLayout::eDepthStencilAttachmentOptimal} };
 	m_Creator.addSubpass(SubpassDesc);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_TRUE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eSuccess);
 
 	vk::RenderPass Renderpass;
-	r = m_Creator.create(m_VkDevice, Renderpass);
+	r = m_Creator.create(Renderpass);
 	EXPECT_TRUE(Renderpass);
 	EXPECT_EQ(r, EResult::eSuccess);
 }
@@ -87,7 +87,7 @@ TEST_F(Test_CreateVkRenderPass, CreateWithInvalidSubpass_Case1)
 {
 	SSubPassDescription SubpassDesc = {};	//空的subpass
 	m_Creator.addSubpass(SubpassDesc);
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_FALSE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
 }
@@ -102,7 +102,7 @@ TEST_F(Test_CreateVkRenderPass, CreateWithInvalidSubpass_Case2)
 	SubpassDesc.ColorAttachmentSet = { vk::AttachmentReference {2, vk::ImageLayout::eColorAttachmentOptimal} };
 	m_Creator.addSubpass(SubpassDesc);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_FALSE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
 }
@@ -117,27 +117,7 @@ TEST_F(Test_CreateVkRenderPass, CreateWithInvalidSubpass_Case3)
 	SubpassDesc.ColorAttachmentSet = { vk::AttachmentReference {2, vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal} };
 	m_Creator.addSubpass(SubpassDesc);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
-	EXPECT_FALSE(m_VkRenderPass);
-	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
-}
-
-//***********************************************************************************************
-//测试点：创建时传入未经创建的Deivce handle
-TEST_F(Test_CreateVkRenderPass, CreateWithInvalidDevice_Case1)
-{
-	vk::Device Device;
-	EResult r = m_Creator.create(Device, m_VkRenderPass);
-	EXPECT_FALSE(m_VkRenderPass);
-	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
-}
-
-//***********************************************************************************************
-//测试点：创建时传入空的Deivce指针
-TEST_F(Test_CreateVkRenderPass, CreateWithInvalidDevice_Case2)
-{
-	vk::Device Device;
-	EResult r = m_Creator.create(nullptr, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_FALSE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eErrorInvalidParameters);
 }
@@ -156,7 +136,7 @@ TEST_F(Test_CreateVkRenderPass, CreateWithTwoSubpass)
 	SubpassDesc2.ColorAttachmentSet = { vk::AttachmentReference {0, vk::ImageLayout::eColorAttachmentOptimal} };
 	m_Creator.addSubpass(SubpassDesc2);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_TRUE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eSuccess);
 }
@@ -173,7 +153,24 @@ TEST_F(Test_CreateVkRenderPass, MultipleAttachments)
 	SubpassDesc.DepthStencilAttachment = { vk::AttachmentReference { 1, vk::ImageLayout::eDepthStencilAttachmentOptimal} };
 	m_Creator.addSubpass(SubpassDesc);
 
-	EResult r = m_Creator.create(m_VkDevice, m_VkRenderPass);
+	EResult r = m_Creator.create(m_VkRenderPass);
 	EXPECT_TRUE(m_VkRenderPass);
 	EXPECT_EQ(r, EResult::eSuccess);
+}
+
+//***********************************************************************************************
+//测试点:VkContext未被创建时，调用
+TEST_F(Test_CreateVkRenderPass, VkContextNotInitialized)
+{
+	CVkContext::getInstance()->destroyContext();
+
+	m_Creator.addAttachment(vk::Format::eR16G16B16A16Sfloat);
+
+	SSubPassDescription SubpassDesc;
+	SubpassDesc.ColorAttachmentSet = { vk::AttachmentReference {0, vk::ImageLayout::eColorAttachmentOptimal} };
+	m_Creator.addSubpass(SubpassDesc);
+
+	EResult r = m_Creator.create(m_VkRenderPass);
+	EXPECT_FALSE(m_VkRenderPass);
+	EXPECT_EQ(r, EResult::eErrorContextNotInitialized);
 }

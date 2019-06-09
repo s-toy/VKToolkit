@@ -1,19 +1,16 @@
 #include "VkRenderPassCreator.h"
 #include "common/CommonMicro.h"
 #include "common/UtilityInterface.h"
+#include "VkContext.h"
 
 using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-EResult hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::RenderPass& voRenderPass)
+EResult hiveVKT::CVkRenderPassCreator::create(vk::RenderPass& voRenderPass)
 {
 	bool IsParamsValid = true;
 
-	if (!vDevice) {
-		IsParamsValid = false;
-		_OUTPUT_WARNING("The input paramter [vDevice] must be a valid vk::Device handle.")
-	}
 	if (m_SubpassDescriptionSet.size() < 1) {
 		IsParamsValid = false;
 		_OUTPUT_WARNING("A render pass must have at least one subpass, call CVkRenderPassCreator::addSubpass() to add a subpass.")
@@ -21,8 +18,14 @@ EResult hiveVKT::CVkRenderPassCreator::create(const vk::Device& vDevice, vk::Ren
 
 	if (!IsParamsValid) { voRenderPass = nullptr; return EResult::eErrorInvalidParameters; }
 
+	auto VkDevice = CVkContext::getInstance()->getVulkanDevice();
+	if (!VkDevice) {
+		voRenderPass = nullptr;
+		return EResult::eErrorContextNotInitialized;
+	}
+
 	__prepareRenderPassCreateInfo();
-	return static_cast<EResult>(vDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass));
+	return static_cast<EResult>(VkDevice.createRenderPass(&m_RenderPassCreateInfo, nullptr, &voRenderPass));
 }
 
 //***********************************************************************************************
