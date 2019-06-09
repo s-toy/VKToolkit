@@ -56,7 +56,7 @@ namespace hiveVKT
 
 		const vk::Sampler& getSampler()const { return m_pSampler; }
 
-		void destroy(vk::Device vDevice);
+		void destroy();
 
 	private:
 		_DISALLOW_COPY_AND_ASSIGN(CVkTexture2D);
