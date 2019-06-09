@@ -43,7 +43,7 @@ void hiveVKT::CModel::destroy(vk::Device vDevice)
 
 	for (auto TextureInfo : m_TextureSet)
 	{
-		TextureInfo->Texture.destroy(vDevice);
+		TextureInfo->Texture.destroy();
 		delete TextureInfo;
 	}
 

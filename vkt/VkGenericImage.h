@@ -15,7 +15,7 @@ namespace hiveVKT
 		void translateImageLayoutAtParticularMipmapLevel(vk::CommandBuffer vCommandBuffer, vk::ImageLayout vNewImageLayout, vk::ImageAspectFlags vImageAspectFlags, uint32_t vMipmapLevel);
 		void translateImageLayout(vk::CommandBuffer vCommandBuffer, vk::ImageLayout vNewImageLayout, vk::ImageSubresourceRange vTranslateRange);
 		void copyFromBuffer(vk::CommandBuffer vCommandBuffer, vk::Buffer vSrcBuffer, uint32_t vMipLevel, vk::Extent3D vImageExtent, vk::DeviceSize vBufferOffset);
-		void destroy(vk::Device vDevice);
+		void destroy();
 
 		const vk::Image&     getImage()const { return m_pImage; }
 		const vk::ImageView& getImageView()const { return m_pImageView; }
