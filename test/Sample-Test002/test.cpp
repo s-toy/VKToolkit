@@ -3,6 +3,7 @@
 #include "GLFW/glfw3.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
+#include "VkCallParser.h"
 
 #define CREATE_WINDOW glfwCreateWindow(800, 600, "Test_Swapchain", nullptr, nullptr)
 
@@ -37,6 +38,11 @@ protected:
 	vk::ImageUsageFlags m_SupportedImageUsages = vk::ImageUsageFlags();
 	GLFWwindow* m_pWindow = nullptr;
 	hiveVKT::CVkSwapchain m_Swapchain;
+
+	void _validateVkCreateSwapchainKHR()
+	{
+		
+	}
 };
 
 //测试点：测试传入空窗口指针
@@ -45,9 +51,10 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithNullWindow)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
-	m_Swapchain.createSwapchain(nullptr, m_SupportedImageUsages);
+	EXPECT_FALSE(m_Swapchain.createSwapchain(nullptr, m_SupportedImageUsages));
 	
 	m_Swapchain.destroySwapchain();
 	hiveVKT::CVkContext::getInstance()->destroyContext();
@@ -59,6 +66,8 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -67,12 +76,26 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_TRUE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 
 	m_Swapchain.destroySwapchain();
 	hiveVKT::CVkContext::getInstance()->destroyContext();
 	glfwDestroyWindow(m_pWindow);
 	glfwTerminate();
+
+	hiveVKT::CVkCallParser Parser;
+	EXPECT_TRUE(Parser.parse("vk_apidump.txt"));
+	auto ParseResultSet = Parser.getVKCallInfoAt(0, 0);
+	int Counter = 0;
+	for (auto VkCall : ParseResultSet)
+	{
+		if (VkCall.FunctionName == "vkCreateSwapchainKHR")
+		{
+			EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
+			Counter++;
+		}
+	}
+	EXPECT_EQ(Counter, 1);
 }
 
 //测试点：测试重建swap chain
@@ -88,6 +111,7 @@ TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -96,7 +120,7 @@ TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, ~m_SupportedImageUsages);
+	EXPECT_FALSE(m_Swapchain.createSwapchain(m_pWindow, ~m_SupportedImageUsages));
 
 	m_Swapchain.destroySwapchain();
 	hiveVKT::CVkContext::getInstance()->destroyContext();
@@ -110,6 +134,7 @@ TEST_F(Test_VkSwapchain, DuplicateCreationCall)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -118,8 +143,8 @@ TEST_F(Test_VkSwapchain, DuplicateCreationCall)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_TRUE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
+	EXPECT_TRUE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 
 	m_Swapchain.destroySwapchain();
 	m_Swapchain.destroySwapchain();
@@ -139,7 +164,7 @@ TEST_F(Test_VkSwapchain, CreateBeforeInitializeContext)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_FALSE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 	m_Swapchain.destroySwapchain();
 }
 
@@ -148,6 +173,7 @@ TEST_F(Test_VkSwapchain, CreateBeforeInitializeContext)
 TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -156,7 +182,7 @@ TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_FALSE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 	
 	m_Swapchain.destroySwapchain();
 	hiveVKT::CVkContext::getInstance()->destroyContext();
@@ -170,6 +196,7 @@ TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -178,7 +205,7 @@ TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_TRUE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 	
 	hiveVKT::CVkContext::getInstance()->destroyContext();
 	m_Swapchain.destroySwapchain();
@@ -193,15 +220,15 @@ TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 	m_pWindow = CREATE_WINDOW;
 
-	m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages);
+	EXPECT_FALSE(m_Swapchain.createSwapchain(m_pWindow, m_SupportedImageUsages));
 
 	m_Swapchain.destroySwapchain();
 	hiveVKT::CVkContext::getInstance()->destroyContext();

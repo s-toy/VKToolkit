@@ -140,9 +140,10 @@ void hiveVKT::CVkGenericImage::copyFromBuffer(vk::CommandBuffer vCommandBuffer, 
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkGenericImage::destroy(vk::Device vDevice)
+void hiveVKT::CVkGenericImage::destroy()
 {
-	vDevice.destroyImage(m_pImage);
-	vDevice.destroyImageView(m_pImageView);
-	vDevice.freeMemory(m_pDeviceMemory);
+	auto pDevice = CVkContext::getInstance()->getVulkanDevice();
+	pDevice.destroyImage(m_pImage);
+	pDevice.destroyImageView(m_pImageView);
+	pDevice.freeMemory(m_pDeviceMemory);
 }

@@ -116,10 +116,11 @@ void hiveVKT::CVkTexture2D::create(int vTextureWidth, int vTextureHeight, vk::Fo
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkTexture2D::destroy(vk::Device vDevice)
+void hiveVKT::CVkTexture2D::destroy()
 {
-	vDevice.destroyImage(m_pImage);
-	vDevice.destroyImageView(m_pImageView);
-	vDevice.freeMemory(m_pDeviceMemory);
-	vDevice.destroySampler(m_pSampler);
+	auto pDevice = CVkContext::getInstance()->getVulkanDevice();
+	pDevice.destroyImage(m_pImage);
+	pDevice.destroyImageView(m_pImageView);
+	pDevice.freeMemory(m_pDeviceMemory);
+	pDevice.destroySampler(m_pSampler);
 }
