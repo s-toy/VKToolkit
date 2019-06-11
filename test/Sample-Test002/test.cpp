@@ -38,11 +38,6 @@ protected:
 	vk::ImageUsageFlags m_SupportedImageUsages = vk::ImageUsageFlags();
 	GLFWwindow* m_pWindow = nullptr;
 	hiveVKT::CVkSwapchain m_Swapchain;
-
-	void _validateVkCreateSwapchainKHR()
-	{
-		
-	}
 };
 
 //测试点：测试传入空窗口指针
@@ -93,6 +88,9 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 		{
 			EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
 			Counter++;
+
+			auto Parameters = VkCall.ParameterInfo;
+			EXPECT_EQ(atoi(Parameters["pCreateInfo|imageUsage"].second.data()), (VkImageUsageFlags)m_SupportedImageUsages);
 		}
 	}
 	EXPECT_EQ(Counter, 1);
