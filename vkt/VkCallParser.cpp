@@ -89,7 +89,7 @@ std::map<std::string, std::pair<std::string, std::string>> CVkCallParser::__pars
 		auto Line = vLines[i];
 		auto CurIndent = __computeIndentation(Line);
 		std::vector<std::string> SplitParameterSet;
-		hiveUtility::hiveSplitLineByRegexPattern(Line, "[:=]", false, SplitParameterSet);
+		hiveUtility::hiveSplitLineByRegexPattern(Line, "[:=(\\|)]", false, SplitParameterSet);
 
 		_ASSERT(SplitParameterSet.size() >= 3);
 		const auto& Name  = __trim(SplitParameterSet[0]);
