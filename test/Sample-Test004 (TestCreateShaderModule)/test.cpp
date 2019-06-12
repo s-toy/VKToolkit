@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "VkContext.h"
 #include "VkShaderModuleCreator.h"
+#include "VkCallParser.h"
 
 using namespace hiveVKT;
 
@@ -10,6 +11,7 @@ protected:
 	virtual void SetUp() override
 	{
 		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		CVkContext::getInstance()->setEnableApiDumpHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
@@ -23,6 +25,23 @@ protected:
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
+	int getCreateShaderModuleCallNum()
+	{
+		hiveVKT::CVkCallParser Parser;
+		_ASSERT(Parser.parse("vk_apidump.txt"));
+		const auto& ParseResultSet = Parser.getVKCallInfoAt(0, 0);
+		int Counter = 0;
+		for (auto VkCall : ParseResultSet)
+		{
+			if (VkCall.FunctionName == "vkCreateShaderModule")
+			{
+				EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
+				Counter++;
+			}
+		}
+		return Counter;
+	}
+
 	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
 	CVkShaderModuleCreator m_ShaderModuleCreator;
 	vk::ShaderModule m_ShaderModule = nullptr;
@@ -33,23 +52,26 @@ protected:
 //测试点：成功创建默认的ShaderModule
 TEST_F(Test_CreateVkShaderModule, CreateShaderModule_Default)
 {
-	EResult r = m_ShaderModuleCreator.create("VertexShader.spv", m_ShaderModule);
+	m_ShaderModule = m_ShaderModuleCreator.create("VertexShader.spv");
 	EXPECT_TRUE(m_ShaderModule);
-	EXPECT_EQ(r, EResult::eSuccess);
+	
+	EXPECT_EQ(getCreateShaderModuleCallNum(), 1);
 }
 
 //测试点：测试传入错误文件路径
-TEST(Test_ShaderModuleCreator, FeedCreator_WrongFileName)
+TEST_F(Test_CreateVkShaderModule, FeedCreator_WrongFileName)
 {
-	//文件路径找不到抛出异常
-	EXPECT_THROW(m_ShaderModuleCreator.create("WrongPath/VertexShader.spv", m_ShaderModule));
+	m_ShaderModule = m_ShaderModuleCreator.create("WrongPath/VertexShader.spv");
 	EXPECT_FALSE(m_ShaderModule);
+
+	EXPECT_EQ(getCreateShaderModuleCallNum(), 0);
 }
 
 //测试点：测试传入错误格式的文件名
-TEST(Test_ShaderModuleCreator, FeedCreator_WrongFormat)
+TEST_F(Test_CreateVkShaderModule, FeedCreator_WrongFormat)
 {
-	//文件格式错误抛出异常
-	EXPECT_THROW(m_ShaderModuleCreator.create("VertexShader.txt", m_ShaderModule));
+	m_ShaderModule = m_ShaderModuleCreator.create("VertexShader.txt");
 	EXPECT_FALSE(m_ShaderModule);
+
+	EXPECT_EQ(getCreateShaderModuleCallNum(), 0);
 }

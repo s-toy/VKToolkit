@@ -9,7 +9,10 @@ vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& v
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
-		_THROW_RUNTIME_ERROR("Bad spv code file");
+	{
+		_OUTPUT_WARNING("bad spv code!");
+		return vk::UniqueShaderModule();
+	}
 
 	__prepareShaderModuleCreateInfo(SpvCode);
 
@@ -19,22 +22,28 @@ vk::UniqueShaderModule CVkShaderModuleCreator::createUnique(const std::string& v
 
 //***********************************************************************************************
 //FUNCTION:
-EResult CVkShaderModuleCreator::create(const std::string& vSpvFileName, vk::ShaderModule& voShaderModule)
+vk::ShaderModule CVkShaderModuleCreator::create(const std::string& vSpvFileName)
 {
 	SprivCodeType SpvCode = __readSpvFile(vSpvFileName);
 	if (!__verifySpvCode(SpvCode))
-		_THROW_RUNTIME_ERROR("Bad spv code file");
+	{
+		_OUTPUT_WARNING("bad spv code!");
+		return vk::ShaderModule();
+	}
 
 	__prepareShaderModuleCreateInfo(SpvCode);
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
 
-	return static_cast<EResult>(CVkContext::getInstance()->getVulkanDevice().createShaderModule(&m_ShaderModuleCreateInfo, nullptr, &voShaderModule));
+	return CVkContext::getInstance()->getVulkanDevice().createShaderModule(m_ShaderModuleCreateInfo);
 }
 
 //***********************************************************************************************
 //FUNCTION:
 bool CVkShaderModuleCreator::__verifySpvCode(const SprivCodeType& vSpvCode)
 {
+	if (vSpvCode.empty()) 
+		return false;
+
 	char MagicNumber[4];
 	memcpy(MagicNumber, vSpvCode.data(), 4);
 	//magic number can be used to weakly validate that the binary blob is a SPIR-V module.
@@ -60,6 +69,6 @@ void CVkShaderModuleCreator::__prepareShaderModuleCreateInfo(const SprivCodeType
 CVkShaderModuleCreator::SprivCodeType CVkShaderModuleCreator::__readSpvFile(const std::string& vSpvFileName)
 {
 	SprivCodeType Buffer;
-	if (!readFile(vSpvFileName, Buffer)) _THROW_RUNTIME_ERROR(format("Failed to read file: %s", vSpvFileName.c_str()));
+	if (!readFile(vSpvFileName, Buffer)) _OUTPUT_WARNING(format("Failed to read file: %s", vSpvFileName.c_str()));
 	return Buffer;
 }
