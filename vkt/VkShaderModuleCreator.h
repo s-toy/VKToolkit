@@ -11,7 +11,7 @@ namespace hiveVKT
 		using SprivCodeType = std::vector<uint32_t>;
 
 	public:
-		EResult create(const std::string& vSpvFileName, vk::ShaderModule& voShaderModule);
+		vk::ShaderModule create(const std::string& vSpvFileName);
 		vk::UniqueShaderModule createUnique(const std::string& vSpvFileName);
 
 	private:
