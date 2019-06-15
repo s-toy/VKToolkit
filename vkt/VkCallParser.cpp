@@ -41,6 +41,18 @@ bool CVkCallParser::parse(const std::string& vFileName)
 
 //***********************************************************************************************
 //FUNCTION:
+std::vector<SVKCallInfo> CVkCallParser::getVkCallInfoByFunctionName(int vThread, int vFrame, const std::string& vFunctionName) const
+{
+	std::vector<SVKCallInfo> InvokedVkCallSet;
+	for (const auto& VkCall : m_ParseResult.at({ vThread, vFrame }))
+	{
+		if (VkCall.FunctionName == vFunctionName) InvokedVkCallSet.push_back(VkCall);
+	}
+	return InvokedVkCallSet;
+}
+
+//***********************************************************************************************
+//FUNCTION:
 std::pair<int, int> CVkCallParser::__parseThreadAndFrameID(const std::string& vLine)
 {
 	std::pair<int, int> FrameIDs;
