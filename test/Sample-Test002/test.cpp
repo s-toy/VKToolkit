@@ -38,11 +38,6 @@ protected:
 	vk::ImageUsageFlags m_SupportedImageUsages = vk::ImageUsageFlags();
 	GLFWwindow* m_pWindow = nullptr;
 	hiveVKT::CVkSwapchain m_Swapchain;
-
-	void _validateVkCreateSwapchainKHR()
-	{
-		
-	}
 };
 
 //测试点：测试传入空窗口指针
@@ -93,6 +88,9 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 		{
 			EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
 			Counter++;
+
+			auto Parameters = VkCall.ParameterInfo;
+			EXPECT_EQ(atoi(Parameters["pCreateInfo|imageUsage"].second.data()), (VkImageUsageFlags)m_SupportedImageUsages);
 		}
 	}
 	EXPECT_EQ(Counter, 1);
@@ -214,13 +212,14 @@ TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 }
 
 //测试点：使用glfw时，会默认创建OpenGL上下文【可以通过：glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)禁止】
-//		 本测试用例将测试，在此情况发生的情况下，程序可以正确处理
-//
+//		 本测试用例将测试，在此情况发生的情况下，程序可以正确处理。在此情况下，glfwCreateWindowSurface内部不会调用
+//		 vkCreateWin32SurfaceKHR
 TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 {
 	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
 	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -234,4 +233,15 @@ TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 	hiveVKT::CVkContext::getInstance()->destroyContext();
 	glfwDestroyWindow(m_pWindow);
 	glfwTerminate();
+
+	hiveVKT::CVkCallParser Parser;
+	EXPECT_TRUE(Parser.parse("vk_apidump.txt"));
+	auto ParseResultSet = Parser.getVKCallInfoAt(0, 0);
+	int Counter = 0;
+	for (auto VkCall : ParseResultSet)
+	{
+		if (VkCall.FunctionName == "vkCreateSwapchainKHR")
+			Counter++;
+	}
+	EXPECT_EQ(Counter, 0);
 }
