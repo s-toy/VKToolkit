@@ -35,13 +35,6 @@ namespace hiveVKT
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { if (m_IsInitialized) return; m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
 		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { if (m_IsInitialized) return; m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
-		std::vector<std::string> fetchEnabledDeviceExtensions() {
-			return std::vector<std::string>();
-		}//TODO
-		std::vector<std::string> fetchEnabledDeviceLayers() {
-			return std::vector<std::string>();
-		}//TODO
-
 		void createContext();
 		void destroyContext();
 
@@ -50,7 +43,9 @@ namespace hiveVKT
 		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { return m_DynamicDispatchLoader; }
 		const vk::Device& getVulkanDevice()const { return m_pDevice; }
 
-		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { return m_DebugUtilsMessenger; }
+		uint32_t getWarningAndErrorCount() const { return m_DebugUtilsMessenger.getWarningAndErrorCount(); }
+		uint32_t getWarningCount() const { return m_DebugUtilsMessenger.getWarningCount(); }
+		uint32_t getErrorCount() const { return m_DebugUtilsMessenger.getErrorCount(); }
 
 		int getComprehensiveQueueFamilyIndex()const { return std::get<0>(m_ComprehensiveQueue); }
 		const vk::Queue& getComprehensiveQueue()const { return std::get<1>(m_ComprehensiveQueue); }

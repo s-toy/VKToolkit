@@ -19,8 +19,7 @@ protected:
 		CVkContext::getInstance()->setEnableApiDumpHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
-		m_pDebugUtilsMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
-		EXPECT_EQ(0, m_pDebugUtilsMessenger->getWarningAndErrorCount());
+		EXPECT_EQ(0, CVkContext::getInstance()->getWarningAndErrorCount());
 	}
 
 	void destroyContext()
@@ -82,8 +81,6 @@ protected:
 		for (auto& Item : vExpectedLayersOrExtensions)
 			EXPECT_TRUE(Actual.find(Item) != Actual.end());
 	}
-
-	const CVkDebugUtilsMessenger* m_pDebugUtilsMessenger = nullptr;
 
 	CVkCallParser m_VkCallParser;
 };

@@ -14,14 +14,12 @@ protected:
 		CVkContext::getInstance()->setEnableApiDumpHint(true);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
-		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
-		ASSERT_TRUE(m_pMessenger);
-		m_WarningAndErrorCount = m_pMessenger->getWarningAndErrorCount();
+		m_WarningAndErrorCount = CVkContext::getInstance()->getWarningAndErrorCount();
 	}
 
 	virtual void TearDown() override
 	{
-		EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), m_WarningAndErrorCount);
+		EXPECT_EQ(CVkContext::getInstance()->getWarningAndErrorCount(), m_WarningAndErrorCount);
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
@@ -42,7 +40,6 @@ protected:
 		return Counter;
 	}
 
-	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
 	CVkShaderModuleCreator m_ShaderModuleCreator;
 	vk::ShaderModule m_ShaderModule = nullptr;
 
