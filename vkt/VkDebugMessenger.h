@@ -6,7 +6,7 @@
 
 namespace hiveVKT
 {
-	class VKT_DECLSPEC CVkDebugUtilsMessenger
+	class CVkDebugUtilsMessenger
 	{
 	public:
 		vk::Result setupDebugUtilsMessenger(const vk::Instance& vInstance,const vk::DispatchLoaderDynamic& vDynamicDispatchLoader);

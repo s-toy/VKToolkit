@@ -76,7 +76,7 @@ std::pair<int, int> CVkCallParser::__parseThreadAndFrameID(const std::string& vL
 std::pair<std::string, std::string> CVkCallParser::__parseFunctionNameAndReturnValue(const std::string& vLine)
 {
 	std::vector<std::string> StrSet;
-	hiveVKT::splitByStr(vLine, "returns", StrSet);
+	hiveUtility::hiveSplitLineByRegexPattern(vLine, "returns", false, StrSet);
 
 	std::vector<std::string> SubStrSet1;
 	hiveUtility::hiveSplitLine(StrSet[0], "(", false, -1, SubStrSet1);
