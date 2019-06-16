@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <set>
 #include "VkContext.h"
 #include "VkCallParser.h"
 
@@ -27,36 +28,64 @@ protected:
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
-	void dumpVkAPIAt(int vThread, int vFrame)
+	void dumpVkAPI()
 	{
-		CVkCallParser Parser;
-		bool r = Parser.parse("vk_apidump.txt");
+		bool r = m_VkCallParser.parse("vk_apidump.txt");
 		ASSERT_EQ(r, true);
-		m_VkCallInfoSet = Parser.getVKCallInfoAt(vThread, vFrame);
 	}
 
-	std::vector<SVKCallInfo> verifyAndFetchInvokedVkCall(const std::string& vFunctionName, const std::string& vReturnValue, int vInvokeTimes)
+	void verifyInvokedVkCallInfo(int vThreadID, int vFrameID, const std::string& vFunctionName, const std::vector<std::string>& vReturnValue)
 	{
-		std::vector<SVKCallInfo> InvokedVkCallSet;
-		for (const auto& VkCallInfo : m_VkCallInfoSet)
+		auto FunctionCallInfo = m_VkCallParser.getVkCallInfoByFunctionName(vThreadID, vFrameID, vFunctionName);
+
+		EXPECT_EQ(FunctionCallInfo.size(), vReturnValue.size());
+
+		for (auto i = 0; i < FunctionCallInfo.size(); ++i)
+			EXPECT_EQ(FunctionCallInfo[i].ReturnValue, vReturnValue[i]);
+	}
+
+	void verifyVkCallParameter(int vThreadID, int vFrameID, const std::string& vFunctionName, const std::vector<std::pair<std::string, std::string>>& vExpectedParameters)
+	{
+		auto FunctionCallInfo = m_VkCallParser.getVkCallInfoByFunctionName(vThreadID, vFrameID, vFunctionName);
+		EXPECT_EQ(FunctionCallInfo.size(), 1);
+
+		auto DumpedParameterInfo = FunctionCallInfo[0].ParameterInfo;
+
+		for (auto i = 0; i < vExpectedParameters.size(); ++i)
+			EXPECT_EQ(DumpedParameterInfo[vExpectedParameters[i].first].second, vExpectedParameters[i].second);
+	}
+
+	void verifyQueueFlags(const vk::QueueFlagBits& vExpectedFlagBit)
+	{
+		auto QueueFamilyIndex = CVkContext::getInstance()->getComprehensiveQueueFamilyIndex();
+
+		auto QueueFamilyProperties = CVkContext::getInstance()->getPhysicalDevice().getQueueFamilyProperties();
+
+		EXPECT_TRUE(QueueFamilyProperties[QueueFamilyIndex].queueFlags & vExpectedFlagBit);
+	}
+
+	void verifyEnabledLayersOrExtensions(const std::string& vFunctionName, const std::string& vPrefix, const std::vector<std::string>& vExpectedLayersOrExtensions)
+	{
+		auto FunctionCallInfo = m_VkCallParser.getVkCallInfoByFunctionName(0, 0, vFunctionName);
+		EXPECT_EQ(FunctionCallInfo.size(), 1);
+
+		auto DumpedParameterInfo = FunctionCallInfo[0].ParameterInfo;
+
+		std::set<std::string> Actual;
+
+		for (auto Item : DumpedParameterInfo)
 		{
-			if (VkCallInfo.FunctionName == vFunctionName && VkCallInfo.ReturnValue == vReturnValue)
-			{
-				vInvokeTimes--;
-				InvokedVkCallSet.push_back(VkCallInfo);
-			}
+			if (Item.first.find(vPrefix) != std::string::npos)
+				Actual.insert(Item.second.second);
 		}
-		EXPECT_EQ(vInvokeTimes, 0);
-		return InvokedVkCallSet;
-	}
 
-	void verifyVKCallParameter()
-	{
-
+		for (auto& Item : vExpectedLayersOrExtensions)
+			EXPECT_TRUE(Actual.find(Item) != Actual.end());
 	}
 
 	const CVkDebugUtilsMessenger* m_pDebugUtilsMessenger = nullptr;
-	std::vector<SVKCallInfo> m_VkCallInfoSet;
+
+	CVkCallParser m_VkCallParser;
 };
 
 //测试点：创建默认VkContext
@@ -65,11 +94,12 @@ TEST_F(Test_VkContext, CreateDefaultContext)
 	createContext();
 	destroyContext();
 
-	dumpVkAPIAt(0, 0);
-	verifyAndFetchInvokedVkCall("vkCreateInstance", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkCreateDevice", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyDevice", "void", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyInstance", "void", 1);
+	dumpVkAPI();
+
+	verifyInvokedVkCallInfo(0, 0, "vkCreateInstance", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkCreateDevice", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyDevice", { "void" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyInstance", { "void" });
 }
 
 //测试点：重复创建VkContext
@@ -79,11 +109,12 @@ TEST_F(Test_VkContext, CreateContextTwice)
 	createContext();
 	destroyContext();
 
-	dumpVkAPIAt(0, 0);
-	verifyAndFetchInvokedVkCall("vkCreateInstance", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkCreateDevice", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyDevice", "void", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyInstance", "void", 1);
+	dumpVkAPI();
+
+	verifyInvokedVkCallInfo(0, 0, "vkCreateInstance", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkCreateDevice", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyDevice", { "void" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyInstance", { "void" });
 }
 
 //测试点：重复析构VkContext
@@ -92,12 +123,13 @@ TEST_F(Test_VkContext, DestroyContextTwice)
 	createContext();
 	destroyContext();
 	destroyContext();
-	
-	dumpVkAPIAt(0, 0);
-	verifyAndFetchInvokedVkCall("vkCreateInstance", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkCreateDevice", "VK_SUCCESS", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyDevice", "void", 1);
-	verifyAndFetchInvokedVkCall("vkDestroyInstance", "void", 1);
+
+	dumpVkAPI();
+
+	verifyInvokedVkCallInfo(0, 0, "vkCreateInstance", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkCreateDevice", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyDevice", { "void" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyInstance", { "void" });
 }
 
 //测试点：在未创建情况下析构VkContext
@@ -117,7 +149,14 @@ TEST_F(Test_VkContext, ForBidModificationAfterContextCreated)
 	CVkContext::getInstance()->setApplicationName("HelloVulkan");
 	destroyContext();
 
-	dumpVkAPIAt(0, 0);
+	dumpVkAPI();
+
+	verifyInvokedVkCallInfo(0, 0, "vkCreateInstance", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkCreateDevice", { "VK_SUCCESS" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyDevice", { "void" });
+	verifyInvokedVkCallInfo(0, 0, "vkDestroyInstance", { "void" });
+
+	verifyVkCallParameter(0, 0, "vkCreateInstance", { {"pCreateInfo|pApplicationInfo|pApplicationName","\"Application\""},{"pCreateInfo|pApplicationInfo|pEngineName","\"HiveVKT\""} });
 }
 
 //测试点: 倾向选择独立显卡
@@ -126,6 +165,7 @@ TEST_F(Test_VkContext, SetPreferDiscreteGPU)
 	CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
 	createContext();
 	EXPECT_EQ(vk::PhysicalDeviceType::eDiscreteGpu, CVkContext::getInstance()->getPhysicalDevice().getProperties().deviceType);
+	destroyContext();
 }
 
 //测试点：要求选择的GPU必须支持图形功能
@@ -133,6 +173,8 @@ TEST_F(Test_VkContext, ForceGraphicsFunction)
 {
 	CVkContext::getInstance()->setForceGraphicsFunctionalityHint(true);
 	createContext();
+	verifyQueueFlags(vk::QueueFlagBits::eGraphics);
+	destroyContext();
 }
 
 //测试点：要求选择的GPU必须支持计算功能
@@ -140,6 +182,8 @@ TEST_F(Test_VkContext, ForceComputeFunction)
 {
 	CVkContext::getInstance()->setForceComputeFunctionalityHint(true);
 	createContext();
+	verifyQueueFlags(vk::QueueFlagBits::eCompute);
+	destroyContext();
 }
 
 //测试点：要求选择的GPU必须支持传输功能
@@ -147,6 +191,8 @@ TEST_F(Test_VkContext, ForceTransferFunction)
 {
 	CVkContext::getInstance()->setForceTransferFunctionalityHint(true);
 	createContext();
+	verifyQueueFlags(vk::QueueFlagBits::eTransfer);
+	destroyContext();
 }
 
 //测试点：开启Presentation支持
@@ -154,6 +200,12 @@ TEST_F(Test_VkContext, EnablePresentation)
 {
 	CVkContext::getInstance()->setEnablePresentationHint(true);
 	createContext();
+	destroyContext();
+
+	dumpVkAPI();
+
+	verifyEnabledLayersOrExtensions("vkCreateInstance", "pCreateInfo|ppEnabledExtensionNames|ppEnabledExtensionNames", { "\"VK_KHR_surface\"" ,"\"VK_KHR_win32_surface\"" });
+	verifyEnabledLayersOrExtensions("vkCreateDevice", "pCreateInfo|ppEnabledExtensionNames|ppEnabledExtensionNames", { "\"VK_KHR_swapchain\"" });
 }
 
 //测试点：开启Api调用记录支持
@@ -161,7 +213,11 @@ TEST_F(Test_VkContext, EnableApiDump)
 {
 	CVkContext::getInstance()->setEnablePresentationHint(true);
 	createContext();
+	destroyContext();
 
+	dumpVkAPI();
+
+	verifyEnabledLayersOrExtensions("vkCreateInstance", "pCreateInfo|ppEnabledLayerNames|ppEnabledLayerNames", { "\"VK_LAYER_LUNARG_api_dump\"" });
 }
 
 //测试点：开启帧率记录支持
@@ -169,6 +225,11 @@ TEST_F(Test_VkContext, EnableFpsMonitor)
 {
 	CVkContext::getInstance()->setEnableFpsMonitorHint(true);
 	createContext();
+	destroyContext();
+
+	dumpVkAPI();
+
+	verifyEnabledLayersOrExtensions("vkCreateInstance", "pCreateInfo|ppEnabledLayerNames|ppEnabledLayerNames", { "\"VK_LAYER_LUNARG_monitor\"" });
 
 }
 
@@ -177,13 +238,17 @@ TEST_F(Test_VkContext, EnableScreenshot)
 {
 	CVkContext::getInstance()->setEnableScreenshotHint(true);
 	createContext();
+	destroyContext();
 
+	dumpVkAPI();
+
+	verifyEnabledLayersOrExtensions("vkCreateInstance", "pCreateInfo|ppEnabledLayerNames|ppEnabledLayerNames", { "\"VK_LAYER_LUNARG_screenshot\"" });
 }
 
 //TODO: 
 //测试点：开启设备不支持的扩展
 TEST_F(Test_VkContext, EnableUnsupportedExtension)
-{	
+{
 }
 
 //测试点：开启设备支持的扩展
