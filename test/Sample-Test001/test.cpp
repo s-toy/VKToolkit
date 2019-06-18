@@ -18,7 +18,7 @@ protected:
 
 	void createContext()
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		CVkContext::getInstance()->setExtraFuncStatus(ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		m_pDebugUtilsMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
@@ -87,7 +87,7 @@ TEST_F(Test_VkContext, ForBidModificationAfterContextCreated)
 {
 	createContext();
 	
-	CVkContext::getInstance()->setEnableApiDumpHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(ENABLE_API_DUMP);
 	EXPECT_EQ(false, isDeviceLayerEnabled("VK_LAYER_LUNARG_api_dump"));
 
 	destroyContext();
@@ -96,7 +96,7 @@ TEST_F(Test_VkContext, ForBidModificationAfterContextCreated)
 //测试点: 倾向选择独立显卡
 TEST_F(Test_VkContext, SetPreferDiscreteGPU)
 {
-	CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU);
 	createContext();
 	EXPECT_EQ(vk::PhysicalDeviceType::eDiscreteGpu, CVkContext::getInstance()->getPhysicalDevice().getProperties().deviceType);
 }
@@ -104,28 +104,28 @@ TEST_F(Test_VkContext, SetPreferDiscreteGPU)
 //测试点：要求选择的GPU必须支持图形功能
 TEST_F(Test_VkContext, ForceGraphicsFunction)
 {
-	CVkContext::getInstance()->setForceGraphicsFunctionalityHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(FORCE_GARPHICS_FUNCTIONALITY);
 	createContext();
 }
 
 //测试点：要求选择的GPU必须支持计算功能
 TEST_F(Test_VkContext, ForceComputeFunction)
 {
-	CVkContext::getInstance()->setForceComputeFunctionalityHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(FORCE_COMPUTE_FUNCTIONALITY);
 	createContext();
 }
 
 //测试点：要求选择的GPU必须支持传输功能
 TEST_F(Test_VkContext, ForceTransferFunction)
 {
-	CVkContext::getInstance()->setForceTransferFunctionalityHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(FORCE_TRANSFER_FUNCTIONALITY);
 	createContext();
 }
 
 //测试点：开启Presentation支持
 TEST_F(Test_VkContext, EnablePresentation)
 {
-	CVkContext::getInstance()->setEnablePresentationHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(ENABLE_PRESENTATION);
 	createContext();
 
 	EXPECT_EQ(true, isDeviceExtensionEnabled("VK_KHR_win32_surface"));
@@ -135,7 +135,7 @@ TEST_F(Test_VkContext, EnablePresentation)
 //测试点：开启Api调用记录支持
 TEST_F(Test_VkContext, EnableApiDump)
 {
-	CVkContext::getInstance()->setEnablePresentationHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(ENABLE_API_DUMP);
 	createContext();
 
 	EXPECT_EQ(true, isDeviceLayerEnabled("VK_LAYER_LUNARG_api_dump"));
@@ -144,7 +144,7 @@ TEST_F(Test_VkContext, EnableApiDump)
 //测试点：开启帧率记录支持
 TEST_F(Test_VkContext, EnableFpsMonitor)
 {
-	CVkContext::getInstance()->setEnableFpsMonitorHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(ENABLE_FPS_MONITOR);
 	createContext();
 
 	EXPECT_EQ(true, isDeviceLayerEnabled("VK_LAYER_LUNARG_monitor"));
@@ -153,7 +153,7 @@ TEST_F(Test_VkContext, EnableFpsMonitor)
 //测试点：开启屏幕截图支持
 TEST_F(Test_VkContext, EnableScreenshot)
 {
-	CVkContext::getInstance()->setEnableScreenshotHint(true);
+	CVkContext::getInstance()->setExtraFuncStatus(ENABLE_SCREENSHOT);
 	createContext();
 
 	EXPECT_EQ(true, isDeviceLayerEnabled("VK_LAYER_LUNARG_screenshot"));

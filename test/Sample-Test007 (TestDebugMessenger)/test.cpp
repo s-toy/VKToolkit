@@ -7,7 +7,7 @@ class Test_CreateVkDebugMessenger : public ::testing::Test
 {
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 	}
 

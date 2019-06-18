@@ -9,7 +9,7 @@ class Test_CreateVkShaderModule : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());

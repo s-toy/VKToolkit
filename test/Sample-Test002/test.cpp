@@ -7,13 +7,14 @@
 
 #define CREATE_WINDOW glfwCreateWindow(800, 600, "Test_Swapchain", nullptr, nullptr)
 
+using namespace hiveVKT;
+
 class Test_VkSwapchain :public ::testing::Test
 {
 public:
 	virtual void SetUp() override
 	{
-		hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-		hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+		hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION);
 		hiveVKT::CVkContext::getInstance()->createContext();
 
 		glfwInit();
@@ -44,9 +45,7 @@ protected:
 //
 TEST_F(Test_VkSwapchain, CreateSwapchainWithNullWindow)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	EXPECT_FALSE(m_Swapchain.createSwapchain(nullptr, m_SupportedImageUsages));
@@ -59,10 +58,7 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithNullWindow)
 //
 TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -107,9 +103,7 @@ TEST_F(Test_VkSwapchain, RecreateSwapchain)
 //
 TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -130,9 +124,7 @@ TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 //
 TEST_F(Test_VkSwapchain, DuplicateCreationCall)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -170,8 +162,7 @@ TEST_F(Test_VkSwapchain, CreateBeforeInitializeContext)
 //
 TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -192,9 +183,7 @@ TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 //
 TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -216,10 +205,7 @@ TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 //		 vkCreateWin32SurfaceKHR
 TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
+	hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
