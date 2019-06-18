@@ -10,7 +10,7 @@ class CreateBufferTest : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(PREFER_DISCRETE_GPU | ENABLE_DEBUG_UTILS);
+		hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 	}
 

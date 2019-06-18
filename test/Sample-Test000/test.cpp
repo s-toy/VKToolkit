@@ -62,3 +62,16 @@ TEST(Test_VkCallParser, VKCallFunctionParameters)
 	EXPECT_EQ(Result[0].ParameterInfo.at("pAllocator").first, "const VkAllocationCallbacks*");
 	EXPECT_EQ(Result[0].ParameterInfo.at("pAllocator").second, "NULL");
 }
+
+TEST(Test_VkCallParser, GetVkCallByFunctionName)
+{
+	const std::string ApiDumpFile = "vk_apidump.txt";
+
+	hiveVKT::CVkCallParser Parser;
+
+	ASSERT_EQ(Parser.parse(ApiDumpFile), true);
+
+	const auto& VkCallInfoSet = Parser.getVkCallInfoByFunctionName(0, 0, "vkCreateDebugUtilsMessengerEXT");
+	EXPECT_EQ(VkCallInfoSet.size(), 1);
+	EXPECT_EQ(VkCallInfoSet[0].ReturnValue, "VK_SUCCESS");
+}

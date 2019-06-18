@@ -18,6 +18,7 @@ namespace hiveVKT
 	public:
 		bool parse(const std::string& vFileName);
 		const std::vector<SVKCallInfo>& getVKCallInfoAt(int vThread, int vFrame) const { return m_ParseResult.at({vThread, vFrame}); }
+		std::vector<SVKCallInfo> getVkCallInfoByFunctionName(int vThread, int vFrame, const std::string& vFunctionName) const;
 
 	private:
 		std::pair<int, int> __parseThreadAndFrameID(const std::string& vLine);

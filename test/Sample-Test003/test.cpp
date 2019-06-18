@@ -10,27 +10,24 @@ class Test_CreateVkRenderPass : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		hiveVKT::CVkContext::getInstance()->setExtraFuncStatus(ENABLE_DEBUG_UTILS);
+		hiveVKT::CVkContext::getInstance()->enableContextFeature(ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		m_VkDevice = CVkContext::getInstance()->getVulkanDevice();
 		ASSERT_TRUE(m_VkDevice);
 
-		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
-		ASSERT_TRUE(m_pMessenger);
-		m_WarningAndErrorCount = m_pMessenger->getWarningAndErrorCount();
+		m_WarningAndErrorCount = CVkContext::getInstance()->getWarningAndErrorCount();
 	}
 
 	virtual void TearDown() override
 	{
-		EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), m_WarningAndErrorCount);
+		EXPECT_EQ(CVkContext::getInstance()->getWarningAndErrorCount(), m_WarningAndErrorCount);
 
 		if (m_VkRenderPass) m_VkDevice.destroyRenderPass(m_VkRenderPass);
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
 	CVkRenderPassCreator m_Creator;
-	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
 
 	vk::Device m_VkDevice = nullptr;
 	vk::RenderPass m_VkRenderPass = nullptr;

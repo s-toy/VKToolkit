@@ -7,7 +7,7 @@
 
 namespace hiveVKT
 {
-	enum EContextExtraFunc
+	enum EContextFeature
 	{
 		UNDEFINED = 0,
 		PREFER_DISCRETE_GPU = 1,
@@ -28,8 +28,10 @@ namespace hiveVKT
 
 	public:
 		~CVkContext();
-		void setExtraFuncStatus(uint32_t vStatus) { m_ExtraFuncStatus = vStatus; }
-		bool getExtraFuncStatus(EContextExtraFunc vEnum) { return m_ExtraFuncStatus & vEnum; }
+		void enableContextFeature(uint32_t vFeatureSet) { m_FeatureStatus |= vFeatureSet; }
+		void disableAllContextFeature() { m_FeatureStatus = EContextFeature::UNDEFINED; }
+
+		bool isFeatureEnabled(EContextFeature vFeature) { return m_FeatureStatus & vFeature; }
 
 		void setApplicationName(const std::string& vApplicationName) { if (m_IsInitialized) return; m_ApplicationName = vApplicationName; }
 		void setEngineName(const std::string& vEngineName) { if (m_IsInitialized) return; m_EngineName = vEngineName; }
@@ -41,13 +43,6 @@ namespace hiveVKT
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { if (m_IsInitialized) return; m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
 		void setEnabledPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& vEnabledPhysicalDeviceFeatures) { if (m_IsInitialized) return; m_EnabledPhysicalDeviceFeatures = vEnabledPhysicalDeviceFeatures; }
 
-		std::vector<std::string> fetchEnabledDeviceExtensions() {
-			return std::vector<std::string>();
-		}//TODO
-		std::vector<std::string> fetchEnabledDeviceLayers() {
-			return std::vector<std::string>();
-		}//TODO
-
 		void createContext();
 		void destroyContext();
 
@@ -56,7 +51,9 @@ namespace hiveVKT
 		const vk::DispatchLoaderDynamic& getDynamicDispatchLoader()const { return m_DynamicDispatchLoader; }
 		const vk::Device& getVulkanDevice()const { return m_pDevice; }
 
-		const CVkDebugUtilsMessenger& getDebugUtilsMessenger()const { return m_DebugUtilsMessenger; }
+		uint32_t getWarningAndErrorCount() const { return m_DebugUtilsMessenger.getWarningAndErrorCount(); }
+		uint32_t getWarningCount() const { return m_DebugUtilsMessenger.getWarningCount(); }
+		uint32_t getErrorCount() const { return m_DebugUtilsMessenger.getErrorCount(); }
 
 		int getComprehensiveQueueFamilyIndex()const { return std::get<0>(m_ComprehensiveQueue); }
 		const vk::Queue& getComprehensiveQueue()const { return std::get<1>(m_ComprehensiveQueue); }
@@ -69,7 +66,7 @@ namespace hiveVKT
 
 		bool m_IsInitialized = false;
 
-		uint32_t m_ExtraFuncStatus = EContextExtraFunc::UNDEFINED;
+		uint32_t m_FeatureStatus = EContextFeature::UNDEFINED;
 
 		std::string m_ApplicationName = "Application";
 		std::string m_EngineName = "HiveVKT";
