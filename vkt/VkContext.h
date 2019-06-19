@@ -3,8 +3,6 @@
 #include "VkDebugMessenger.h"
 #include "Export.h"
 
-#define Singleton(T) static T* getInstance() { static T Instance; return &Instance; }
-
 namespace hiveVKT
 {
 	enum EContextFeature

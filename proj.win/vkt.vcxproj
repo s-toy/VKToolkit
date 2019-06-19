@@ -28,13 +28,15 @@
     <ClInclude Include="..\vkt\VkContext.h" />
     <ClInclude Include="..\vkt\VkDebugMessenger.h" />
     <ClInclude Include="..\vkt\VkGenericImage.h" />
-    <ClInclude Include="..\vkt\VkGraphicsPipelineCreator.h" />
+    <ClInclude Include="..\vkt\VkGraphicsPipelineDescriptor.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h" />
+    <ClInclude Include="..\vkt\VkObjectCreator.h" />
     <ClInclude Include="..\vkt\VkRenderPassCreator.h" />
     <ClInclude Include="..\vkt\VkShaderModuleCreator.h" />
     <ClInclude Include="..\vkt\VkSwapchain.h" />
     <ClInclude Include="..\vkt\VkTexture2D.h" />
     <ClInclude Include="..\vkt\VkUtility.h" />
+    <ClInclude Include="VkGraphicsPipelineDescriptor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\vkt\Mesh.cpp" />
@@ -43,12 +45,14 @@
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
     <ClCompile Include="..\vkt\VkGenericImage.cpp" />
-    <ClCompile Include="..\vkt\VkGraphicsPipelineCreator.cpp" />
+    <ClCompile Include="..\vkt\VkGraphicsPipelineDescriptor.cpp" />
+    <ClCompile Include="..\vkt\VkObjectCreator.cpp" />
     <ClCompile Include="..\vkt\VkRenderPassCreator.cpp" />
     <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp" />
     <ClCompile Include="..\vkt\VkSwapchain.cpp" />
     <ClCompile Include="..\vkt\VkTexture2D.cpp" />
     <ClCompile Include="..\vkt\VkUtility.cpp" />
+    <ClCompile Include="VkGraphicsPipelineDescriptor.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

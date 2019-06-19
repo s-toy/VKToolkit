@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "VkDebugMessenger.h"
-#include "VkGraphicsPipelineCreator.h"
+#include "VkGraphicsPipelineDescriptor.h"
 #include "VkContext.h"
 #include "VkRenderPassCreator.h"
 #include "VkShaderModuleCreator.h"
@@ -33,7 +33,7 @@ protected:
 
 	CVkDebugUtilsMessenger m_DebugMessenger;
 	vk::Extent2D m_TestExtent;
-	CVkGraphicsPipelineCreator m_GraphicsPipelineCreator;
+	CVkGraphicsPipelineDescriptor m_GraphicsPipelineCreator;
 	vk::Pipeline m_GraphicsPipeline;
 	vk::Device m_Device;
 	vk::PipelineLayout m_PipelineLayout;
