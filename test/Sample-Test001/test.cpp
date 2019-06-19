@@ -15,8 +15,8 @@ protected:
 
 	void createContext()
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		CVkContext::getInstance()->setEnableApiDumpHint(true);
+		CVkContext::getInstance()->enableContextFeature(ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
+
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		EXPECT_EQ(0, CVkContext::getInstance()->getWarningAndErrorCount());
@@ -159,7 +159,7 @@ TEST_F(Test_VkContext, ForBidModificationAfterContextCreated)
 //测试点: 倾向选择独立显卡
 TEST_F(Test_VkContext, SetPreferDiscreteGPU)
 {
-	CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
+	CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU);
 	createContext();
 	EXPECT_EQ(vk::PhysicalDeviceType::eDiscreteGpu, CVkContext::getInstance()->getPhysicalDevice().getProperties().deviceType);
 	destroyContext();
@@ -168,7 +168,7 @@ TEST_F(Test_VkContext, SetPreferDiscreteGPU)
 //测试点：要求选择的GPU必须支持图形功能
 TEST_F(Test_VkContext, ForceGraphicsFunction)
 {
-	CVkContext::getInstance()->setForceGraphicsFunctionalityHint(true);
+	CVkContext::getInstance()->enableContextFeature(FORCE_GARPHICS_FUNCTIONALITY);
 	createContext();
 	verifyQueueFlags(vk::QueueFlagBits::eGraphics);
 	destroyContext();
@@ -177,7 +177,7 @@ TEST_F(Test_VkContext, ForceGraphicsFunction)
 //测试点：要求选择的GPU必须支持计算功能
 TEST_F(Test_VkContext, ForceComputeFunction)
 {
-	CVkContext::getInstance()->setForceComputeFunctionalityHint(true);
+	CVkContext::getInstance()->enableContextFeature(FORCE_COMPUTE_FUNCTIONALITY);
 	createContext();
 	verifyQueueFlags(vk::QueueFlagBits::eCompute);
 	destroyContext();
@@ -186,7 +186,7 @@ TEST_F(Test_VkContext, ForceComputeFunction)
 //测试点：要求选择的GPU必须支持传输功能
 TEST_F(Test_VkContext, ForceTransferFunction)
 {
-	CVkContext::getInstance()->setForceTransferFunctionalityHint(true);
+	CVkContext::getInstance()->enableContextFeature(FORCE_TRANSFER_FUNCTIONALITY);
 	createContext();
 	verifyQueueFlags(vk::QueueFlagBits::eTransfer);
 	destroyContext();
@@ -195,7 +195,7 @@ TEST_F(Test_VkContext, ForceTransferFunction)
 //测试点：开启Presentation支持
 TEST_F(Test_VkContext, EnablePresentation)
 {
-	CVkContext::getInstance()->setEnablePresentationHint(true);
+	CVkContext::getInstance()->enableContextFeature(ENABLE_PRESENTATION);
 	createContext();
 	destroyContext();
 
@@ -208,7 +208,7 @@ TEST_F(Test_VkContext, EnablePresentation)
 //测试点：开启Api调用记录支持
 TEST_F(Test_VkContext, EnableApiDump)
 {
-	CVkContext::getInstance()->setEnablePresentationHint(true);
+	CVkContext::getInstance()->enableContextFeature(ENABLE_API_DUMP);
 	createContext();
 	destroyContext();
 
@@ -220,7 +220,7 @@ TEST_F(Test_VkContext, EnableApiDump)
 //测试点：开启帧率记录支持
 TEST_F(Test_VkContext, EnableFpsMonitor)
 {
-	CVkContext::getInstance()->setEnableFpsMonitorHint(true);
+	CVkContext::getInstance()->enableContextFeature(ENABLE_FPS_MONITOR);
 	createContext();
 	destroyContext();
 
@@ -233,7 +233,7 @@ TEST_F(Test_VkContext, EnableFpsMonitor)
 //测试点：开启屏幕截图支持
 TEST_F(Test_VkContext, EnableScreenshot)
 {
-	CVkContext::getInstance()->setEnableScreenshotHint(true);
+	CVkContext::getInstance()->enableContextFeature(ENABLE_SCREENSHOT);
 	createContext();
 	destroyContext();
 

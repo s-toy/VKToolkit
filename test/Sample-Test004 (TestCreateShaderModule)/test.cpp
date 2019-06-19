@@ -10,8 +10,7 @@ class Test_CreateVkShaderModule : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		CVkContext::getInstance()->setEnableApiDumpHint(true);
+		CVkContext::getInstance()->enableContextFeature(ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
 		m_WarningAndErrorCount = CVkContext::getInstance()->getWarningAndErrorCount();

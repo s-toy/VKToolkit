@@ -7,6 +7,20 @@
 
 namespace hiveVKT
 {
+	enum EContextFeature
+	{
+		UNDEFINED = 0,
+		PREFER_DISCRETE_GPU = 1,
+		FORCE_GARPHICS_FUNCTIONALITY = 2,
+		FORCE_COMPUTE_FUNCTIONALITY = 4,
+		FORCE_TRANSFER_FUNCTIONALITY = 8,
+		ENABLE_DEBUG_UTILS = 16,
+		ENABLE_PRESENTATION = 32,
+		ENABLE_API_DUMP = 64,
+		ENABLE_FPS_MONITOR = 128,
+		ENABLE_SCREENSHOT = 256
+	};
+
 	class VKT_DECLSPEC CVkContext
 	{
 	public:
@@ -14,16 +28,10 @@ namespace hiveVKT
 
 	public:
 		~CVkContext();
+		void enableContextFeature(uint32_t vFeatureSet) { m_FeatureStatus |= vFeatureSet; }
+		void disableAllContextFeature() { m_FeatureStatus = EContextFeature::UNDEFINED; }
 
-		void setPreferDiscreteGpuHint(bool vPreferDiscreteGpuHint) { if(m_IsInitialized) return; m_PreferDiscreteGpuHint = vPreferDiscreteGpuHint; }
-		void setForceGraphicsFunctionalityHint(bool vForceGraphicsFunctionalityHint) { if (m_IsInitialized) return; m_ForceGraphicsFunctionalityHint = vForceGraphicsFunctionalityHint; }
-		void setForceComputeFunctionalityHint(bool vForceComputeFunctionalityHint) { if (m_IsInitialized) return; m_ForceComputeFunctionalityHint = vForceComputeFunctionalityHint; }
-		void setForceTransferFunctionalityHint(bool vForceTransferFunctionalityHint) { if (m_IsInitialized) return; m_ForceTransferFunctionalityHint = vForceTransferFunctionalityHint; }
-		void setEnableDebugUtilsHint(bool vEnableDebugUtilsHint) { if (m_IsInitialized) return; m_EnableDebugUtilsHint = vEnableDebugUtilsHint; }
-		void setEnablePresentationHint(bool vEnablePresentationHint) { if (m_IsInitialized) return; m_EnablePresentationHint = vEnablePresentationHint; }
-		void setEnableApiDumpHint(bool vEnableApiDumpHint) { if (m_IsInitialized) return; m_EnableApiDumpHint = vEnableApiDumpHint; }
-		void setEnableFpsMonitorHint(bool vEnableFpsMonitorHint) { if (m_IsInitialized) return; m_EnableFpsMonitorHint = vEnableFpsMonitorHint; }
-		void setEnableScreenshotHint(bool vEnableScreenshotHint) { if (m_IsInitialized) return; m_EnableScreenshotHint = vEnableScreenshotHint; }
+		bool isFeatureEnabled(EContextFeature vFeature) { return m_FeatureStatus & vFeature; }
 
 		void setApplicationName(const std::string& vApplicationName) { if (m_IsInitialized) return; m_ApplicationName = vApplicationName; }
 		void setEngineName(const std::string& vEngineName) { if (m_IsInitialized) return; m_EngineName = vEngineName; }
@@ -58,15 +66,7 @@ namespace hiveVKT
 
 		bool m_IsInitialized = false;
 
-		bool m_PreferDiscreteGpuHint = false;
-		bool m_ForceGraphicsFunctionalityHint = false;
-		bool m_ForceComputeFunctionalityHint = false;
-		bool m_ForceTransferFunctionalityHint = false;
-		bool m_EnableDebugUtilsHint = false;
-		bool m_EnablePresentationHint = false;
-		bool m_EnableApiDumpHint = false;
-		bool m_EnableFpsMonitorHint = false;
-		bool m_EnableScreenshotHint = false;
+		uint32_t m_FeatureStatus = EContextFeature::UNDEFINED;
 
 		std::string m_ApplicationName = "Application";
 		std::string m_EngineName = "HiveVKT";
