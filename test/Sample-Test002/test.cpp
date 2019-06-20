@@ -7,13 +7,14 @@
 
 #define CREATE_WINDOW glfwCreateWindow(800, 600, "Test_Swapchain", nullptr, nullptr)
 
+using namespace hiveVKT;
+
 class Test_VkSwapchain :public ::testing::Test
 {
 public:
 	virtual void SetUp() override
 	{
-		hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-		hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
+		hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION);
 		hiveVKT::CVkContext::getInstance()->createContext();
 
 		glfwInit();
@@ -44,9 +45,7 @@ protected:
 //
 TEST_F(Test_VkSwapchain, CreateSwapchainWithNullWindow)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	EXPECT_FALSE(m_Swapchain.createSwapchain(nullptr, m_SupportedImageUsages));
@@ -59,10 +58,7 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithNullWindow)
 //
 TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -80,20 +76,11 @@ TEST_F(Test_VkSwapchain, CreateSwapchainWithValidWindow)
 
 	hiveVKT::CVkCallParser Parser;
 	EXPECT_TRUE(Parser.parse("vk_apidump.txt"));
-	auto ParseResultSet = Parser.getVKCallInfoAt(0, 0);
-	int Counter = 0;
-	for (auto VkCall : ParseResultSet)
-	{
-		if (VkCall.FunctionName == "vkCreateSwapchainKHR")
-		{
-			EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
-			Counter++;
 
-			auto Parameters = VkCall.ParameterInfo;
-			EXPECT_EQ(atoi(Parameters["pCreateInfo|imageUsage"].second.data()), (VkImageUsageFlags)m_SupportedImageUsages);
-		}
-	}
-	EXPECT_EQ(Counter, 1);
+	auto CreateSwapChainCallInfo = Parser.getVkCallInfoByFunctionName(0, 0, "vkCreateSwapchainKHR");
+	EXPECT_EQ(CreateSwapChainCallInfo.size(), 1);
+	EXPECT_EQ(CreateSwapChainCallInfo[0].ReturnValue, "VK_SUCCESS");
+	EXPECT_EQ(atoi(CreateSwapChainCallInfo[0].ParameterInfo["pCreateInfo|imageUsage"].second.data()), (VkImageUsageFlags)m_SupportedImageUsages);
 }
 
 //测试点：测试重建swap chain
@@ -107,9 +94,7 @@ TEST_F(Test_VkSwapchain, RecreateSwapchain)
 //
 TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -128,11 +113,9 @@ TEST_F(Test_VkSwapchain, CreateWithInvalidImageUsageFlags)
 
 //测试点：测试重复调用create方法，程序可以正常处理
 //
-TEST_F(Test_VkSwapchain, DuplicateCreationCall)
+TEST_F(Test_VkSwapchain, DuplicateInterfaceCall)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -170,8 +153,7 @@ TEST_F(Test_VkSwapchain, CreateBeforeInitializeContext)
 //
 TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -192,9 +174,7 @@ TEST_F(Test_VkSwapchain, CreateWithUnsuitableContext)
 //
 TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -216,10 +196,7 @@ TEST_F(Test_VkSwapchain, DestroyAfterDestructContext)
 //		 vkCreateWin32SurfaceKHR
 TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 {
-	hiveVKT::CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnablePresentationHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-	hiveVKT::CVkContext::getInstance()->setEnableApiDumpHint(true);
+	hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_PRESENTATION | ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 	hiveVKT::CVkContext::getInstance()->createContext();
 
 	glfwInit();
@@ -236,12 +213,7 @@ TEST_F(Test_VkSwapchain, CreateUnderOpenGLContext)
 
 	hiveVKT::CVkCallParser Parser;
 	EXPECT_TRUE(Parser.parse("vk_apidump.txt"));
-	auto ParseResultSet = Parser.getVKCallInfoAt(0, 0);
-	int Counter = 0;
-	for (auto VkCall : ParseResultSet)
-	{
-		if (VkCall.FunctionName == "vkCreateSwapchainKHR")
-			Counter++;
-	}
-	EXPECT_EQ(Counter, 0);
+
+	auto CreateSwapChainCallInfo = Parser.getVkCallInfoByFunctionName(0, 0, "vkCreateWin32SurfaceKHR");
+	EXPECT_EQ(CreateSwapChainCallInfo.size(), 0);
 }

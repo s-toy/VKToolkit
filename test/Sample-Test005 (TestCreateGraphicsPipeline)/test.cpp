@@ -14,8 +14,7 @@ class Test_CreateGraphicsPipeline : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setPreferDiscreteGpuHint(true);
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
+		hiveVKT::CVkContext::getInstance()->enableContextFeature(PREFER_DISCRETE_GPU | ENABLE_DEBUG_UTILS);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 		m_Device = CVkContext::getInstance()->getVulkanDevice();
 		ASSERT_TRUE(m_Device);

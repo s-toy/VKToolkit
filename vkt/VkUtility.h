@@ -14,6 +14,4 @@ namespace hiveVKT
 	VKT_DECLSPEC void executeImmediately(const std::function<void(vk::CommandBuffer vCommandBuffer)>& vFunction);
 
 	VKT_DECLSPEC void createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, vk::MemoryPropertyFlags vMemoryProperty, vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory);
-
-	bool splitByStr(const std::string& vInput, const std::string& vDelimiter, std::vector<std::string>& voOutput);
 }

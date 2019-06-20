@@ -10,18 +10,15 @@ class Test_CreateVkShaderModule : public ::testing::Test
 protected:
 	virtual void SetUp() override
 	{
-		CVkContext::getInstance()->setEnableDebugUtilsHint(true);
-		CVkContext::getInstance()->setEnableApiDumpHint(true);
+		CVkContext::getInstance()->enableContextFeature(ENABLE_DEBUG_UTILS | ENABLE_API_DUMP);
 		ASSERT_NO_THROW(CVkContext::getInstance()->createContext());
 
-		m_pMessenger = &(CVkContext::getInstance()->getDebugUtilsMessenger());
-		ASSERT_TRUE(m_pMessenger);
-		m_WarningAndErrorCount = m_pMessenger->getWarningAndErrorCount();
+		m_WarningAndErrorCount = CVkContext::getInstance()->getWarningAndErrorCount();
 	}
 
 	virtual void TearDown() override
 	{
-		EXPECT_EQ(m_pMessenger->getWarningAndErrorCount(), m_WarningAndErrorCount);
+		EXPECT_EQ(CVkContext::getInstance()->getWarningAndErrorCount(), m_WarningAndErrorCount);
 		ASSERT_NO_THROW(CVkContext::getInstance()->destroyContext());
 	}
 
@@ -29,20 +26,11 @@ protected:
 	{
 		hiveVKT::CVkCallParser Parser;
 		_ASSERT(Parser.parse("vk_apidump.txt"));
-		const auto& ParseResultSet = Parser.getVKCallInfoAt(0, 0);
-		int Counter = 0;
-		for (auto VkCall : ParseResultSet)
-		{
-			if (VkCall.FunctionName == "vkCreateShaderModule")
-			{
-				EXPECT_TRUE(VkCall.ReturnValue == "VK_SUCCESS");
-				Counter++;
-			}
-		}
-		return Counter;
+		auto CreateShaderModuleCallInfo = Parser.getVkCallInfoByFunctionName(0, 0, "vkCreateShaderModule");
+
+		return CreateShaderModuleCallInfo.size();
 	}
 
-	const CVkDebugUtilsMessenger* m_pMessenger = nullptr;
 	CVkShaderModuleCreator m_ShaderModuleCreator;
 	vk::ShaderModule m_ShaderModule = nullptr;
 
