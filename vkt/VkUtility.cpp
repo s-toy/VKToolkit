@@ -68,25 +68,19 @@ void hiveVKT::executeImmediately(const std::function<void(vk::CommandBuffer vCom
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Result hiveVKT::createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, 
+void hiveVKT::createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlags vBufferUsage, 
 	vk::MemoryPropertyFlags vMemoryProperty, 
 	vk::Buffer& voBuffer, vk::DeviceMemory& voBufferDeviceMemory)
 {
 	_ASSERT(CVkContext::getInstance()->isContextCreated());
 	auto Device = CVkContext::getInstance()->getVulkanDevice();
 
-	vk::Result Result;
-
 	vk::BufferCreateInfo BufferCreateInfo = {};
 	BufferCreateInfo.size = vBufferSize;
 	BufferCreateInfo.usage = vBufferUsage;
 	BufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-	Result = Device.createBuffer(&BufferCreateInfo, nullptr, &voBuffer);
-	if (Result != vk::Result::eSuccess)
-	{
-		return Result;
-	}
+	voBuffer = Device.createBuffer(BufferCreateInfo);
 
 	vk::MemoryRequirements MemoryRequirements = Device.getBufferMemoryRequirements(voBuffer);
 
@@ -94,15 +88,9 @@ vk::Result hiveVKT::createBuffer(vk::DeviceSize vBufferSize, vk::BufferUsageFlag
 	MemoryAllocateInfo.allocationSize = MemoryRequirements.size;
 	MemoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(MemoryRequirements.memoryTypeBits, vMemoryProperty);
 
-	Result = Device.allocateMemory(&MemoryAllocateInfo, nullptr, &voBufferDeviceMemory);
-	if (Result != vk::Result::eSuccess)
-	{
-		return Result;
-	}
+	voBufferDeviceMemory = Device.allocateMemory(MemoryAllocateInfo);
 
-	Device.bindBufferMemory(voBuffer, voBufferDeviceMemory, 0);//TODO: Get result and check
-
-	return vk::Result::eSuccess;
+	Device.bindBufferMemory(voBuffer, voBufferDeviceMemory, 0);
 }
 
 //***********************************************************************************************
