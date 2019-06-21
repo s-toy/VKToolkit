@@ -2,6 +2,8 @@
 #include <set>
 #include "VkContext.h"
 #include "VkCallParser.h"
+#include "VkInitializer.h"
+#include "VkObjectCreator.h"
 
 using namespace hiveVKT;
 
@@ -246,6 +248,9 @@ TEST_F(Test_VkContext, EnableScreenshot)
 //测试点：开启设备不支持的扩展
 TEST_F(Test_VkContext, EnableUnsupportedExtension)
 {
+	auto GraphicsPipelineCreateInfo = hiveVKT::initializer::graphicsPipelineCreateInfo();
+	auto Pipeline = hiveVKT::objectCreator::createGraphicsPipeline(CVkContext::getInstance()->getVulkanDevice(), GraphicsPipelineCreateInfo);
+	EXPECT_TRUE(Pipeline);
 }
 
 //测试点：开启设备支持的扩展

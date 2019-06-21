@@ -60,7 +60,6 @@
     <ClInclude Include="..\vkt\VkObjectCreator.h">
       <Filter>vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VkGraphicsPipelineDescriptor.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDescriptor.h">
       <Filter>vulkan\descriptors</Filter>
     </ClInclude>
@@ -105,7 +104,6 @@
     <ClCompile Include="..\vkt\VkObjectCreator.cpp">
       <Filter>vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VkGraphicsPipelineDescriptor.cpp" />
     <ClCompile Include="..\vkt\VkGraphicsPipelineDescriptor.cpp">
       <Filter>vulkan\descriptors</Filter>
     </ClCompile>

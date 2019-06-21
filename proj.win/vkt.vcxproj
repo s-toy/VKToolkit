@@ -37,7 +37,6 @@
     <ClInclude Include="..\vkt\VkSwapchain.h" />
     <ClInclude Include="..\vkt\VkTexture2D.h" />
     <ClInclude Include="..\vkt\VkUtility.h" />
-    <ClInclude Include="VkGraphicsPipelineDescriptor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\vkt\Mesh.cpp" />
@@ -53,7 +52,6 @@
     <ClCompile Include="..\vkt\VkSwapchain.cpp" />
     <ClCompile Include="..\vkt\VkTexture2D.cpp" />
     <ClCompile Include="..\vkt\VkUtility.cpp" />
-    <ClCompile Include="VkGraphicsPipelineDescriptor.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
