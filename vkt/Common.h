@@ -22,6 +22,8 @@
     TypeName(const TypeName &) = delete; \
     TypeName &operator =(const TypeName &) = delete;
 
+#define Singleton(T) static T* getInstance() { static T Instance; return &Instance; }
+
 namespace hiveVKT
 {
 	enum class EResult
