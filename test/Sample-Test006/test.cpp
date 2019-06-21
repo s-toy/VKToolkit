@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "VkContext.h"
 #include "VKUtility.h"
+#include "VkCallParser.h"
 #include <Windows.h>
 
 using namespace hiveVKT;
@@ -24,7 +25,7 @@ protected:
 		{vk::BufferUsageFlagBits::eVertexBuffer,	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent},		// vertex buffer without staging buffer
 		{vk::BufferUsageFlagBits::eIndexBuffer,		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent},		// index buffer without staging buffer
 		{vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,	vk::MemoryPropertyFlagBits::eDeviceLocal},			// vertex buffer with staging buffer
-		{vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,	vk::MemoryPropertyFlagBits::eDeviceLocal},				// index buffer with staging buffer
+		{vk::BufferUsageFlagBits::eIndexBuffer	| vk::BufferUsageFlagBits::eTransferDst,	vk::MemoryPropertyFlagBits::eDeviceLocal},			// index buffer with staging buffer
 		{vk::BufferUsageFlagBits::eUniformBuffer,	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent},		// uniform buffer
 		{vk::BufferUsageFlagBits::eTransferSrc,		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent},		// staging buffer
 	};
@@ -51,17 +52,44 @@ TEST_F(CreateBufferTest, CreateVkBuffer)
 	Buffers.resize(NumBuffersToCreate);
 	BufferMemories.resize(NumBuffersToCreate);
 
-	vk::Result Result;
-
 	for (size_t i = 0; i < NumBuffersToCreate; i++)
 	{
 		vk::Buffer		 Buffer;
 		vk::DeviceMemory BufferMemory;
 
-		Result = createBuffer(BufferSize, m_BufferInfos[i].first, m_BufferInfos[i].second, Buffers[i], BufferMemories[i]);
-		
-		EXPECT_EQ(vk::Result::eSuccess, Result);
+		createBuffer(BufferSize, m_BufferInfos[i].first, m_BufferInfos[i].second, Buffers[i], BufferMemories[i]);		
 	}
+
+	const std::string ApiDumpFile = "vk_apidump.txt";
+
+	CVkCallParser Parser;
+
+	ASSERT_EQ(Parser.parse(ApiDumpFile), true);
+
+	const auto& ApiCallInfos = Parser.getVKCallInfoAt(0, 0);
+	EXPECT_EQ(ApiCallInfos.size(), NumBuffersToCreate * 4);		//NOTE: 每个CreateVkBuffer包含4次VK API的调用
+
+	int SuccessCounter = 0;
+	for (auto Call : ApiCallInfos)
+	{
+		if (Call.FunctionName == "createBuffer")	//TODO: 函数名尚未确定
+		{
+			EXPECT_TRUE(Call.ReturnValue == "VK_SUCCESS");
+			SuccessCounter++;
+		}
+		if (Call.FunctionName == "allocateMemory")	//TODO: 函数名尚未确定
+		{
+			EXPECT_TRUE(Call.ReturnValue == "VK_SUCCESS");
+			SuccessCounter++;
+		}
+		if (Call.FunctionName == "bindBufferMemory")	//TODO: 函数名尚未确定
+		{
+			EXPECT_TRUE(Call.ReturnValue == "VK_SUCCESS");	//TODO: 尚不确定增强模式下该方法的返回值
+			SuccessCounter++;
+		}
+	}
+
+	EXPECT_EQ(SuccessCounter, (NumBuffersToCreate * 3));
 }
 
 //测试点：传入非法的BufferSize时，程序应该抛出异常
@@ -111,8 +139,5 @@ TEST(CreateBufferTest, CreateBeforeInitializeContext)
 	vk::Buffer			Buffer;
 	vk::DeviceMemory	BufferMemory;
 
-	vk::Result Result;
-	Result = createBuffer(BufferSize, BufferUsage, MemoryProperty, Buffer, BufferMemory);
-
-	EXPECT_EQ(vk::Result::eSuccess, Result);	// not sure about the result yet
+	createBuffer(BufferSize, BufferUsage, MemoryProperty, Buffer, BufferMemory);
 }

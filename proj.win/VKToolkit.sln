@@ -20,6 +20,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test005 (TestCreateGraphicsPipeline)", "..\test\Sample-Test005 (TestCreateGraphicsPipeline)\Sample-Test005 (TestCreateGraphicsPipeline).vcxproj", "{5ED2A99F-7C6B-43B8-8245-E1E53CCD3AFC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test006(TestCreateBuffer)", "..\test\Sample-Test006\Sample-Test006.vcxproj", "{7847B89B-AF46-48E4-9B91-2B97F1B5DA78}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9AE0893-58B4-409D-BCFB-E97748BAFA16} = {B9AE0893-58B4-409D-BCFB-E97748BAFA16}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample-Test000 (TestParseVkCall)", "..\test\Sample-Test000\Sample-Test000.vcxproj", "{F60AC400-2E0D-4814-94DE-551BF6B5F498}"
 EndProject
