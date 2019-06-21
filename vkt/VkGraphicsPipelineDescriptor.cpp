@@ -8,56 +8,30 @@ using namespace hiveVKT;
 void hiveVKT::CVkGraphicsPipelineDescriptor::begin(const vk::Extent2D& vExtent)
 {
 	__clearPipelineCreateInfo();
-	__constructDefaultPipelineCreateInfo(vExtent);
+	__init(vExtent);
+
+	m_IsActive = true;
 }
 
 //***********************************************************************************************
 //FUNCTION:
 bool hiveVKT::CVkGraphicsPipelineDescriptor::end()
 {
+	_ASSERTE(m_IsActive);
+
 	m_IsCreateInfoValid = __checkCreateInfoValidity();
 	if (!m_IsCreateInfoValid) return false;
 
-	__preparePipelineCreateInfo();
+	__assemblingPipelineCreateInfo();
+
+	m_IsActive = false;
 
 	return true;
 }
 
-bool hiveVKT::CVkGraphicsPipelineDescriptor::__isParameterWrong(const vk::Device & vDevice, const vk::PipelineLayout & vPipelineLayout,
-	const vk::RenderPass & vRenderPass, uint32_t vSubPass)
-{
-	//!=和==两个重载有相似的转换
-	if (/*vDevice != NULL && vPipelineLayout != VK_NULL_HANDLE && vRenderPass != VK_NULL_HANDLE &&*/ vSubPass == 0)
-		return false;
-	else
-	{
-		return true;
-	}
-}
-
-bool hiveVKT::CVkGraphicsPipelineDescriptor::__isPipelineSettingWrong()
-{
-	if (m_ShaderStageSet.size() <= 1 || m_ViewportSet.size() <= 0 || m_ScissorSet.size() <= 0
-		|| m_ColorBlendAttachmentStateSet.size() <= 0)
-		return true;
-	else
-	{
-		return false;
-	}
-}
-
-bool hiveVKT::CVkGraphicsPipelineDescriptor::__isShaderStageWrong()
-{
-	/*if (m_ShaderStageSet.size() >= 2)
-	{
-		if(m_ShaderStageSet[0].)
-	}*/
-	return false;
-}
-
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkGraphicsPipelineDescriptor::__preparePipelineCreateInfo()
+void hiveVKT::CVkGraphicsPipelineDescriptor::__assemblingPipelineCreateInfo()
 {
 	m_VertexInputStateCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(m_VertexBindingDescriptionSet.size());
 	m_VertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_VertexAttributeDescriptionSet.size());
@@ -90,7 +64,7 @@ void hiveVKT::CVkGraphicsPipelineDescriptor::__preparePipelineCreateInfo()
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkGraphicsPipelineDescriptor::__constructDefaultPipelineCreateInfo(const vk::Extent2D& vExtent)
+void hiveVKT::CVkGraphicsPipelineDescriptor::__init(const vk::Extent2D& vExtent)
 {
 	m_InputAssemblyStateCreateInfo = DefaultPipelineInputAssemblyStateCreateInfo;
 	m_VertexInputStateCreateInfo = DefaultPipelineVertexInputStateCreateInfo;
@@ -123,9 +97,13 @@ void hiveVKT::CVkGraphicsPipelineDescriptor::__clearPipelineCreateInfo()
 //FUNCTION:
 bool hiveVKT::CVkGraphicsPipelineDescriptor::__checkCreateInfoValidity()
 {
-	//if (__isParameterWrong(vDevice, vPipelineLayout, vRenderPass, vSubPass))
-//	return EResult::eErrorInvalidParameters;
-//if (__isPipelineSettingWrong())
-//	return EResult::eErrorInitializationFailed;
+	if (m_ShaderStageSet.size() <= 1 || m_ViewportSet.size() <= 0 || m_ScissorSet.size() <= 0
+		|| m_ColorBlendAttachmentStateSet.size() <= 0)
+		return true;
+	else
+	{
+		return false;
+	}
+
 	return true;
 }

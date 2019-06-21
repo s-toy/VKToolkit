@@ -4,15 +4,11 @@ using namespace hiveVKT;
 
 //***********************************************************************************************
 //FUNCTION:
-vk::Pipeline hiveVKT::CVkObjectCreator::createGraphicsPipeline(vk::Device vDevice, const CVkGraphicsPipelineDescriptor* vDescriptor)
+vk::Pipeline objectCreator::createGraphicsPipeline(vk::Device vDevice, const vk::GraphicsPipelineCreateInfo& vCreateInfo)
 {
-	_ASSERTE(vDescriptor != nullptr);
+	_ASSERTE(vDevice);
 
-	if (!vDescriptor->isValid())
-	{
-		//TODO: output warning
-		return nullptr;
-	}
+	//TODO: 有效性检查
 
-	return vDevice.createGraphicsPipeline(nullptr, vDescriptor->getPipelineCreateInfo());
+	return vDevice.createGraphicsPipeline(nullptr, vCreateInfo);
 }

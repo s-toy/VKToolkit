@@ -4,10 +4,10 @@
     <Filter Include="general">
       <UniqueIdentifier>{6015bd38-8c1b-4a93-8481-79356df622ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="graphics">
+    <Filter Include="vulkan">
       <UniqueIdentifier>{cc98133f-1b73-4e58-be25-68a9aa354c89}</UniqueIdentifier>
     </Filter>
-    <Filter Include="graphics\descriptors">
+    <Filter Include="vulkan\descriptors">
       <UniqueIdentifier>{1ef28b91-6070-475f-a093-6c2bb5fa4896}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -19,37 +19,37 @@
       <Filter>general</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkUtility.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkTexture2D.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkSwapchain.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkShaderModuleCreator.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkRenderPassCreator.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkGenericImage.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkDebugMessenger.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkContext.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\Model.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\Mesh.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\Export.h">
       <Filter>general</Filter>
@@ -58,53 +58,56 @@
       <Filter>general</Filter>
     </ClInclude>
     <ClInclude Include="..\vkt\VkObjectCreator.h">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClInclude>
     <ClInclude Include="VkGraphicsPipelineDescriptor.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDescriptor.h">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>vulkan\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vkt\VkInitializer.h">
+      <Filter>vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\vkt\VkUtility.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkTexture2D.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkSwapchain.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkRenderPassCreator.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkGenericImage.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkContext.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\Model.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\Mesh.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkCallParser.cpp">
       <Filter>general</Filter>
     </ClCompile>
     <ClCompile Include="..\vkt\VkObjectCreator.cpp">
-      <Filter>graphics</Filter>
+      <Filter>vulkan</Filter>
     </ClCompile>
     <ClCompile Include="VkGraphicsPipelineDescriptor.cpp" />
     <ClCompile Include="..\vkt\VkGraphicsPipelineDescriptor.cpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>vulkan\descriptors</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

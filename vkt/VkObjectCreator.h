@@ -1,17 +1,10 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
-#include "Common.h"
-#include "VkGraphicsPipelineDescriptor.h"
 
 namespace hiveVKT
 {
-	class CVkObjectCreator
+	namespace objectCreator
 	{
-	public:
-		Singleton(CVkObjectCreator);
-		vk::Pipeline createGraphicsPipeline(vk::Device vDevice, const CVkGraphicsPipelineDescriptor* vDescriptor);
-
-	private:
-		CVkObjectCreator() = default;
-	};
+		vk::Pipeline createGraphicsPipeline(vk::Device vDevice, const vk::GraphicsPipelineCreateInfo& vCreateInfo);
+	}
 }
