@@ -32,10 +32,6 @@ namespace hiveVKT
 		bool isFeatureEnabled(EContextFeature vFeature) { return m_FeatureStatus & vFeature; }
 
 		void setApplicationName(const std::string& vApplicationName) { if (m_IsInitialized) return; m_ApplicationName = vApplicationName; }
-		void setEngineName(const std::string& vEngineName) { if (m_IsInitialized) return; m_EngineName = vEngineName; }
-		void setApplicationVersion(uint32_t vApplicationVersion) { if (m_IsInitialized) return; m_ApplicationVersion = vApplicationVersion; }
-		void setEngineVersion(uint32_t vEngineVersion) { if (m_IsInitialized) return; m_EngineVersion = vEngineVersion; }
-		void setApiVersion(uint32_t vApiVersion) { if (m_IsInitialized) return; m_ApiVersion = vApiVersion; }
 
 		//TODO：提供查询物理设备支持的扩展和特性
 		void setEnabledPhysicalDeviceExtensions(const std::vector<std::string>& vEnabledDeviceExtensions) { if (m_IsInitialized) return; m_EnabledDeviceExtensions = vEnabledDeviceExtensions; }
@@ -67,13 +63,7 @@ namespace hiveVKT
 		uint32_t m_FeatureStatus = EContextFeature::UNDEFINED;
 
 		std::string m_ApplicationName = "Application";
-		std::string m_EngineName = "HiveVKT";
-		uint32_t m_ApplicationVersion = VK_MAKE_VERSION(0, 0, 0);
-		uint32_t m_EngineVersion = VK_MAKE_VERSION(0, 0, 0);
-		uint32_t m_ApiVersion = VK_API_VERSION_1_0;
 
-		std::vector<std::string> m_EnabledInstanceLayers = {};
-		std::vector<std::string> m_EnabledInstanceExtensions = {};
 		std::vector<std::string> m_EnabledDeviceExtensions = {};
 		vk::PhysicalDeviceFeatures m_EnabledPhysicalDeviceFeatures = {};
 

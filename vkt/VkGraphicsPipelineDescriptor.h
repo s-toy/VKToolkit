@@ -5,42 +5,45 @@
 #include "Common.h"
 #include "Export.h"
 
-#define _ASSERT_ACTIVE _ASSERTE(m_IsActive, "This function can only be called after CVkGraphicsPipelineDescriptor::begin()."); 
-
 namespace hiveVKT
 {
 	class VKT_DECLSPEC CVkGraphicsPipelineDescriptor
 	{
 	public:
-		void begin(const vk::Extent2D& vExtent);
-		bool end();
+		CVkGraphicsPipelineDescriptor(const vk::Extent2D& vExtent);
+		~CVkGraphicsPipelineDescriptor();
 
-		vk::PipelineInputAssemblyStateCreateInfo& fetchInputAssemblyState() { _ASSERT_ACTIVE; return m_InputAssemblyStateCreateInfo; }
-		vk::PipelineRasterizationStateCreateInfo& fetchRasterizationState() { _ASSERT_ACTIVE; return m_RasterizationStateCreateInfo; }
-		vk::PipelineMultisampleStateCreateInfo& fetchMultisampleState() { _ASSERT_ACTIVE; return m_MultisampleStateCreateInfo; }
-		vk::PipelineDepthStencilStateCreateInfo& fetchDepthStencilState() { _ASSERT_ACTIVE; return m_DepthStencilStateCreateInfo; }
-		vk::PipelineColorBlendStateCreateInfo& fetchColorBlendState() { _ASSERT_ACTIVE; return m_ColorBlendStateCreateInfo; }
-		vk::PipelineTessellationStateCreateInfo& fetchTessellationState() { _ASSERT_ACTIVE; return m_TessellationStateCreateInfo.value(); }
+		vk::PipelineInputAssemblyStateCreateInfo& fetchInputAssemblyState() { return m_InputAssemblyStateCreateInfo; }
+		vk::PipelineRasterizationStateCreateInfo& fetchRasterizationState() { return m_RasterizationStateCreateInfo; }
+		vk::PipelineMultisampleStateCreateInfo& fetchMultisampleState() { return m_MultisampleStateCreateInfo; }
+		vk::PipelineDepthStencilStateCreateInfo& fetchDepthStencilState() { return m_DepthStencilStateCreateInfo; }
+		vk::PipelineColorBlendStateCreateInfo& fetchColorBlendState() { return m_ColorBlendStateCreateInfo; }
+		vk::PipelineTessellationStateCreateInfo& fetchTessellationState() { return m_TessellationStateCreateInfo.value(); }
 
-		void addShaderStage(vk::PipelineShaderStageCreateInfo vShaderStage) { _ASSERT_ACTIVE; m_ShaderStageSet.emplace_back(vShaderStage); }
+		void addShaderStage(vk::PipelineShaderStageCreateInfo vShaderStage) { m_ShaderStageSet.emplace_back(vShaderStage); }
+		void clearShaderStage() { m_ShaderStageSet.clear(); }
 
-		void addColorBlendAttachment(const vk::PipelineColorBlendAttachmentState& vColorBlendAttachmentState) { _ASSERT_ACTIVE; m_ColorBlendAttachmentStateSet.emplace_back(vColorBlendAttachmentState); }
+		void addColorBlendAttachment(const vk::PipelineColorBlendAttachmentState& vColorBlendAttachmentState) { m_ColorBlendAttachmentStateSet.emplace_back(vColorBlendAttachmentState); }
+		void clearColorBlendAttachment() { m_ColorBlendAttachmentStateSet.clear(); }
 
-		void addVertexBinding(const vk::VertexInputBindingDescription& vValue) { _ASSERT_ACTIVE; m_VertexBindingDescriptionSet.emplace_back(vValue); }
-		void addVertexAttribute(const vk::VertexInputAttributeDescription& vValue) { _ASSERT_ACTIVE; m_VertexAttributeDescriptionSet.emplace_back(vValue); }
+		void addVertexBinding(const vk::VertexInputBindingDescription& vValue) { m_VertexBindingDescriptionSet.emplace_back(vValue); }
+		void addVertexAttribute(const vk::VertexInputAttributeDescription& vValue) { m_VertexAttributeDescriptionSet.emplace_back(vValue); }
+		void clearVertexInputInfo() { m_VertexBindingDescriptionSet.clear(); m_VertexAttributeDescriptionSet.clear(); }
 
-		void addDynamicState(const vk::DynamicState& vDynamicState) { _ASSERT_ACTIVE; m_DynamicStateSet.emplace_back(vDynamicState); }
+		void addDynamicState(const vk::DynamicState& vDynamicState) { m_DynamicStateSet.emplace_back(vDynamicState); }
+		void clearDynamicState() { m_DynamicStateSet.clear(); }
 
-		void addViewport(const vk::Viewport& vValue) { _ASSERT_ACTIVE; m_ViewportSet.emplace_back(vValue); }
-		void addScissor(const vk::Rect2D& vValue) { _ASSERT_ACTIVE; m_ScissorSet.emplace_back(vValue); }
+		void addViewport(const vk::Viewport& vValue) { m_ViewportSet.emplace_back(vValue); }
+		void addScissor(const vk::Rect2D& vValue) { m_ScissorSet.emplace_back(vValue); }
+		void clearViewportAndScissorInfo() { m_ViewportSet.clear(); m_ScissorSet.clear(); }
 
-		void setRenderPass(vk::RenderPass vRenderPass) { _ASSERT_ACTIVE; m_PipelineCreateInfo.renderPass = vRenderPass; }
-		void setSubpass(uint32_t vSubpass) { _ASSERT_ACTIVE; m_PipelineCreateInfo.subpass = vSubpass; }
-		void setPipelineLayout(vk::PipelineLayout vLayout) { _ASSERT_ACTIVE; m_PipelineCreateInfo.layout = vLayout; }
+		void setRenderPass(vk::RenderPass vRenderPass) { m_PipelineCreateInfo.renderPass = vRenderPass; }
+		void setSubpass(uint32_t vSubpass) { m_PipelineCreateInfo.subpass = vSubpass; }
+		void setPipelineLayout(vk::PipelineLayout vLayout) { m_PipelineCreateInfo.layout = vLayout; }
 
 	protected:
-		bool _isValid() const { return m_IsCreateInfoValid; }
-		const vk::GraphicsPipelineCreateInfo& _getPipelineCreateInfo() const { return m_PipelineCreateInfo; }
+		bool _isValid() const { return __checkCreateInfoValidity(); }
+		const vk::GraphicsPipelineCreateInfo& _getPipelineCreateInfo() { __assemblingPipelineCreateInfo(); return m_PipelineCreateInfo; }
 
 	private:
 		vk::PipelineInputAssemblyStateCreateInfo                m_InputAssemblyStateCreateInfo = {};
@@ -64,14 +67,9 @@ namespace hiveVKT
 
 		vk::GraphicsPipelineCreateInfo m_PipelineCreateInfo = {};
 
-		bool m_IsCreateInfoValid = false;
-		bool m_IsActive = false;
-
 		void __init(const vk::Extent2D& vExtent);
 		void __assemblingPipelineCreateInfo();
-		void __clearPipelineCreateInfo();
-
-		bool __checkCreateInfoValidity();
+		bool __checkCreateInfoValidity() const;
 
 		friend class CVkObjectCreator;
 	};

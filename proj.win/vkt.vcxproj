@@ -27,10 +27,12 @@
     <ClInclude Include="..\vkt\VkCallParser.h" />
     <ClInclude Include="..\vkt\VkContext.h" />
     <ClInclude Include="..\vkt\VkDebugMessenger.h" />
+    <ClInclude Include="..\vkt\VkDeviceDescriptor.h" />
     <ClInclude Include="..\vkt\VkGenericImage.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDescriptor.h" />
     <ClInclude Include="..\vkt\VkGraphicsPipelineDefaultState.h" />
     <ClInclude Include="..\vkt\VkInitializer.h" />
+    <ClInclude Include="..\vkt\VkInstanceDescriptor.h" />
     <ClInclude Include="..\vkt\VkObjectCreator.h" />
     <ClInclude Include="..\vkt\VkRenderPassCreator.h" />
     <ClInclude Include="..\vkt\VkShaderModuleCreator.h" />
@@ -44,8 +46,10 @@
     <ClCompile Include="..\vkt\VkCallParser.cpp" />
     <ClCompile Include="..\vkt\VkContext.cpp" />
     <ClCompile Include="..\vkt\VkDebugMessenger.cpp" />
+    <ClCompile Include="..\vkt\VkDeviceDescriptor.cpp" />
     <ClCompile Include="..\vkt\VkGenericImage.cpp" />
     <ClCompile Include="..\vkt\VkGraphicsPipelineDescriptor.cpp" />
+    <ClCompile Include="..\vkt\VkInstanceDescriptor.cpp" />
     <ClCompile Include="..\vkt\VkObjectCreator.cpp" />
     <ClCompile Include="..\vkt\VkRenderPassCreator.cpp" />
     <ClCompile Include="..\vkt\VkShaderModuleCreator.cpp" />

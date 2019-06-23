@@ -1,32 +1,16 @@
 #include "VkGraphicsPipelineDescriptor.h"
+#include "VkInitializer.h"
 
 using namespace std;
 using namespace hiveVKT;
 
-//***********************************************************************************************
-//FUNCTION:
-void hiveVKT::CVkGraphicsPipelineDescriptor::begin(const vk::Extent2D& vExtent)
+CVkGraphicsPipelineDescriptor::CVkGraphicsPipelineDescriptor(const vk::Extent2D& vExtent)
 {
-	__clearPipelineCreateInfo();
 	__init(vExtent);
-
-	m_IsActive = true;
 }
 
-//***********************************************************************************************
-//FUNCTION:
-bool hiveVKT::CVkGraphicsPipelineDescriptor::end()
+CVkGraphicsPipelineDescriptor::~CVkGraphicsPipelineDescriptor()
 {
-	_ASSERTE(m_IsActive);
-
-	m_IsCreateInfoValid = __checkCreateInfoValidity();
-	if (!m_IsCreateInfoValid) return false;
-
-	__assemblingPipelineCreateInfo();
-
-	m_IsActive = false;
-
-	return true;
 }
 
 //***********************************************************************************************
@@ -66,44 +50,26 @@ void hiveVKT::CVkGraphicsPipelineDescriptor::__assemblingPipelineCreateInfo()
 //FUNCTION:
 void hiveVKT::CVkGraphicsPipelineDescriptor::__init(const vk::Extent2D& vExtent)
 {
-	m_InputAssemblyStateCreateInfo = DefaultPipelineInputAssemblyStateCreateInfo;
-	m_VertexInputStateCreateInfo = DefaultPipelineVertexInputStateCreateInfo;
-	m_ViewportStateCreateInfo = DefaultPipelineViewportStateCreateInfo;
-	m_RasterizationStateCreateInfo = DefaultPipelineRasterizationStateCreateInfo;
-	m_MultisampleStateCreateInfo = DefaultPipelineMultisampleStateCreateInfo;
-	m_DepthStencilStateCreateInfo = DefaultPipelineDepthStencilStateCreateInfo;
-	m_ColorBlendStateCreateInfo = DefaultPipelineColorBlendStateCreateInfo;
-	m_DynamicStateCreateInfo = DefaultPipelineDynamicStateCreateInfo;
+	m_InputAssemblyStateCreateInfo = initializer::pipelineInputAssemblyStateCreateInfo();
+	m_VertexInputStateCreateInfo = {};
+	m_ViewportStateCreateInfo = {};
+	m_RasterizationStateCreateInfo = initializer::pipelineRasterizationStateCreateInfo();
+	m_MultisampleStateCreateInfo = initializer::pipelineMultisampleStateCreateInfo();
+	m_DepthStencilStateCreateInfo = initializer::pipelineDepthStencilStateCreateInfo();
+	m_ColorBlendStateCreateInfo = initializer::pipelineColorBlendStateCreateInfo();
+	m_DynamicStateCreateInfo = initializer::pipelineDynamicStateCreateInfo();
 
-	addColorBlendAttachment(DefaultPipelineColorBlendAttachmentState);
-	addViewport(vk::Viewport(0, 0, vExtent.width, vExtent.height, 0, 1.0));
-	addScissor(vk::Rect2D(vk::Offset2D(0, 0), vExtent));
+	addColorBlendAttachment(initializer::pipelineColorBlendAttachmentState());
+	addViewport(initializer::viewport(vExtent.width, vExtent.height));
+	addScissor(initializer::scissor(vExtent.width, vExtent.height));
 }
 
 //***********************************************************************************************
 //FUNCTION:
-void hiveVKT::CVkGraphicsPipelineDescriptor::__clearPipelineCreateInfo()
+bool hiveVKT::CVkGraphicsPipelineDescriptor::__checkCreateInfoValidity() const
 {
-	m_ShaderStageSet.clear();
-	m_ColorBlendAttachmentStateSet.clear();
-	m_VertexAttributeDescriptionSet.clear();
-	m_VertexBindingDescriptionSet.clear();
-	m_DynamicStateSet.clear();
-	m_ViewportSet.clear();
-	m_ScissorSet.clear();
-}
-
-//***********************************************************************************************
-//FUNCTION:
-bool hiveVKT::CVkGraphicsPipelineDescriptor::__checkCreateInfoValidity()
-{
-	if (m_ShaderStageSet.size() <= 1 || m_ViewportSet.size() <= 0 || m_ScissorSet.size() <= 0
-		|| m_ColorBlendAttachmentStateSet.size() <= 0)
-		return true;
-	else
-	{
+	if (m_ShaderStageSet.size() <= 1 || m_ViewportSet.size() <= 0 || m_ScissorSet.size() <= 0 || m_ColorBlendAttachmentStateSet.size() <= 0)
 		return false;
-	}
 
 	return true;
 }
