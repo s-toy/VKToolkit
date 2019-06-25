@@ -15,6 +15,8 @@ vk::Instance CVkObjectCreator::createInstance(CVkInstanceDescriptor& vDescriptor
 	return vk::createInstance(vDescriptor._getInstanceCreateInfo());
 }
 
+//***********************************************************************************************
+//FUNCTION:
 vk::Device hiveVKT::CVkObjectCreator::createDevice(vk::PhysicalDevice vPhysicalDevice, CVkDeviceDescriptor& vDescriptor)
 {
 	_ASSERTE(vPhysicalDevice);
